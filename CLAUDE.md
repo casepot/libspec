@@ -5,11 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ```bash
-uv sync                       # Install dependencies (creates .venv automatically)
-uv run libspec                # Run CLI
-uv run pytest                 # Run tests (none exist yet)
-uv run ruff check src/        # Lint (use --fix for auto-fixes)
-uv run mypy src/              # Type check
+uv sync                                  # Install dependencies (creates .venv automatically)
+uv run libspec                           # Run CLI
+uv run pytest                            # Run tests
+uv run ruff check src/                   # Lint (use --fix for auto-fixes)
+uv run mypy src/                         # Type check
+uv run python tools/generate_schema.py   # Regenerate core schema (use --check in CI)
+uv run python tools/generate_models.py   # Regenerate extension models (async → async_ guard)
+uv run python tools/check_generated.py   # Drift check extension models
 ```
 
 Publishing:
@@ -23,8 +26,8 @@ uv publish                    # Publish to PyPI
 ### Schema System (`src/libspec/schema/`)
 
 JSON Schema definitions for library documentation:
-- `core.schema.json` - Base schema for library, types, functions, features, modules, principles
-- `extensions/` - Domain extensions (async, web, data, cli, orm, testing, events, state, plugins) and concern extensions (errors, perf, safety, config, versioning, observability)
+- `core.schema.json` - Base schema for library, types, functions, features, modules, principles (generated from Pydantic models via `tools/generate_schema.py`)
+- `extensions/` - Domain extensions (async, web, data, cli, orm, testing, events, state, plugins) and concern extensions (errors, perf, safety, config, versioning, observability); extension models are generated from these schemas via `tools/generate_models.py` (async rename guard included)
 
 Core API in `src/libspec/__init__.py`: `get_schema_path()`, `validate_spec()`, `get_core_schema()`
 

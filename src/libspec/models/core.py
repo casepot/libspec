@@ -11,8 +11,9 @@ This module defines all the core entity types:
 from __future__ import annotations
 
 import re
+from typing import Any
 
-from pydantic import AnyUrl, Field, conlist, field_validator, model_validator
+from pydantic import AnyUrl, Field, ValidationInfo, conlist, field_validator, model_validator
 from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
@@ -23,12 +24,16 @@ from .types import (
     GenericVariance,
     KebabCaseId,
     LibraryName,
+    ModulePath,
+    NonEmptyStr,
     ParameterKind,
+    PascalCaseName,
     SchemaVersion,
     ScreamingSnakeCase,
     SemVer,
     TypeKind,
 )
+from .utils import ensure_strict_bool
 
 # -----------------------------------------------------------------------------
 # Function/Method Components (Leaf Types)
@@ -38,8 +43,10 @@ from .types import (
 class Parameter(LibspecModel):
     """A function or method parameter."""
 
-    name: str = Field(description="Parameter name")
-    type: str | None = Field(default=None, description="Parameter type annotation")
+    name: NonEmptyStr = Field(description="Parameter name")
+    type: NonEmptyStr | None = Field(
+        default=None, description="Parameter type annotation"
+    )
     default: str | None = Field(
         default=None, description="Default value (string 'REQUIRED' means no default)"
     )
@@ -54,7 +61,7 @@ class Parameter(LibspecModel):
 class ReturnSpec(LibspecModel):
     """Return value specification."""
 
-    type: str = Field(description="Return type annotation")
+    type: NonEmptyStr = Field(description="Return type annotation")
     description: str | None = Field(
         default=None, description="What the return value represents"
     )
@@ -63,7 +70,7 @@ class ReturnSpec(LibspecModel):
 class YieldSpec(LibspecModel):
     """Generator yield specification."""
 
-    type: str = Field(description="Yielded type annotation")
+    type: NonEmptyStr = Field(description="Yielded type annotation")
     description: str | None = Field(
         default=None, description="What each yielded value represents"
     )
@@ -72,7 +79,7 @@ class YieldSpec(LibspecModel):
 class RaisesClause(LibspecModel):
     """An exception that may be raised."""
 
-    type: str = Field(description="Exception type name")
+    type: NonEmptyStr = Field(description="Exception type name")
     when: str | None = Field(
         default=None, description="Condition under which this exception is raised"
     )
@@ -86,12 +93,14 @@ class RaisesClause(LibspecModel):
 class GenericParam(LibspecModel):
     """A generic type parameter."""
 
-    name: str = Field(description="Parameter name (e.g., 'T', 'K', 'V')")
-    bound: str | None = Field(default=None, description="Upper bound type constraint")
+    name: NonEmptyStr = Field(description="Parameter name (e.g., 'T', 'K', 'V')")
+    bound: NonEmptyStr | None = Field(
+        default=None, description="Upper bound type constraint"
+    )
     variance: GenericVariance = Field(
         default=GenericVariance.INVARIANT, description="Variance of the parameter"
     )
-    default: str | None = Field(
+    default: NonEmptyStr | None = Field(
         default=None, description="Default type if not specified (Python 3.12+)"
     )
 
@@ -99,8 +108,10 @@ class GenericParam(LibspecModel):
 class Property(ExtensibleModel):
     """An instance property or attribute."""
 
-    name: str = Field(description="Property name")
-    type: str | None = Field(default=None, description="Property type annotation")
+    name: NonEmptyStr = Field(description="Property name")
+    type: NonEmptyStr | None = Field(
+        default=None, description="Property type annotation"
+    )
     readonly: bool = Field(
         default=False, description="Whether this is a read-only property"
     )
@@ -115,7 +126,7 @@ class Property(ExtensibleModel):
 class EnumValue(LibspecModel):
     """An enum member value."""
 
-    name: str = Field(description="Enum member name")
+    name: NonEmptyStr = Field(description="Enum member name")
     value: str | int | None = Field(
         default=None, description="Enum member value (e.g., 'auto()' or explicit value)"
     )
@@ -132,8 +143,8 @@ class EnumValue(LibspecModel):
 class Method(ExtensibleModel):
     """A method definition."""
 
-    name: str = Field(description="Method name")
-    signature: str = Field(
+    name: NonEmptyStr = Field(description="Method name")
+    signature: NonEmptyStr = Field(
         description="Full signature including parameters and return type"
     )
     description: str | None = Field(
@@ -165,7 +176,7 @@ class Method(ExtensibleModel):
 class Constructor(LibspecModel):
     """Constructor specification."""
 
-    signature: str = Field(description="Constructor signature")
+    signature: NonEmptyStr = Field(description="Constructor signature")
     parameters: list[Parameter] = Field(
         default_factory=list, description="Constructor parameters"
     )
@@ -186,9 +197,9 @@ class Constructor(LibspecModel):
 class TypeDef(ExtensibleModel):
     """A type definition (class, protocol, enum, etc.)."""
 
-    name: str = Field(description="Type name")
+    name: PascalCaseName = Field(description="Type name")
     kind: TypeKind = Field(description="Kind of type")
-    module: str = Field(description="Module where this type is defined")
+    module: ModulePath = Field(description="Module where this type is defined")
     generic_params: list[GenericParam] = Field(
         default_factory=list, description="Generic type parameters"
     )
@@ -231,14 +242,6 @@ class TypeDef(ExtensibleModel):
         default=None, description="Code example showing typical usage"
     )
 
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        """N003: Type names must be PascalCase."""
-        if not re.match(r"^[A-Z][a-zA-Z0-9]*$", v):
-            raise ValueError(f"Type name '{v}' must be PascalCase")
-        return v
-
     @model_validator(mode="after")
     def check_type_completeness(self) -> Self:
         """Validate type completeness based on kind."""
@@ -263,8 +266,8 @@ class FunctionDef(ExtensibleModel):
     kind: FunctionKind = Field(
         default=FunctionKind.FUNCTION, description="Kind of callable"
     )
-    module: str = Field(description="Module where this function is defined")
-    signature: str = Field(
+    module: ModulePath = Field(description="Module where this function is defined")
+    signature: NonEmptyStr = Field(
         description="Full signature including parameters and return type"
     )
     generic_params: list[GenericParam] = Field(
@@ -326,6 +329,11 @@ class FunctionDef(ExtensibleModel):
             raise ValueError(f"Function name '{v}' must be snake_case")
         return v
 
+    @field_validator("idempotent", "pure", "deterministic", mode="before")
+    @classmethod
+    def enforce_strict_flags(cls, value: Any, info: ValidationInfo) -> Any:
+        return ensure_strict_bool(value, info, info.field_name or "flag")
+
 
 class Feature(ExtensibleModel):
     """A behavioral specification with test steps."""
@@ -340,7 +348,7 @@ class Feature(ExtensibleModel):
     description: str | None = Field(
         default=None, description="Detailed description (Markdown supported)"
     )
-    steps: conlist(str, min_length=1) = Field(
+    steps: conlist(NonEmptyStr, min_length=1) = Field(
         default_factory=list, description="Verification/test steps (at least one)"
     )
     references: list[str] = Field(
@@ -360,7 +368,7 @@ class Feature(ExtensibleModel):
 class Module(LibspecModel):
     """A Python module or package."""
 
-    path: str = Field(description="Dotted module path (e.g., 'mylib.submodule')")
+    path: ModulePath = Field(description="Dotted module path (e.g., 'mylib.submodule')")
     description: str | None = Field(
         default=None, description="What this module provides"
     )
@@ -382,7 +390,7 @@ class Principle(LibspecModel):
     """A design principle that guides library decisions."""
 
     id: KebabCaseId = Field(description="Unique identifier for this principle")
-    statement: str = Field(description="Brief principle statement")
+    statement: NonEmptyStr = Field(description="Brief principle statement")
     rationale: str | None = Field(
         default=None, description="Why this principle exists"
     )

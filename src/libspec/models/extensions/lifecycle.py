@@ -9,12 +9,31 @@ This extension provides:
 from __future__ import annotations
 
 import re
+from datetime import date as date_type
 from typing import Annotated, Literal, Union
 
-from pydantic import Field, AnyUrl, conlist, field_validator, model_validator
+from pydantic import (
+    AnyUrl,
+    Field,
+    NonNegativeInt,
+    ValidationInfo,
+    conlist,
+    field_validator,
+    model_validator,
+)
 from typing_extensions import Self
 
 from ..base import ExtensionModel
+from ..types import KebabCaseId, NonEmptyStr
+from ..utils import ensure_strict_bool, validate_local_path
+
+
+def _validate_path_or_url(value: str, info: ValidationInfo, field: str) -> str:
+    """Allow URLs; otherwise enforce local path existence in strict mode."""
+
+    if value.startswith(("http://", "https://")):
+        return value
+    return validate_local_path(value, info, field)
 
 # -----------------------------------------------------------------------------
 # Evidence Types (Discriminated Union Members)
@@ -25,7 +44,7 @@ class EvidenceBase(ExtensionModel):
     """Base fields shared by all evidence types."""
 
     description: str | None = None
-    date: str | None = None  # ISO date format
+    date: date_type | None = None  # ISO date format
 
 
 class PrEvidence(EvidenceBase):
@@ -48,11 +67,11 @@ class TestsEvidence(EvidenceBase):
     """Test file/directory evidence."""
 
     type: Literal["tests"]
-    path: str
+    path: NonEmptyStr
 
     @field_validator("path")
     @classmethod
-    def validate_test_path(cls, v: str) -> str:
+    def validate_test_path(cls, v: str, info: ValidationInfo) -> str:
         """L009: Validate test path looks like a test file."""
         # Common test file patterns
         patterns = [
@@ -65,15 +84,20 @@ class TestsEvidence(EvidenceBase):
         ]
         if not any(re.search(p, v) for p in patterns):
             raise ValueError(f"Path does not look like a test file: {v}")
-        return v
+        return validate_local_path(v, info, "path")
 
 
 class DesignDocEvidence(EvidenceBase):
     """Design document evidence."""
 
     type: Literal["design_doc"]
-    reference: str  # URL or path to design doc
+    reference: NonEmptyStr  # URL or path to design doc
     author: str | None = None
+
+    @field_validator("reference")
+    @classmethod
+    def validate_reference(cls, v: str, info: ValidationInfo) -> str:
+        return _validate_path_or_url(v, info, "reference")
 
 
 class DocsEvidence(EvidenceBase):
@@ -95,43 +119,67 @@ class ApprovalEvidence(EvidenceBase):
     """Approval evidence - requires author."""
 
     type: Literal["approval"]
-    reference: str
-    author: str  # Required for approvals
+    reference: NonEmptyStr
+    author: NonEmptyStr  # Required for approvals
 
 
 class BenchmarkEvidence(EvidenceBase):
     """Benchmark results evidence."""
 
     type: Literal["benchmark"]
-    reference: str
+    reference: NonEmptyStr
     metrics: dict[str, int | float | str] = Field(default_factory=dict)
     author: str | None = None
+
+    @field_validator("reference")
+    @classmethod
+    def validate_reference(cls, v: str, info: ValidationInfo) -> str:
+        return _validate_path_or_url(v, info, "reference")
 
 
 class MigrationGuideEvidence(EvidenceBase):
     """Migration guide evidence."""
 
     type: Literal["migration_guide"]
-    reference: str
+    reference: NonEmptyStr
+
+    @field_validator("reference")
+    @classmethod
+    def validate_reference(cls, v: str, info: ValidationInfo) -> str:
+        return _validate_path_or_url(v, info, "reference")
 
 
 class DeprecationNoticeEvidence(EvidenceBase):
     """Deprecation notice evidence - requires date."""
 
     type: Literal["deprecation_notice"]
-    reference: str
-    date: str  # Required for deprecation notices
+    reference: NonEmptyStr
+    date: date_type  # Required for deprecation notices
 
 
 class CustomEvidence(EvidenceBase):
     """Custom evidence type defined in workflow."""
 
     type: Literal["custom"]
-    type_name: str  # References workflow evidence_types
+    type_name: NonEmptyStr  # References workflow evidence_types
     reference: str | None = None
     url: AnyUrl | None = None
     path: str | None = None
     author: str | None = None
+
+    @field_validator("path")
+    @classmethod
+    def validate_optional_path(cls, v: str | None, info: ValidationInfo) -> str | None:
+        if v is None:
+            return None
+        return validate_local_path(v, info, "path")
+
+    @field_validator("reference")
+    @classmethod
+    def validate_optional_reference(cls, v: str | None, info: ValidationInfo) -> str | None:
+        if v is None:
+            return None
+        return _validate_path_or_url(v, info, "reference")
 
 
 # Discriminated union of all evidence types
@@ -159,27 +207,37 @@ EvidenceSpec = Annotated[
 class GateSpec(ExtensionModel):
     """A gate condition for a state transition."""
 
-    type: str  # Gate type (e.g., 'pr_merged', 'tests_passing')
+    type: NonEmptyStr  # Gate type (e.g., 'pr_merged', 'tests_passing')
     required: bool = True
     description: str | None = None
     validator: str | None = None  # Custom validator function name
+
+    @field_validator("required", mode="before")
+    @classmethod
+    def enforce_required_bool(cls, v: object, info: ValidationInfo) -> object:
+        return ensure_strict_bool(v, info, "required")
 
 
 class DevStateSpec(ExtensionModel):
     """A development lifecycle state."""
 
-    name: str
+    name: NonEmptyStr
     description: str | None = None
     terminal: bool = False
     required_evidence: list[str] = Field(default_factory=list)
-    order: int | None = None  # Maturity order
+    order: NonNegativeInt | None = None  # Maturity order
+
+    @field_validator("terminal", mode="before")
+    @classmethod
+    def enforce_terminal_bool(cls, v: object, info: ValidationInfo) -> object:
+        return ensure_strict_bool(v, info, "terminal")
 
 
 class DevTransitionSpec(ExtensionModel):
     """A valid state transition with optional gates."""
 
-    from_state: str
-    to_state: str
+    from_state: NonEmptyStr
+    to_state: NonEmptyStr
     gates: list[GateSpec] = Field(default_factory=list)
     description: str | None = None
 
@@ -187,7 +245,7 @@ class DevTransitionSpec(ExtensionModel):
 class EvidenceTypeSpec(ExtensionModel):
     """Custom evidence type definition for a workflow."""
 
-    name: str  # snake_case identifier
+    name: NonEmptyStr  # snake_case identifier
     description: str | None = None
     required_fields: list[
         Literal["reference", "url", "path", "author", "date"]
@@ -199,13 +257,18 @@ class EvidenceTypeSpec(ExtensionModel):
 class WorkflowSpec(ExtensionModel):
     """A named workflow defining development lifecycle states and transitions."""
 
-    name: str  # kebab-case identifier
+    name: KebabCaseId  # kebab-case identifier
     description: str | None = None
     states: list[DevStateSpec] = Field(min_length=1)
-    initial_state: str
+    initial_state: NonEmptyStr
     transitions: list[DevTransitionSpec] = Field(default_factory=list)
     allow_skip: bool = False
     evidence_types: list[EvidenceTypeSpec] = Field(default_factory=list)
+
+    @field_validator("allow_skip", mode="before")
+    @classmethod
+    def enforce_allow_skip_bool(cls, v: object, info: ValidationInfo) -> object:
+        return ensure_strict_bool(v, info, "allow_skip")
 
     @model_validator(mode="after")
     def validate_workflow(self) -> Self:
@@ -250,3 +313,8 @@ class LifecycleLibraryFields(ExtensionModel):
 
     workflows: list[WorkflowSpec] = Field(default_factory=list)
     default_workflow: str | None = None
+
+
+# Ensure forward refs for EvidenceSpec are resolved when imported indirectly
+LifecycleFields.model_rebuild()
+LifecycleLibraryFields.model_rebuild()

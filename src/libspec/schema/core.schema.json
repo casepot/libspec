@@ -1,633 +1,1247 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/core.schema.json",
-  "title": "Library Specification Schema",
-  "description": "A schema for documenting library interfaces, architecture, and behavioral specifications.",
-  "type": "object",
-  "required": ["$schema", "library"],
-  "additionalProperties": false,
-  "properties": {
-    "$schema": {
-      "type": "string",
-      "description": "Schema version identifier",
-      "pattern": "^libspec/[0-9]+\\.[0-9]+$"
-    },
-    "extensions": {
-      "type": "array",
-      "description": "List of extensions to apply to this specification",
-      "items": {
-        "type": "string",
-        "enum": [
-          "async", "web", "data", "cli", "orm", "testing", "events", "state", "plugins", "ml",
-          "errors", "perf", "safety", "config", "versioning", "observability", "lifecycle"
-        ]
-      },
-      "uniqueItems": true,
-      "default": []
-    },
-    "library": {
-      "$ref": "#/$defs/Library"
-    }
-  },
-
   "$defs": {
-    "Library": {
-      "type": "object",
-      "description": "Root container for a library specification",
-      "required": ["name", "version"],
+    "Constructor": {
       "additionalProperties": false,
+      "description": "Constructor specification.",
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Package name (lowercase, underscores allowed)",
-          "pattern": "^[a-z][a-z0-9_]*$",
-          "minLength": 1,
-          "maxLength": 100
-        },
-        "version": {
-          "type": "string",
-          "description": "Semantic version string",
-          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+.*$"
-        },
-        "python_requires": {
-          "type": "string",
-          "description": "Python version requirement (e.g., '>=3.10')"
-        },
-        "tagline": {
-          "type": "string",
-          "description": "One-line description of the library",
-          "maxLength": 100
-        },
-        "description": {
-          "type": "string",
-          "description": "Longer description (Markdown supported)"
-        },
-        "repository": {
-          "type": "string",
-          "description": "URL to source repository",
-          "format": "uri"
-        },
-        "documentation": {
-          "type": "string",
-          "description": "URL to documentation",
-          "format": "uri"
-        },
-        "principles": {
-          "type": "array",
-          "description": "Design principles guiding the library",
-          "items": { "$ref": "#/$defs/Principle" }
-        },
-        "modules": {
-          "type": "array",
-          "description": "Package structure and module definitions",
-          "items": { "$ref": "#/$defs/Module" }
-        },
-        "types": {
-          "type": "array",
-          "description": "Type definitions (classes, protocols, enums, etc.)",
-          "items": { "$ref": "#/$defs/TypeDef" }
-        },
-        "functions": {
-          "type": "array",
-          "description": "Top-level function definitions",
-          "items": { "$ref": "#/$defs/FunctionDef" }
-        },
-        "features": {
-          "type": "array",
-          "description": "Behavioral specifications with test steps",
-          "items": { "$ref": "#/$defs/Feature" }
-        }
-      }
-    },
-
-    "Principle": {
-      "type": "object",
-      "description": "A design principle that guides library decisions",
-      "required": ["id", "statement"],
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for this principle",
-          "pattern": "^[a-z][a-z0-9-]*$"
-        },
-        "statement": {
-          "type": "string",
-          "description": "Brief principle statement",
-          "maxLength": 200
-        },
-        "rationale": {
-          "type": "string",
-          "description": "Why this principle exists"
-        },
-        "implications": {
-          "type": "array",
-          "description": "Concrete implications of this principle",
-          "items": { "type": "string" }
-        },
-        "anti_patterns": {
-          "type": "array",
-          "description": "What this principle forbids",
-          "items": { "type": "string" }
-        }
-      }
-    },
-
-    "Module": {
-      "type": "object",
-      "description": "A Python module or package",
-      "required": ["path"],
-      "additionalProperties": false,
-      "properties": {
-        "path": {
-          "type": "string",
-          "description": "Dotted module path (e.g., 'mylib.submodule')"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this module provides"
-        },
-        "exports": {
-          "type": "array",
-          "description": "Public names exported by this module",
-          "items": { "type": "string" }
-        },
-        "depends_on": {
-          "type": "array",
-          "description": "Internal module dependencies",
-          "items": { "type": "string" }
-        },
-        "external_deps": {
-          "type": "array",
-          "description": "External package dependencies",
-          "items": { "type": "string" }
-        },
-        "internal": {
-          "type": "boolean",
-          "description": "Whether this is a private/internal module",
-          "default": false
-        }
-      }
-    },
-
-    "TypeDef": {
-      "type": "object",
-      "description": "A type definition (class, protocol, enum, etc.)",
-      "required": ["name", "kind", "module"],
-      "additionalProperties": true,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Type name"
-        },
-        "kind": {
-          "type": "string",
-          "description": "Kind of type",
-          "enum": ["class", "dataclass", "protocol", "enum", "type_alias", "namedtuple"]
-        },
-        "module": {
-          "type": "string",
-          "description": "Module where this type is defined"
-        },
-        "generic_params": {
-          "type": "array",
-          "description": "Generic type parameters",
-          "items": { "$ref": "#/$defs/GenericParam" }
-        },
-        "bases": {
-          "type": "array",
-          "description": "Base classes or protocols",
-          "items": { "type": "string" }
-        },
-        "docstring": {
-          "type": "string",
-          "description": "What this type represents"
-        },
-        "type_target": {
-          "type": "string",
-          "description": "For type_alias: the aliased type"
-        },
-        "properties": {
-          "type": "array",
-          "description": "Instance properties/attributes",
-          "items": { "$ref": "#/$defs/Property" }
-        },
-        "methods": {
-          "type": "array",
-          "description": "Instance methods",
-          "items": { "$ref": "#/$defs/Method" }
-        },
-        "class_methods": {
-          "type": "array",
-          "description": "Class methods",
-          "items": { "$ref": "#/$defs/Method" }
-        },
-        "static_methods": {
-          "type": "array",
-          "description": "Static methods",
-          "items": { "$ref": "#/$defs/Method" }
-        },
-        "values": {
-          "type": "array",
-          "description": "Enum values (only for kind='enum')",
-          "items": { "$ref": "#/$defs/EnumValue" }
-        },
-        "invariants": {
-          "type": "array",
-          "description": "Statements that are always true for valid instances",
-          "items": { "type": "string" }
-        },
-        "construction": {
-          "$ref": "#/$defs/Constructor",
-          "description": "Constructor specification"
-        },
-        "related": {
-          "type": "array",
-          "description": "Related types or functions (cross-references)",
-          "items": { "type": "string" }
-        },
-        "example": {
-          "type": "string",
-          "description": "Code example showing typical usage"
-        }
-      }
-    },
-
-    "GenericParam": {
-      "type": "object",
-      "description": "A generic type parameter",
-      "required": ["name"],
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Parameter name (e.g., 'T', 'K', 'V')"
-        },
-        "bound": {
-          "type": "string",
-          "description": "Upper bound type constraint"
-        },
-        "variance": {
-          "type": "string",
-          "description": "Variance of the parameter",
-          "enum": ["invariant", "covariant", "contravariant"],
-          "default": "invariant"
-        },
-        "default": {
-          "type": "string",
-          "description": "Default type if not specified (Python 3.12+)"
-        }
-      }
-    },
-
-    "Property": {
-      "type": "object",
-      "description": "An instance property or attribute",
-      "required": ["name", "type"],
-      "additionalProperties": true,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Property name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Property type annotation"
-        },
-        "readonly": {
-          "type": "boolean",
-          "description": "Whether this is a read-only property",
-          "default": false
-        },
-        "default": {
-          "type": "string",
-          "description": "Default value (as a string representation)"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this property represents"
-        }
-      }
-    },
-
-    "Method": {
-      "type": "object",
-      "description": "A method definition",
-      "required": ["name", "signature"],
-      "additionalProperties": true,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Method name"
-        },
-        "signature": {
-          "type": "string",
-          "description": "Full signature including parameters and return type"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this method does"
-        },
         "parameters": {
-          "type": "array",
-          "description": "Detailed parameter specifications",
-          "items": { "$ref": "#/$defs/Parameter" }
-        },
-        "returns": {
-          "$ref": "#/$defs/ReturnSpec",
-          "description": "Return value specification"
-        },
-        "preconditions": {
-          "type": "array",
-          "description": "State requirements before calling this method",
-          "items": { "type": "string" }
-        },
-        "postconditions": {
-          "type": "array",
-          "description": "Guaranteed state after this method completes",
-          "items": { "type": "string" }
+          "description": "Constructor parameters",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "title": "Parameters",
+          "type": "array"
         },
         "raises": {
-          "type": "array",
-          "description": "Exceptions this method may raise",
-          "items": { "$ref": "#/$defs/RaisesClause" }
+          "description": "Exceptions that may be raised during construction",
+          "items": {
+            "$ref": "#/$defs/RaisesClause"
+          },
+          "title": "Raises",
+          "type": "array"
         },
-        "inherited_from": {
-          "type": "string",
-          "description": "Base class this method is inherited from (if any)"
-        }
-      }
-    },
-
-    "Parameter": {
-      "type": "object",
-      "description": "A function or method parameter",
-      "required": ["name", "type"],
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Parameter name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Parameter type annotation"
-        },
-        "default": {
-          "type": "string",
-          "description": "Default value (string 'REQUIRED' means no default)"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this parameter controls"
-        },
-        "kind": {
-          "type": "string",
-          "description": "Parameter kind",
-          "enum": ["positional_only", "positional_or_keyword", "keyword_only", "var_positional", "var_keyword"],
-          "default": "positional_or_keyword"
-        }
-      }
-    },
-
-    "ReturnSpec": {
-      "type": "object",
-      "description": "Return value specification",
-      "required": ["type"],
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Return type annotation"
-        },
-        "description": {
-          "type": "string",
-          "description": "What the return value represents"
-        }
-      }
-    },
-
-    "YieldSpec": {
-      "type": "object",
-      "description": "Yield value specification for generators",
-      "required": ["type"],
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Yielded type annotation"
-        },
-        "description": {
-          "type": "string",
-          "description": "What each yielded value represents"
-        }
-      }
-    },
-
-    "RaisesClause": {
-      "type": "object",
-      "description": "An exception that may be raised",
-      "required": ["type", "when"],
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Exception type name"
-        },
-        "when": {
-          "type": "string",
-          "description": "Condition under which this exception is raised"
-        }
-      }
-    },
-
-    "EnumValue": {
-      "type": "object",
-      "description": "An enum member value",
-      "required": ["name"],
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Enum member name"
-        },
-        "value": {
-          "type": "string",
-          "description": "Enum member value (e.g., 'auto()' or explicit value)"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this enum value represents"
-        }
-      }
-    },
-
-    "Constructor": {
-      "type": "object",
-      "description": "Constructor specification",
-      "additionalProperties": false,
-      "properties": {
         "signature": {
-          "type": "string",
-          "description": "Constructor signature"
-        },
-        "parameters": {
-          "type": "array",
-          "description": "Constructor parameters",
-          "items": { "$ref": "#/$defs/Parameter" }
+          "description": "Constructor signature",
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
         },
         "validates": {
-          "type": "array",
           "description": "Validation performed during construction",
-          "items": { "type": "string" }
-        },
-        "raises": {
-          "type": "array",
-          "description": "Exceptions that may be raised during construction",
-          "items": { "$ref": "#/$defs/RaisesClause" }
+          "items": {
+            "type": "string"
+          },
+          "title": "Validates",
+          "type": "array"
         }
-      }
+      },
+      "required": [
+        "signature"
+      ],
+      "title": "Constructor",
+      "type": "object"
     },
-
-    "FunctionDef": {
-      "type": "object",
-      "description": "A top-level function definition",
-      "required": ["name", "kind", "module", "signature"],
-      "additionalProperties": true,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Function name"
-        },
-        "kind": {
-          "type": "string",
-          "description": "Kind of callable",
-          "enum": ["function", "decorator", "context_manager", "async_context_manager"]
-        },
-        "module": {
-          "type": "string",
-          "description": "Module where this function is defined"
-        },
-        "signature": {
-          "type": "string",
-          "description": "Full signature including parameters and return type"
-        },
-        "generic_params": {
-          "type": "array",
-          "description": "Generic type parameters",
-          "items": { "$ref": "#/$defs/GenericParam" }
-        },
-        "parameters": {
-          "type": "array",
-          "description": "Detailed parameter specifications",
-          "items": { "$ref": "#/$defs/Parameter" }
-        },
-        "returns": {
-          "$ref": "#/$defs/ReturnSpec",
-          "description": "Return value specification"
-        },
-        "yields": {
-          "$ref": "#/$defs/YieldSpec",
-          "description": "Yield value specification (for generators)"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this function does"
-        },
-        "preconditions": {
-          "type": "array",
-          "description": "State requirements before calling",
-          "items": { "type": "string" }
-        },
-        "postconditions": {
-          "type": "array",
-          "description": "Guaranteed state after completion",
-          "items": { "type": "string" }
-        },
-        "invariants": {
-          "type": "array",
-          "description": "Invariants maintained by this function",
-          "items": { "type": "string" }
-        },
-        "raises": {
-          "type": "array",
-          "description": "Exceptions this function may raise",
-          "items": { "$ref": "#/$defs/RaisesClause" }
-        },
-        "idempotent": {
-          "type": "boolean",
-          "description": "Whether calling multiple times has same effect as once"
-        },
-        "pure": {
-          "type": "boolean",
-          "description": "Whether this function has no side effects"
-        },
-        "deterministic": {
-          "type": "boolean",
-          "description": "Whether same inputs always produce same outputs"
-        },
-        "related": {
-          "type": "array",
-          "description": "Related types or functions",
-          "items": { "type": "string" }
-        },
-        "example": {
-          "type": "string",
-          "description": "Code example showing typical usage"
-        }
-      }
-    },
-
-    "Feature": {
-      "type": "object",
-      "description": "A behavioral specification with test steps",
-      "required": ["id", "category", "description"],
+    "EnumValue": {
       "additionalProperties": false,
+      "description": "An enum member value.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for this feature"
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this enum value represents",
+          "title": "Description"
+        },
+        "name": {
+          "description": "Enum member name",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Enum member value (e.g., 'auto()' or explicit value)",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "EnumValue",
+      "type": "object"
+    },
+    "ExtensionName": {
+      "description": "Available extension names.",
+      "enum": [
+        "async",
+        "web",
+        "data",
+        "cli",
+        "orm",
+        "testing",
+        "events",
+        "state",
+        "plugins",
+        "ml",
+        "errors",
+        "perf",
+        "safety",
+        "config",
+        "versioning",
+        "observability",
+        "lifecycle"
+      ],
+      "title": "ExtensionName",
+      "type": "string"
+    },
+    "Feature": {
+      "description": "A behavioral specification with test steps.",
+      "properties": {
+        "breaking_since": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version where this became a breaking change",
+          "title": "Breaking Since"
         },
         "category": {
-          "type": "string",
           "description": "Feature category (SCREAMING_SNAKE_CASE)",
-          "pattern": "^[A-Z][A-Z0-9_]*$"
-        },
-        "summary": {
-          "type": "string",
-          "description": "One-line summary",
-          "maxLength": 100
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$",
+          "title": "Category",
+          "type": "string"
         },
         "description": {
-          "type": "string",
-          "description": "Detailed behavioral description"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Detailed description (Markdown supported)",
+          "title": "Description"
         },
-        "steps": {
-          "type": "array",
-          "description": "Verification/test steps",
-          "items": { "type": "string" }
+        "id": {
+          "description": "Unique identifier for this feature",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
         },
         "references": {
-          "type": "array",
-          "description": "Cross-references to types, methods, or functions",
-          "items": { "type": "string" }
+          "description": "Related types, functions, or features",
+          "items": {
+            "type": "string"
+          },
+          "title": "References",
+          "type": "array"
         },
         "status": {
-          "type": "string",
-          "description": "Implementation status",
-          "enum": ["planned", "implemented", "tested"],
-          "default": "planned"
+          "$ref": "#/$defs/FeatureStatus",
+          "default": "planned",
+          "description": "Implementation status"
         },
-        "breaking_since": {
-          "type": ["string", "null"],
-          "description": "Version where this became a breaking change (null if never)"
+        "steps": {
+          "description": "Verification/test steps (at least one)",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Steps",
+          "type": "array"
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Brief one-line summary",
+          "title": "Summary"
         },
         "v1_planned": {
-          "type": "array",
-          "description": "Features planned for v1 but not in v0",
-          "items": { "type": "string" }
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether planned for v1.0 release",
+          "title": "V1 Planned"
         }
-      }
+      },
+      "required": [
+        "id",
+        "category"
+      ],
+      "title": "Feature",
+      "type": "object"
+    },
+    "FeatureStatus": {
+      "description": "Implementation status of a feature.",
+      "enum": [
+        "planned",
+        "implemented",
+        "tested"
+      ],
+      "title": "FeatureStatus",
+      "type": "string"
+    },
+    "FunctionDef": {
+      "description": "A top-level function definition.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this function does",
+          "title": "Description"
+        },
+        "deterministic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether same inputs always produce same outputs",
+          "title": "Deterministic"
+        },
+        "example": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Code example showing typical usage",
+          "title": "Example"
+        },
+        "generic_params": {
+          "description": "Generic type parameters",
+          "items": {
+            "$ref": "#/$defs/GenericParam"
+          },
+          "title": "Generic Params",
+          "type": "array"
+        },
+        "idempotent": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether calling multiple times has same effect as once",
+          "title": "Idempotent"
+        },
+        "invariants": {
+          "description": "Conditions preserved by this function",
+          "items": {
+            "type": "string"
+          },
+          "title": "Invariants",
+          "type": "array"
+        },
+        "kind": {
+          "$ref": "#/$defs/FunctionKind",
+          "default": "function",
+          "description": "Kind of callable"
+        },
+        "module": {
+          "description": "Module where this function is defined",
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_.]*$",
+          "title": "Module",
+          "type": "string"
+        },
+        "name": {
+          "description": "Function name",
+          "title": "Name",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "Detailed parameter specifications",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "title": "Parameters",
+          "type": "array"
+        },
+        "postconditions": {
+          "description": "Guaranteed state after this function completes",
+          "items": {
+            "type": "string"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "preconditions": {
+          "description": "State requirements before calling this function",
+          "items": {
+            "type": "string"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "pure": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether function has no side effects",
+          "title": "Pure"
+        },
+        "raises": {
+          "description": "Exceptions this function may raise",
+          "items": {
+            "$ref": "#/$defs/RaisesClause"
+          },
+          "title": "Raises",
+          "type": "array"
+        },
+        "related": {
+          "description": "Related types or functions (cross-references)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Related",
+          "type": "array"
+        },
+        "returns": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReturnSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Return value specification"
+        },
+        "signature": {
+          "description": "Full signature including parameters and return type",
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        },
+        "yields": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/YieldSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Yield value specification for generators"
+        }
+      },
+      "required": [
+        "name",
+        "module",
+        "signature"
+      ],
+      "title": "FunctionDef",
+      "type": "object"
+    },
+    "FunctionKind": {
+      "description": "Kind of function definition.",
+      "enum": [
+        "function",
+        "decorator",
+        "context_manager",
+        "async_context_manager"
+      ],
+      "title": "FunctionKind",
+      "type": "string"
+    },
+    "GenericParam": {
+      "additionalProperties": false,
+      "description": "A generic type parameter.",
+      "properties": {
+        "bound": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Upper bound type constraint",
+          "title": "Bound"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default type if not specified (Python 3.12+)",
+          "title": "Default"
+        },
+        "name": {
+          "description": "Parameter name (e.g., 'T', 'K', 'V')",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "variance": {
+          "$ref": "#/$defs/GenericVariance",
+          "default": "invariant",
+          "description": "Variance of the parameter"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "GenericParam",
+      "type": "object"
+    },
+    "GenericVariance": {
+      "description": "Variance of a generic type parameter.",
+      "enum": [
+        "invariant",
+        "covariant",
+        "contravariant"
+      ],
+      "title": "GenericVariance",
+      "type": "string"
+    },
+    "Library": {
+      "description": "Root container for a library specification.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Longer description (Markdown supported)",
+          "title": "Description"
+        },
+        "documentation": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "URL to documentation",
+          "title": "Documentation"
+        },
+        "features": {
+          "description": "Behavioral specifications with test steps",
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Features",
+          "type": "array"
+        },
+        "functions": {
+          "description": "Top-level function definitions",
+          "items": {
+            "$ref": "#/$defs/FunctionDef"
+          },
+          "title": "Functions",
+          "type": "array"
+        },
+        "modules": {
+          "description": "Package structure and module definitions",
+          "items": {
+            "$ref": "#/$defs/Module"
+          },
+          "title": "Modules",
+          "type": "array"
+        },
+        "name": {
+          "description": "Package name (lowercase, underscores allowed)",
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "principles": {
+          "description": "Design principles guiding the library",
+          "items": {
+            "$ref": "#/$defs/Principle"
+          },
+          "title": "Principles",
+          "type": "array"
+        },
+        "python_requires": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version requirement (e.g., '>=3.10')",
+          "title": "Python Requires"
+        },
+        "repository": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "URL to source repository",
+          "title": "Repository"
+        },
+        "tagline": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "One-line description of the library",
+          "title": "Tagline"
+        },
+        "types": {
+          "description": "Type definitions (classes, protocols, enums, etc.)",
+          "items": {
+            "$ref": "#/$defs/TypeDef"
+          },
+          "title": "Types",
+          "type": "array"
+        },
+        "version": {
+          "description": "Semantic version string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+.*$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "Library",
+      "type": "object"
+    },
+    "Method": {
+      "description": "A method definition.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this method does",
+          "title": "Description"
+        },
+        "inherited_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Base class this method is inherited from (if any)",
+          "title": "Inherited From"
+        },
+        "name": {
+          "description": "Method name",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "Detailed parameter specifications",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "title": "Parameters",
+          "type": "array"
+        },
+        "postconditions": {
+          "description": "Guaranteed state after this method completes",
+          "items": {
+            "type": "string"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "preconditions": {
+          "description": "State requirements before calling this method",
+          "items": {
+            "type": "string"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "raises": {
+          "description": "Exceptions this method may raise",
+          "items": {
+            "$ref": "#/$defs/RaisesClause"
+          },
+          "title": "Raises",
+          "type": "array"
+        },
+        "returns": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReturnSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Return value specification"
+        },
+        "signature": {
+          "description": "Full signature including parameters and return type",
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "signature"
+      ],
+      "title": "Method",
+      "type": "object"
+    },
+    "Module": {
+      "additionalProperties": false,
+      "description": "A Python module or package.",
+      "properties": {
+        "depends_on": {
+          "description": "Internal module dependencies",
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this module provides",
+          "title": "Description"
+        },
+        "exports": {
+          "description": "Public names exported by this module",
+          "items": {
+            "type": "string"
+          },
+          "title": "Exports",
+          "type": "array"
+        },
+        "external_deps": {
+          "description": "External package dependencies",
+          "items": {
+            "type": "string"
+          },
+          "title": "External Deps",
+          "type": "array"
+        },
+        "internal": {
+          "default": false,
+          "description": "Whether this is a private/internal module",
+          "title": "Internal",
+          "type": "boolean"
+        },
+        "path": {
+          "description": "Dotted module path (e.g., 'mylib.submodule')",
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_.]*$",
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "Module",
+      "type": "object"
+    },
+    "Parameter": {
+      "additionalProperties": false,
+      "description": "A function or method parameter.",
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value (string 'REQUIRED' means no default)",
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this parameter controls",
+          "title": "Description"
+        },
+        "kind": {
+          "$ref": "#/$defs/ParameterKind",
+          "default": "positional_or_keyword",
+          "description": "Parameter kind"
+        },
+        "name": {
+          "description": "Parameter name",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parameter type annotation",
+          "title": "Type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Parameter",
+      "type": "object"
+    },
+    "ParameterKind": {
+      "description": "Kind of function/method parameter.",
+      "enum": [
+        "positional_only",
+        "positional_or_keyword",
+        "keyword_only",
+        "var_positional",
+        "var_keyword"
+      ],
+      "title": "ParameterKind",
+      "type": "string"
+    },
+    "Principle": {
+      "additionalProperties": false,
+      "description": "A design principle that guides library decisions.",
+      "properties": {
+        "anti_patterns": {
+          "description": "What this principle forbids",
+          "items": {
+            "type": "string"
+          },
+          "title": "Anti Patterns",
+          "type": "array"
+        },
+        "id": {
+          "description": "Unique identifier for this principle",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "implications": {
+          "description": "Concrete implications of this principle",
+          "items": {
+            "type": "string"
+          },
+          "title": "Implications",
+          "type": "array"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why this principle exists",
+          "title": "Rationale"
+        },
+        "statement": {
+          "description": "Brief principle statement",
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "statement"
+      ],
+      "title": "Principle",
+      "type": "object"
+    },
+    "Property": {
+      "description": "An instance property or attribute.",
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value (as a string representation)",
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this property represents",
+          "title": "Description"
+        },
+        "name": {
+          "description": "Property name",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "readonly": {
+          "default": false,
+          "description": "Whether this is a read-only property",
+          "title": "Readonly",
+          "type": "boolean"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Property type annotation",
+          "title": "Type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Property",
+      "type": "object"
+    },
+    "RaisesClause": {
+      "additionalProperties": false,
+      "description": "An exception that may be raised.",
+      "properties": {
+        "type": {
+          "description": "Exception type name",
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        },
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Condition under which this exception is raised",
+          "title": "When"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "RaisesClause",
+      "type": "object"
+    },
+    "ReturnSpec": {
+      "additionalProperties": false,
+      "description": "Return value specification.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What the return value represents",
+          "title": "Description"
+        },
+        "type": {
+          "description": "Return type annotation",
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ReturnSpec",
+      "type": "object"
+    },
+    "TypeDef": {
+      "description": "A type definition (class, protocol, enum, etc.).",
+      "properties": {
+        "bases": {
+          "description": "Base classes or protocols",
+          "items": {
+            "type": "string"
+          },
+          "title": "Bases",
+          "type": "array"
+        },
+        "class_methods": {
+          "description": "Class methods",
+          "items": {
+            "$ref": "#/$defs/Method"
+          },
+          "title": "Class Methods",
+          "type": "array"
+        },
+        "construction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Constructor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Constructor specification"
+        },
+        "docstring": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this type represents",
+          "title": "Docstring"
+        },
+        "example": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Code example showing typical usage",
+          "title": "Example"
+        },
+        "generic_params": {
+          "description": "Generic type parameters",
+          "items": {
+            "$ref": "#/$defs/GenericParam"
+          },
+          "title": "Generic Params",
+          "type": "array"
+        },
+        "invariants": {
+          "description": "Statements that are always true for valid instances",
+          "items": {
+            "type": "string"
+          },
+          "title": "Invariants",
+          "type": "array"
+        },
+        "kind": {
+          "$ref": "#/$defs/TypeKind",
+          "description": "Kind of type"
+        },
+        "methods": {
+          "description": "Instance methods",
+          "items": {
+            "$ref": "#/$defs/Method"
+          },
+          "title": "Methods",
+          "type": "array"
+        },
+        "module": {
+          "description": "Module where this type is defined",
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_.]*$",
+          "title": "Module",
+          "type": "string"
+        },
+        "name": {
+          "description": "Type name",
+          "minLength": 1,
+          "pattern": "^[A-Z][a-zA-Z0-9]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "properties": {
+          "description": "Instance properties/attributes",
+          "items": {
+            "$ref": "#/$defs/Property"
+          },
+          "title": "Properties",
+          "type": "array"
+        },
+        "related": {
+          "description": "Related types or functions (cross-references)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Related",
+          "type": "array"
+        },
+        "static_methods": {
+          "description": "Static methods",
+          "items": {
+            "$ref": "#/$defs/Method"
+          },
+          "title": "Static Methods",
+          "type": "array"
+        },
+        "type_target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For type_alias: the aliased type",
+          "title": "Type Target"
+        },
+        "values": {
+          "description": "Enum values (only for kind='enum')",
+          "items": {
+            "$ref": "#/$defs/EnumValue"
+          },
+          "title": "Values",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "module"
+      ],
+      "title": "TypeDef",
+      "type": "object"
+    },
+    "TypeKind": {
+      "description": "Kind of type definition.",
+      "enum": [
+        "class",
+        "dataclass",
+        "protocol",
+        "enum",
+        "type_alias",
+        "namedtuple"
+      ],
+      "title": "TypeKind",
+      "type": "string"
+    },
+    "YieldSpec": {
+      "additionalProperties": false,
+      "description": "Generator yield specification.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What each yielded value represents",
+          "title": "Description"
+        },
+        "type": {
+          "description": "Yielded type annotation",
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "YieldSpec",
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/core.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Schema for library specification documents",
+  "properties": {
+    "$schema": {
+      "anyOf": [
+        {
+          "pattern": "^libspec/[0-9]+\\.[0-9]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Schema version identifier",
+      "title": "$Schema"
+    },
+    "extensions": {
+      "description": "List of extensions to apply to this specification",
+      "items": {
+        "$ref": "#/$defs/ExtensionName"
+      },
+      "title": "Extensions",
+      "type": "array"
+    },
+    "library": {
+      "$ref": "#/$defs/Library",
+      "description": "The library specification"
+    }
+  },
+  "required": [
+    "library"
+  ],
+  "title": "LibSpec Core Schema",
+  "type": "object"
 }

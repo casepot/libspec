@@ -49,7 +49,7 @@ class LintRunner:
             rule_classes = RuleRegistry.get_all_rules()
 
         # Run each enabled rule
-        config_dict = self.config.model_dump()
+        config_dict = self.config.model_dump(exclude_none=True)
         for rule_class in rule_classes:
             # Check if rule is enabled
             if not self.config.is_rule_enabled(rule_class.id, rule_class.category):

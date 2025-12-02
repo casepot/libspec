@@ -103,13 +103,13 @@ def info(ctx: Context, counts_only: bool) -> None:
     if ctx.text:
         output_text_info(
             spec,
-            counts.model_dump(),
-            coverage.model_dump(),
+            counts.model_dump(exclude_none=True),
+            coverage.model_dump(exclude_none=True),
         )
         return
 
     if counts_only:
-        envelope = make_envelope("info", spec, counts.model_dump())
+        envelope = make_envelope("info", spec, counts.model_dump(exclude_none=True))
     else:
         result = InfoResult(
             library=LibraryInfo(
@@ -124,7 +124,7 @@ def info(ctx: Context, counts_only: bool) -> None:
             counts=counts,
             coverage=coverage,
         )
-        envelope = make_envelope("info", spec, result.model_dump())
+        envelope = make_envelope("info", spec, result.model_dump(exclude_none=True))
 
     output_json(envelope, ctx.no_meta)
 
@@ -191,7 +191,7 @@ def types(
         )
 
     if ctx.text:
-        output_text_types([r.model_dump() for r in result])
+        output_text_types([r.model_dump(exclude_none=True) for r in result])
         return
 
     # Compute metadata
@@ -202,7 +202,7 @@ def types(
     envelope = make_envelope(
         "types",
         spec,
-        [r.model_dump() for r in result],
+        [r.model_dump(exclude_none=True) for r in result],
         meta={"count": len(result), "kinds": kinds},
     )
     output_json(envelope, ctx.no_meta)
@@ -254,7 +254,7 @@ def functions(
         )
 
     if ctx.text:
-        output_text_functions([r.model_dump() for r in result])
+        output_text_functions([r.model_dump(exclude_none=True) for r in result])
         return
 
     kinds: dict[str, int] = {}
@@ -264,7 +264,7 @@ def functions(
     envelope = make_envelope(
         "functions",
         spec,
-        [r.model_dump() for r in result],
+        [r.model_dump(exclude_none=True) for r in result],
         meta={"count": len(result), "kinds": kinds},
     )
     output_json(envelope, ctx.no_meta)
@@ -324,7 +324,7 @@ def features(
         )
 
     if ctx.text:
-        output_text_features([r.model_dump() for r in result])
+        output_text_features([r.model_dump(exclude_none=True) for r in result])
         return
 
     by_status: dict[str, int] = {}
@@ -334,7 +334,7 @@ def features(
     envelope = make_envelope(
         "features",
         spec,
-        [r.model_dump() for r in result],
+        [r.model_dump(exclude_none=True) for r in result],
         meta={"count": len(result), "by_status": by_status},
     )
     output_json(envelope, ctx.no_meta)
@@ -369,13 +369,13 @@ def modules(ctx: Context, tree: bool, internal: bool) -> None:
         )
 
     if ctx.text:
-        output_text_modules([r.model_dump() for r in result])
+        output_text_modules([r.model_dump(exclude_none=True) for r in result])
         return
 
     envelope = make_envelope(
         "modules",
         spec,
-        [r.model_dump() for r in result],
+        [r.model_dump(exclude_none=True) for r in result],
         meta={"count": len(result)},
     )
     output_json(envelope, ctx.no_meta)
@@ -409,14 +409,14 @@ def principles(ctx: Context, with_implications: bool) -> None:
         )
 
     if ctx.text:
-        output_text_principles([r.model_dump() for r in result])
+        output_text_principles([r.model_dump(exclude_none=True) for r in result])
         return
 
     # If with_implications, include full data as dicts
     if with_implications:
-        data = [p.model_dump() for p in spec.principles]
+        data = [p.model_dump(exclude_none=True) for p in spec.principles]
     else:
-        data = [r.model_dump() for r in result]
+        data = [r.model_dump(exclude_none=True) for r in result]
 
     envelope = make_envelope(
         "principles",

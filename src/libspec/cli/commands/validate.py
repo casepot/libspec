@@ -143,14 +143,14 @@ def lint(
         by_rule[issue.rule] = by_rule.get(issue.rule, 0) + 1
 
     if ctx.text:
-        output_text_lint([i.model_dump() for i in issues], passed)
+        output_text_lint([i.model_dump(exclude_none=True) for i in issues], passed)
     else:
         envelope = make_envelope(
             "lint",
             spec,
             {
                 "passed": passed,
-                "issues": [i.model_dump() for i in issues],
+                "issues": [i.model_dump(exclude_none=True) for i in issues],
             },
             meta={
                 "total": len(issues),

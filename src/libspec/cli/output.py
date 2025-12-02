@@ -28,7 +28,7 @@ def make_envelope(
 
 def output_json(envelope: OutputEnvelope[Any], no_meta: bool = False) -> None:
     """Output envelope as JSON."""
-    data = envelope.model_dump(mode="json")
+    data = envelope.model_dump(mode="json", exclude_none=True)
     if no_meta:
         data.pop("meta", None)
     print(json.dumps(data, indent=2))

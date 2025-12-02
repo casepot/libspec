@@ -3,40 +3,58 @@
 from enum import Enum
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, StringConstraints
 
 # -----------------------------------------------------------------------------
 # Constrained String Types
 # -----------------------------------------------------------------------------
 
 # Identifier patterns matching lint rule definitions exactly
-KebabCaseId = Annotated[str, Field(pattern=r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$", min_length=1)]
+KebabCaseId = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$", min_length=1),
+]
 """Kebab-case identifier (e.g., 'my-feature-id'). Matches N001/N002 lint rules."""
 
-SnakeCaseId = Annotated[str, Field(pattern=r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$", min_length=1)]
+SnakeCaseId = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$", min_length=1),
+]
 """Snake_case identifier (e.g., 'my_function_name'). Matches N004 lint rule."""
 
-PascalCaseName = Annotated[str, Field(pattern=r"^[A-Z][a-zA-Z0-9]*$", min_length=1)]
+PascalCaseName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[A-Z][a-zA-Z0-9]*$", min_length=1),
+]
 """PascalCase name (e.g., 'MyClassName'). Matches N003 lint rule."""
 
-ScreamingSnakeCase = Annotated[str, Field(pattern=r"^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$", min_length=1)]
+ScreamingSnakeCase = Annotated[
+    str,
+    StringConstraints(pattern=r"^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$", min_length=1),
+]
 """SCREAMING_SNAKE_CASE (e.g., 'FEATURE_CATEGORY'). Matches N006 lint rule."""
 
 # Library metadata patterns
 LibraryName = Annotated[
-    str, Field(pattern=r"^[a-z][a-z0-9_]*$", min_length=1, max_length=100)
+    str, StringConstraints(pattern=r"^[a-z][a-z0-9_]*$", min_length=1, max_length=100)
 ]
 """Library name pattern (lowercase with underscores)."""
 
-SemVer = Annotated[str, Field(pattern=r"^[0-9]+\.[0-9]+\.[0-9]+.*$")]
+SemVer = Annotated[str, StringConstraints(pattern=r"^[0-9]+\.[0-9]+\.[0-9]+.*$")]
 """Semantic version string (e.g., '1.2.3' or '1.2.3-beta.1')."""
 
-SchemaVersion = Annotated[str, Field(pattern=r"^libspec/[0-9]+\.[0-9]+$")]
+SchemaVersion = Annotated[str, StringConstraints(pattern=r"^libspec/[0-9]+\.[0-9]+$")]
 """Schema version string (e.g., 'libspec/1.0')."""
 
 # Module path pattern
-ModulePath = Annotated[str, Field(pattern=r"^[a-z_][a-z0-9_.]*$", min_length=1)]
+ModulePath = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z_][a-z0-9_.]*$", min_length=1),
+]
 """Python module path (e.g., 'mypackage.submodule')."""
+
+NonEmptyStr = Annotated[str, StringConstraints(min_length=1)]
+"""Generic non-empty string for required text fields."""
 
 
 # -----------------------------------------------------------------------------
