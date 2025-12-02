@@ -173,10 +173,11 @@ class InvalidStatusTransition(LintRule):
             # We can't actually verify this programmatically, but we can
             # warn if status is "tested" but there are no steps
             if status == "tested" and not steps:
+                fid = feature.get("id", "?")
                 yield LintIssue(
                     rule=self.id,
                     severity=severity,
-                    message=f"Feature '{feature.get('id', '?')}' marked as tested but has no verification steps",
+                    message=f"Feature '{fid}' marked tested but has no steps",
                     path=f"$.library.features[{i}]",
-                    ref=f"#/features/{feature.get('id')}",
+                    ref=f"#/features/{fid}",
                 )

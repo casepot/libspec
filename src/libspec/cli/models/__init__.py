@@ -1,48 +1,48 @@
 """Pydantic models for CLI output and internal representation."""
 
-from libspec.cli.models.output import (
-    OutputEnvelope,
-    SpecContext,
-    TypeSummary,
-    FunctionSummary,
-    FeatureSummary,
-    ModuleSummary,
-    PrincipleSummary,
-    InfoResult,
-    CountsResult,
-    CoverageResult,
-    LibraryInfo,
-)
-from libspec.cli.models.lint import (
-    Severity,
-    LintIssue,
-    LintResult,
-    LintMeta,
-)
 from libspec.cli.models.lifecycle import (
-    # Evidence types
-    EvidenceSpec,
-    PrEvidence,
-    TestsEvidence,
-    DesignDocEvidence,
-    DocsEvidence,
     ApprovalEvidence,
     BenchmarkEvidence,
-    MigrationGuideEvidence,
-    DeprecationNoticeEvidence,
+    BlockedItem,
     CustomEvidence,
-    # Workflow types
-    WorkflowSpec,
+    DeprecationNoticeEvidence,
+    DesignDocEvidence,
     DevStateSpec,
     DevTransitionSpec,
-    GateSpec,
+    DocsEvidence,
+    # Evidence types
+    EvidenceSpec,
     EvidenceTypeSpec,
+    GateSpec,
+    GateStatus,
+    LifecycleEntity,
     # Entity types
     LifecycleFields,
     LifecycleLibraryFields,
-    LifecycleEntity,
-    BlockedItem,
-    GateStatus,
+    MigrationGuideEvidence,
+    PrEvidence,
+    TestsEvidence,
+    # Workflow types
+    WorkflowSpec,
+)
+from libspec.cli.models.lint import (
+    LintIssue,
+    LintMeta,
+    LintResult,
+    Severity,
+)
+from libspec.cli.models.output import (
+    CountsResult,
+    CoverageResult,
+    FeatureSummary,
+    FunctionSummary,
+    InfoResult,
+    LibraryInfo,
+    ModuleSummary,
+    OutputEnvelope,
+    PrincipleSummary,
+    SpecContext,
+    TypeSummary,
 )
 
 __all__ = [

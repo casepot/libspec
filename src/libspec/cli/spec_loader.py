@@ -1,75 +1,113 @@
 """Spec file loading and caching."""
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, ValidationError
+
+from libspec.models import (
+    ExtensionName,
+    Feature,
+    FunctionDef,
+    Library,
+    LibspecSpec,
+    Module,
+    Principle,
+    TypeDef,
+)
 
 
 class LoadedSpec(BaseModel):
-    """A loaded and parsed libspec file."""
+    """A loaded and parsed libspec file.
+
+    This class wraps a LibspecSpec model with convenience accessors
+    and path information for CLI usage.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     path: Path
-    data: dict[str, Any]
+    spec: LibspecSpec
 
-    class Config:
-        arbitrary_types_allowed = True
+    # Keep raw data for backward compatibility with query commands
+    _raw_data: dict[str, Any] | None = None
 
     @property
-    def library(self) -> dict[str, Any]:
+    def data(self) -> dict[str, Any]:
+        """Get the raw spec data (for backward compatibility with query commands)."""
+        if self._raw_data is not None:
+            return self._raw_data
+        # Serialize spec back to dict if raw data wasn't saved
+        return self.spec.model_dump(by_alias=True, exclude_none=True)
+
+    @property
+    def library(self) -> Library:
         """Get the library object."""
-        return self.data.get("library", {})
+        return self.spec.library
 
     @property
     def name(self) -> str:
         """Get library name."""
-        return self.library.get("name", "unknown")
+        return self.spec.library.name
 
     @property
     def version(self) -> str:
         """Get library version."""
-        return self.library.get("version", "0.0.0")
+        return self.spec.library.version
 
     @property
     def extensions(self) -> list[str]:
         """Get enabled extensions."""
-        return self.data.get("extensions", [])
+        return [e.value if isinstance(e, ExtensionName) else e for e in self.spec.extensions]
 
     @property
-    def types(self) -> list[dict[str, Any]]:
+    def types(self) -> list[TypeDef]:
         """Get type definitions."""
-        return self.library.get("types", [])
+        return self.spec.library.types
 
     @property
-    def functions(self) -> list[dict[str, Any]]:
+    def functions(self) -> list[FunctionDef]:
         """Get function definitions."""
-        return self.library.get("functions", [])
+        return self.spec.library.functions
 
     @property
-    def features(self) -> list[dict[str, Any]]:
+    def features(self) -> list[Feature]:
         """Get feature specifications."""
-        return self.library.get("features", [])
+        return self.spec.library.features
 
     @property
-    def modules(self) -> list[dict[str, Any]]:
+    def modules(self) -> list[Module]:
         """Get module definitions."""
-        return self.library.get("modules", [])
+        return self.spec.library.modules
 
     @property
-    def principles(self) -> list[dict[str, Any]]:
+    def principles(self) -> list[Principle]:
         """Get design principles."""
-        return self.library.get("principles", [])
+        return self.spec.library.principles
 
     @property
     def workflows(self) -> list[dict[str, Any]]:
-        """Get workflow definitions (requires lifecycle extension)."""
-        return self.library.get("workflows", [])
+        """Get workflow definitions (requires lifecycle extension).
+
+        Returns raw dicts for backward compatibility with lifecycle command.
+        """
+        if self._raw_data is not None:
+            library = self._raw_data.get("library", {})
+            workflows: list[dict[str, Any]] = library.get("workflows", [])
+            return workflows
+        return []
 
     @property
     def default_workflow(self) -> str | None:
         """Get default workflow name."""
-        return self.library.get("default_workflow")
+        if self._raw_data is not None:
+            library = self._raw_data.get("library", {})
+            default: str | None = library.get("default_workflow")
+            return default
+        return None
 
 
 class SpecLoadError(Exception):
@@ -78,12 +116,13 @@ class SpecLoadError(Exception):
     pass
 
 
-def load_spec(path: Path) -> LoadedSpec:
+def load_spec(path: Path, *, validate: bool = True) -> LoadedSpec:
     """
     Load a libspec file from disk.
 
     Args:
         path: Path to the libspec.json file
+        validate: If True, validate using Pydantic models. If False, do minimal validation.
 
     Returns:
         LoadedSpec with parsed data
@@ -108,4 +147,22 @@ def load_spec(path: Path) -> LoadedSpec:
     if "library" not in data:
         raise SpecLoadError("Spec must have a 'library' field")
 
-    return LoadedSpec(path=path, data=data)
+    if validate:
+        try:
+            spec = LibspecSpec.model_validate(data)
+        except ValidationError as e:
+            # Format validation errors nicely
+            errors = []
+            for err in e.errors():
+                loc = ".".join(str(x) for x in err["loc"])
+                msg = err["msg"]
+                errors.append(f"  {loc}: {msg}")
+            raise SpecLoadError("Invalid spec:\n" + "\n".join(errors))
+    else:
+        # Minimal validation - just wrap the data
+        spec = LibspecSpec.model_construct(**data)
+
+    loaded = LoadedSpec(path=path, spec=spec)
+    # Store raw data for backward compatibility
+    object.__setattr__(loaded, "_raw_data", data)
+    return loaded

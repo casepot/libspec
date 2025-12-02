@@ -1,8 +1,6 @@
 """Output formatting for CLI commands."""
 
 import json
-import sys
-from datetime import datetime, timezone
 from typing import Any
 
 from libspec.cli.models.output import OutputEnvelope, SpecContext
@@ -97,7 +95,7 @@ def output_text_info(
 ) -> None:
     """Output info in text format."""
     lib = spec.library
-    print(f"{lib.get('name', '?')} {lib.get('version', '?')}")
+    print(f"{lib.name} {lib.version}")
     if spec.extensions:
         print(f"ext: {','.join(spec.extensions)}")
     print(

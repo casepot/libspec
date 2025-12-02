@@ -1,7 +1,6 @@
 """Configuration loading from pyproject.toml."""
 
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel, Field
 

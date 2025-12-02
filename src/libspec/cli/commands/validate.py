@@ -1,18 +1,16 @@
 """Validate commands: validate, lint."""
 
 import sys
-from pathlib import Path
-from typing import Any
 
 import click
 
 from libspec.cli.app import Context, pass_context
-from libspec.cli.lint.base import Severity
-from libspec.cli.lint.runner import LintRunner
-from libspec.cli.output import make_envelope, output_json, output_text_lint, output_text_validate
 
 # Import rules to trigger registration
 from libspec.cli.lint import rules  # noqa: F401
+from libspec.cli.lint.base import Severity
+from libspec.cli.lint.runner import LintRunner
+from libspec.cli.output import make_envelope, output_json, output_text_lint, output_text_validate
 
 
 @click.command()
@@ -54,7 +52,9 @@ def validate(ctx: Context, strict: bool) -> None:
 
 
 @click.command()
-@click.option("--rule", "-r", multiple=True, help="Run specific rule(s) only (e.g., -r S001 -r N001)")
+@click.option(
+    "--rule", "-r", multiple=True, help="Run specific rule(s) only (e.g., -r S001 -r N001)"
+)
 @click.option(
     "--severity",
     "-s",
@@ -104,7 +104,9 @@ def lint(
         if ctx.text:
             for r in rules:
                 enabled = "+" if r["enabled"] else "-"
-                click.echo(f"{enabled} {r['id']} {r['category']} {r['default_severity']} {r['name']}")
+                click.echo(
+                    f"{enabled} {r['id']} {r['category']} {r['default_severity']} {r['name']}"
+                )
             click.echo("---")
             click.echo(f"{len(rules)} rules")
         else:

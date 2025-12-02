@@ -49,12 +49,13 @@ class MissingMethodDescription(LintRule):
             type_name = type_def.get("name", "unknown")
             for j, method in enumerate(type_def.get("methods", [])):
                 if not method.get("description"):
+                    mname = method.get("name", "?")
                     yield LintIssue(
                         rule=self.id,
                         severity=severity,
-                        message=f"Method '{type_name}.{method.get('name', '?')}' missing description",
+                        message=f"Method '{type_name}.{mname}' missing description",
                         path=f"$.library.types[{i}].methods[{j}]",
-                        ref=f"#/types/{type_name}/methods/{method.get('name')}",
+                        ref=f"#/types/{type_name}/methods/{mname}",
                     )
 
 

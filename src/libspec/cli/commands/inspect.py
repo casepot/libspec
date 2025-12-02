@@ -1,7 +1,6 @@
 """Inspect commands: info, types, functions, features, modules, principles."""
 
 import re
-from typing import Any
 
 import click
 
@@ -27,9 +26,11 @@ from libspec.cli.output import (
     output_text_principles,
     output_text_types,
 )
+from libspec.cli.spec_loader import LoadedSpec
+from libspec.models import Feature, FunctionDef, TypeDef
 
 
-def compute_counts(spec: Any) -> CountsResult:
+def compute_counts(spec: LoadedSpec) -> CountsResult:
     """Compute entity counts from a spec."""
     return CountsResult(
         types=len(spec.types),
@@ -40,27 +41,27 @@ def compute_counts(spec: Any) -> CountsResult:
     )
 
 
-def compute_coverage(spec: Any) -> CoverageResult:
+def compute_coverage(spec: LoadedSpec) -> CoverageResult:
     """Compute coverage statistics from a spec."""
     features = spec.features
     types = spec.types
 
     # Feature coverage
     features_total = len(features)
-    features_planned = sum(1 for f in features if f.get("status") == "planned")
-    features_implemented = sum(1 for f in features if f.get("status") == "implemented")
-    features_tested = sum(1 for f in features if f.get("status") == "tested")
+    features_planned = sum(1 for f in features if f.status == "planned")
+    features_implemented = sum(1 for f in features if f.status == "implemented")
+    features_tested = sum(1 for f in features if f.status == "tested")
 
     # Doc coverage
     types_total = len(types)
-    types_with_docs = sum(1 for t in types if t.get("docstring"))
+    types_with_docs = sum(1 for t in types if t.docstring)
 
     methods_total = 0
     methods_with_docs = 0
     for t in types:
-        for m in t.get("methods", []):
+        for m in t.methods:
             methods_total += 1
-            if m.get("description"):
+            if m.description:
                 methods_with_docs += 1
 
     return CoverageResult(
@@ -112,12 +113,12 @@ def info(ctx: Context, counts_only: bool) -> None:
     else:
         result = InfoResult(
             library=LibraryInfo(
-                name=lib.get("name", "unknown"),
-                version=lib.get("version", "0.0.0"),
-                tagline=lib.get("tagline"),
-                python_requires=lib.get("python_requires"),
-                repository=lib.get("repository"),
-                documentation=lib.get("documentation"),
+                name=lib.name,
+                version=lib.version,
+                tagline=lib.tagline,
+                python_requires=lib.python_requires,
+                repository=lib.repository,
+                documentation=lib.documentation,
             ),
             extensions=spec.extensions,
             counts=counts,
@@ -126,6 +127,13 @@ def info(ctx: Context, counts_only: bool) -> None:
         envelope = make_envelope("info", spec, result.model_dump())
 
     output_json(envelope, ctx.no_meta)
+
+
+def _get_lifecycle_state(entity: TypeDef | FunctionDef | Feature) -> str | None:
+    """Get lifecycle_state from an entity (extension field)."""
+    # Lifecycle state is from the lifecycle extension, accessed via raw data
+    # For now, return None as we'd need extension field support
+    return getattr(entity, "lifecycle_state", None)
 
 
 @click.command()
@@ -161,24 +169,24 @@ def types(
 
     for t in spec.types:
         # Apply filters
-        if kind and t.get("kind") != kind:
+        if kind and t.kind != kind:
             continue
-        if module and not re.search(module, t.get("module", "")):
+        if module and not re.search(module, t.module):
             continue
-        if undocumented and t.get("docstring"):
+        if undocumented and t.docstring:
             continue
-        if lifecycle_state and t.get("lifecycle_state") != lifecycle_state:
+        if lifecycle_state and _get_lifecycle_state(t) != lifecycle_state:
             continue
 
         result.append(
             TypeSummary(
-                name=t.get("name", "?"),
-                kind=t.get("kind", "?"),
-                module=t.get("module", "?"),
-                methods_count=len(t.get("methods", [])),
-                properties_count=len(t.get("properties", [])),
-                has_docstring=bool(t.get("docstring")),
-                ref=f"#/types/{t.get('name')}",
+                name=t.name,
+                kind=t.kind,
+                module=t.module,
+                methods_count=len(t.methods),
+                properties_count=len(t.properties),
+                has_docstring=bool(t.docstring),
+                ref=f"#/types/{t.name}",
             )
         )
 
@@ -187,7 +195,7 @@ def types(
         return
 
     # Compute metadata
-    kinds = {}
+    kinds: dict[str, int] = {}
     for r in result:
         kinds[r.kind] = kinds.get(r.kind, 0) + 1
 
@@ -201,7 +209,9 @@ def types(
 
 
 @click.command()
-@click.option("--kind", "-k", help="Filter: function, decorator, context_manager, async_context_manager")
+@click.option(
+    "--kind", "-k", help="Filter: function, decorator, context_manager, async_context_manager"
+)
 @click.option("--module", "-m", help="Filter by module path (regex pattern)")
 @click.option("--lifecycle-state", help="Filter by lifecycle_state (requires lifecycle extension)")
 @pass_context
@@ -225,21 +235,21 @@ def functions(
     result: list[FunctionSummary] = []
 
     for f in spec.functions:
-        if kind and f.get("kind") != kind:
+        if kind and f.kind != kind:
             continue
-        if module and not re.search(module, f.get("module", "")):
+        if module and not re.search(module, f.module):
             continue
-        if lifecycle_state and f.get("lifecycle_state") != lifecycle_state:
+        if lifecycle_state and _get_lifecycle_state(f) != lifecycle_state:
             continue
 
         result.append(
             FunctionSummary(
-                name=f.get("name", "?"),
-                kind=f.get("kind", "function"),
-                module=f.get("module", "?"),
-                signature=f.get("signature", "()"),
-                has_description=bool(f.get("description")),
-                ref=f"#/functions/{f.get('name')}",
+                name=f.name,
+                kind=f.kind,
+                module=f.module,
+                signature=f.signature,
+                has_description=bool(f.description),
+                ref=f"#/functions/{f.name}",
             )
         )
 
@@ -247,7 +257,7 @@ def functions(
         output_text_functions([r.model_dump() for r in result])
         return
 
-    kinds = {}
+    kinds: dict[str, int] = {}
     for r in result:
         kinds[r.kind] = kinds.get(r.kind, 0) + 1
 
@@ -294,22 +304,22 @@ def features(
     result: list[FeatureSummary] = []
 
     for f in spec.features:
-        if status and f.get("status", "planned") != status:
+        if status and f.status != status:
             continue
-        if category and not re.search(category, f.get("category", ""), re.IGNORECASE):
+        if category and not re.search(category, f.category, re.IGNORECASE):
             continue
-        if lifecycle_state and f.get("lifecycle_state") != lifecycle_state:
+        if lifecycle_state and _get_lifecycle_state(f) != lifecycle_state:
             continue
 
         result.append(
             FeatureSummary(
-                id=f.get("id", "?"),
-                category=f.get("category", "?"),
-                summary=f.get("summary"),
-                status=f.get("status", "planned"),
-                steps_count=len(f.get("steps", [])),
-                refs_count=len(f.get("references", [])),
-                ref=f"#/features/{f.get('id')}",
+                id=f.id,
+                category=f.category,
+                summary=f.summary,
+                status=f.status,
+                steps_count=len(f.steps),
+                refs_count=len(f.references),
+                ref=f"#/features/{f.id}",
             )
         )
 
@@ -317,7 +327,7 @@ def features(
         output_text_features([r.model_dump() for r in result])
         return
 
-    by_status = {}
+    by_status: dict[str, int] = {}
     for r in result:
         by_status[r.status] = by_status.get(r.status, 0) + 1
 
@@ -345,16 +355,16 @@ def modules(ctx: Context, tree: bool, internal: bool) -> None:
     result: list[ModuleSummary] = []
 
     for m in spec.modules:
-        if not internal and m.get("internal"):
+        if not internal and m.internal:
             continue
 
         result.append(
             ModuleSummary(
-                path=m.get("path", "?"),
-                description=m.get("description"),
-                exports_count=len(m.get("exports", [])),
-                depends_on=m.get("depends_on", []),
-                internal=m.get("internal", False),
+                path=m.path,
+                description=m.description,
+                exports_count=len(m.exports),
+                depends_on=m.depends_on,
+                internal=m.internal,
             )
         )
 
@@ -372,7 +382,9 @@ def modules(ctx: Context, tree: bool, internal: bool) -> None:
 
 
 @click.command()
-@click.option("--with-implications", is_flag=True, help="Include full implications and anti-patterns")
+@click.option(
+    "--with-implications", is_flag=True, help="Include full implications and anti-patterns"
+)
 @pass_context
 def principles(ctx: Context, with_implications: bool) -> None:
     """
@@ -388,11 +400,11 @@ def principles(ctx: Context, with_implications: bool) -> None:
     for p in spec.principles:
         result.append(
             PrincipleSummary(
-                id=p.get("id", "?"),
-                statement=p.get("statement", ""),
-                has_rationale=bool(p.get("rationale")),
-                implications_count=len(p.get("implications", [])),
-                anti_patterns_count=len(p.get("anti_patterns", [])),
+                id=p.id,
+                statement=p.statement,
+                has_rationale=bool(p.rationale),
+                implications_count=len(p.implications),
+                anti_patterns_count=len(p.anti_patterns),
             )
         )
 
@@ -400,9 +412,9 @@ def principles(ctx: Context, with_implications: bool) -> None:
         output_text_principles([r.model_dump() for r in result])
         return
 
-    # If with_implications, include full data
+    # If with_implications, include full data as dicts
     if with_implications:
-        data = spec.principles
+        data = [p.model_dump() for p in spec.principles]
     else:
         data = [r.model_dump() for r in result]
 

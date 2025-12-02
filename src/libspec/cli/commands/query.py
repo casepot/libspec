@@ -232,8 +232,8 @@ def search(ctx: Context, pattern: str, search_in: str, entity_type: str) -> None
     # Search types
     if entity_type in ("types", "all"):
         for t in spec.types:
-            name = t.get("name", "")
-            docstring = t.get("docstring", "")
+            name = t.name
+            docstring = t.docstring or ""
 
             match_in = None
             context = None
@@ -264,8 +264,8 @@ def search(ctx: Context, pattern: str, search_in: str, entity_type: str) -> None
     # Search functions
     if entity_type in ("functions", "all"):
         for f in spec.functions:
-            name = f.get("name", "")
-            desc = f.get("description", "")
+            name = f.name
+            desc = f.description or ""
 
             match_in = None
             context = None
@@ -293,10 +293,10 @@ def search(ctx: Context, pattern: str, search_in: str, entity_type: str) -> None
 
     # Search features
     if entity_type in ("features", "all"):
-        for f in spec.features:
-            fid = f.get("id", "")
-            summary = f.get("summary", "")
-            desc = f.get("description", "")
+        for feat in spec.features:
+            fid = feat.id
+            summary = feat.summary or ""
+            desc = feat.description or ""
 
             match_in = None
             context = None

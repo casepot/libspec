@@ -72,6 +72,7 @@ def validate_spec(spec_path: Union[str, Path]) -> list[str]:
         List of validation errors (empty if valid)
     """
     import json
+
     from jsonschema import Draft202012Validator
 
     spec_path = Path(spec_path)

@@ -8,32 +8,33 @@ import click
 
 from libspec.cli.app import Context, pass_context
 from libspec.cli.output import make_envelope, output_json
+from libspec.models import TypeDef
 
 
-def extract_refs_from_type(type_def: dict[str, Any]) -> set[str]:
+def extract_refs_from_type(type_def: TypeDef) -> set[str]:
     """Extract type references from a type definition."""
     refs = set()
 
     # Bases
-    for base in type_def.get("bases", []):
+    for base in type_def.bases:
         if not base.startswith(("#", "typing.", "collections.")):
             refs.add(base)
 
     # Related
-    for ref in type_def.get("related", []):
+    for ref in type_def.related:
         if ref.startswith("#/types/"):
             refs.add(ref.split("/")[-1])
 
     # Properties types
-    for prop in type_def.get("properties", []):
-        ptype = prop.get("type", "")
+    for prop in type_def.properties:
+        ptype = prop.type or ""
         # Extract type names from type annotations
         for match in re.findall(r"[A-Z][a-zA-Z0-9]*", ptype):
             refs.add(match)
 
     # Method signatures
-    for method in type_def.get("methods", []):
-        sig = method.get("signature", "")
+    for method in type_def.methods:
+        sig = method.signature
         for match in re.findall(r"[A-Z][a-zA-Z0-9]*", sig):
             refs.add(match)
 
@@ -76,9 +77,9 @@ def coverage(ctx: Context, coverage_type: str, threshold: float | None) -> None:
     if coverage_type in ("features", "all"):
         features = spec.features
         total = len(features)
-        planned = sum(1 for f in features if f.get("status") == "planned")
-        implemented = sum(1 for f in features if f.get("status") == "implemented")
-        tested = sum(1 for f in features if f.get("status") == "tested")
+        planned = sum(1 for f in features if f.status == "planned")
+        implemented = sum(1 for f in features if f.status == "implemented")
+        tested = sum(1 for f in features if f.status == "tested")
 
         result["features"] = {
             "total": total,
@@ -90,30 +91,30 @@ def coverage(ctx: Context, coverage_type: str, threshold: float | None) -> None:
 
         # Find gaps
         for f in features:
-            if f.get("status") == "planned":
+            if f.status == "planned":
                 gaps.append({
                     "entity": "feature",
-                    "id": f.get("id"),
+                    "id": f.id,
                     "issue": "not implemented",
                 })
-            elif f.get("status") == "implemented":
+            elif f.status == "implemented":
                 gaps.append({
                     "entity": "feature",
-                    "id": f.get("id"),
+                    "id": f.id,
                     "issue": "not tested",
                 })
 
     if coverage_type in ("docs", "all"):
         types = spec.types
         types_total = len(types)
-        types_documented = sum(1 for t in types if t.get("docstring"))
+        types_documented = sum(1 for t in types if t.docstring)
 
         methods_total = 0
         methods_documented = 0
         for t in types:
-            for m in t.get("methods", []):
+            for m in t.methods:
                 methods_total += 1
-                if m.get("description"):
+                if m.description:
                     methods_documented += 1
 
         result["documentation"] = {
@@ -133,10 +134,10 @@ def coverage(ctx: Context, coverage_type: str, threshold: float | None) -> None:
 
         # Find gaps
         for t in types:
-            if not t.get("docstring"):
+            if not t.docstring:
                 gaps.append({
                     "entity": "type",
-                    "name": t.get("name"),
+                    "name": t.name,
                     "issue": "no docstring",
                 })
 
@@ -205,10 +206,10 @@ def deps(
 
     # Build type dependency graph
     type_deps: dict[str, set[str]] = defaultdict(set)
-    type_names = {t.get("name") for t in spec.types}
+    type_names = {t.name for t in spec.types}
 
     for t in spec.types:
-        name = t.get("name", "")
+        name = t.name
         refs = extract_refs_from_type(t)
         # Filter to only types that exist in this spec
         type_deps[name] = refs & type_names
@@ -216,8 +217,8 @@ def deps(
     # Build module dependency graph
     module_deps: dict[str, list[str]] = {}
     for m in spec.modules:
-        path = m.get("path", "")
-        module_deps[path] = m.get("depends_on", [])
+        path = m.path
+        module_deps[path] = m.depends_on
 
     # If specific type requested
     if type_name:
@@ -227,7 +228,7 @@ def deps(
         if reverse:
             # Find what depends on this type
             dependents = [n for n, d in type_deps.items() if type_name in d]
-            result = {"type": type_name, "depended_by": dependents}
+            result: dict[str, Any] = {"type": type_name, "depended_by": dependents}
         else:
             result = {"type": type_name, "depends_on": list(type_deps[type_name])}
     elif module:
@@ -235,7 +236,7 @@ def deps(
             raise click.ClickException(f"Module '{module}' not found")
 
         if reverse:
-            dependents = [m for m, d in module_deps.items() if module in d]
+            dependents = [m_path for m_path, d in module_deps.items() if module in d]
             result = {"module": module, "depended_by": dependents}
         else:
             result = {"module": module, "depends_on": module_deps[module]}
@@ -303,7 +304,7 @@ def surface(ctx: Context, public_only: bool, by_module: bool) -> None:
     spec = ctx.get_spec()
 
     # Get internal modules
-    internal_modules = {m.get("path") for m in spec.modules if m.get("internal")}
+    internal_modules = {m.path for m in spec.modules if m.internal}
 
     # Count entities
     types_count = 0
@@ -316,27 +317,27 @@ def surface(ctx: Context, public_only: bool, by_module: bool) -> None:
     })
 
     for t in spec.types:
-        module = t.get("module", "")
-        if public_only and module in internal_modules:
+        mod = t.module
+        if public_only and mod in internal_modules:
             continue
 
         types_count += 1
-        by_mod[module]["types"] += 1
+        by_mod[mod]["types"] += 1
 
-        methods = len(t.get("methods", []))
-        properties = len(t.get("properties", []))
+        methods = len(t.methods)
+        properties = len(t.properties)
         methods_count += methods
         properties_count += properties
-        by_mod[module]["methods"] += methods
-        by_mod[module]["properties"] += properties
+        by_mod[mod]["methods"] += methods
+        by_mod[mod]["properties"] += properties
 
-    for f in spec.functions:
-        module = f.get("module", "")
-        if public_only and module in internal_modules:
+    for func in spec.functions:
+        mod = func.module
+        if public_only and mod in internal_modules:
             continue
 
         functions_count += 1
-        by_mod[module]["functions"] += 1
+        by_mod[mod]["functions"] += 1
 
     result: dict[str, Any] = {
         "public_types": types_count,

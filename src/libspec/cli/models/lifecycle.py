@@ -6,7 +6,6 @@ enabling IDE autocomplete and static type checking without runtime overhead.
 
 from typing import Literal, TypedDict
 
-
 # -----------------------------------------------------------------------------
 # Evidence Types
 # -----------------------------------------------------------------------------

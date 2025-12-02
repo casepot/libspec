@@ -1,8 +1,6 @@
 """Click application definition."""
 
-import sys
 from pathlib import Path
-from typing import Any
 
 import click
 
@@ -94,8 +92,8 @@ def cli(
     ctx.obj = Context(spec_path=spec, text=text, no_meta=no_meta, config=cfg)
 
 
-# Import and register command groups
-from libspec.cli.commands import inspect, query, validate, analyze, lifecycle
+# Import and register command groups (must be after cli definition to avoid circular imports)
+from libspec.cli.commands import analyze, inspect, lifecycle, query, validate  # noqa: E402
 
 cli.add_command(inspect.info)
 cli.add_command(inspect.types)

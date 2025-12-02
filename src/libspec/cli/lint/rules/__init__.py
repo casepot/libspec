@@ -1,10 +1,6 @@
 """Lint rule implementations."""
 
 # Import rule modules to trigger registration
-from libspec.cli.lint.rules import structural
-from libspec.cli.lint.rules import naming
-from libspec.cli.lint.rules import completeness
-from libspec.cli.lint.rules import consistency
-from libspec.cli.lint.rules import lifecycle
+from libspec.cli.lint.rules import completeness, consistency, lifecycle, naming, structural
 
 __all__ = ["structural", "naming", "completeness", "consistency", "lifecycle"]

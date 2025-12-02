@@ -2,9 +2,9 @@
 
 from typing import Any
 
+from libspec.cli.config import LintConfig
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
-from libspec.cli.config import LintConfig
 
 
 class LintRunner:
@@ -39,21 +39,18 @@ class LintRunner:
         issues: list[LintIssue] = []
 
         # Get rules to run
+        rule_classes: list[type[LintRule]] = []
         if rule_ids:
-            rule_classes = [
-                RuleRegistry.get_rule(rid)
-                for rid in rule_ids
-                if RuleRegistry.get_rule(rid)
-            ]
+            for rid in rule_ids:
+                rule_cls = RuleRegistry.get_rule(rid)
+                if rule_cls is not None:
+                    rule_classes.append(rule_cls)
         else:
             rule_classes = RuleRegistry.get_all_rules()
 
         # Run each enabled rule
         config_dict = self.config.model_dump()
         for rule_class in rule_classes:
-            if rule_class is None:
-                continue
-
             # Check if rule is enabled
             if not self.config.is_rule_enabled(rule_class.id, rule_class.category):
                 continue

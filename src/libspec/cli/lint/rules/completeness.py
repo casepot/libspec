@@ -130,12 +130,13 @@ class ProtocolNoMethods(LintRule):
                 methods = type_def.get("methods", [])
                 properties = type_def.get("properties", [])
                 if not methods and not properties:
+                    name = type_def.get("name", "?")
                     yield LintIssue(
                         rule=self.id,
                         severity=severity,
-                        message=f"Protocol '{type_def.get('name', '?')}' has no methods or properties",
+                        message=f"Protocol '{name}' has no methods or properties",
                         path=f"$.library.types[{i}]",
-                        ref=f"#/types/{type_def.get('name')}",
+                        ref=f"#/types/{name}",
                     )
 
 
