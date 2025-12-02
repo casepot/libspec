@@ -54,6 +54,9 @@ TYPING_FEATURES: dict[str, str] = {
     # PEP 646 (Python 3.11) - TypeVarTuple
     "TypeVarTuple": "3.11",
     "Unpack": "3.11",
+    # PEP 654 (Python 3.11) - Exception Groups
+    "BaseExceptionGroup": "3.11",
+    "ExceptionGroup": "3.11",
     # PEP 673 (Python 3.11) - Self type
     "Self": "3.11",
     # PEP 675 (Python 3.11) - LiteralString
@@ -80,10 +83,11 @@ TYPING_FEATURES: dict[str, str] = {
 
 # Type annotation syntax patterns introduced in specific Python versions
 SYNTAX_PATTERNS: dict[str, tuple[str, str]] = {
-    # Pattern: (regex_pattern, python_version)
+    # Pattern: (python_version, description)
     r"\|": ("3.10", "Union syntax (X | Y)"),
     r"\btype\s+\w+\s*=": ("3.12", "Type alias syntax (type X = ...)"),
     r"\[\s*\*\w+\s*\]": ("3.11", "TypeVarTuple unpacking ([*Ts])"),
+    r"tuple\[.*\*\w+": ("3.11", "TypeVarTuple in tuple unpacking"),
 }
 
 

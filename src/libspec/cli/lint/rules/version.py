@@ -287,7 +287,7 @@ class MissingPythonRequires(LintRule):
 
 @RuleRegistry.register
 class GenericParamVersionFeatures(LintRule):
-    """Check that generic parameter kinds match declared versions."""
+    """Check that generic parameter kinds and features match declared versions."""
 
     id = "V004"
     name = "generic-param-version"
@@ -301,6 +301,53 @@ class GenericParamVersionFeatures(LintRule):
         "param_spec": "3.10",
         "type_var_tuple": "3.11",
     }
+
+    # PEP 696 - TypeVar defaults require Python 3.13
+    DEFAULT_VERSION = "3.13"
+
+    def _check_gparam(
+        self,
+        gparam: dict[str, Any],
+        gparam_idx: int,
+        entity_name: str,
+        entity_type: str,
+        entity_idx: int,
+        min_version: str,
+        severity: Severity,
+    ) -> Iterator[LintIssue]:
+        """Check a single generic parameter for version issues."""
+        gparam_name = gparam.get("name", "")
+        kind = gparam.get("kind", "type_var")
+        required_version = self.KIND_VERSIONS.get(kind, "3.8")
+
+        # Check kind version
+        if version_compare(required_version, min_version) > 0:
+            yield LintIssue(
+                rule="V004",
+                severity=severity,
+                message=(
+                    f"Generic parameter '{gparam_name}' uses {kind} "
+                    f"(Python {required_version}+) but library requires "
+                    f"Python {min_version}+"
+                ),
+                path=f"$.library.{entity_type}[{entity_idx}].generic_params[{gparam_idx}].kind",
+                ref=f"#/{entity_type}/{entity_name}/generic_params/{gparam_name}",
+            )
+
+        # Check default field (PEP 696, Python 3.13+)
+        if gparam.get("default") is not None:
+            if version_compare(self.DEFAULT_VERSION, min_version) > 0:
+                yield LintIssue(
+                    rule="V004",
+                    severity=severity,
+                    message=(
+                        f"Generic parameter '{gparam_name}' uses default value "
+                        f"(PEP 696, Python {self.DEFAULT_VERSION}+) but library requires "
+                        f"Python {min_version}+"
+                    ),
+                    path=f"$.library.{entity_type}[{entity_idx}].generic_params[{gparam_idx}].default",
+                    ref=f"#/{entity_type}/{entity_name}/generic_params/{gparam_name}",
+                )
 
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         library = spec.get("library", {})
@@ -319,41 +366,122 @@ class GenericParamVersionFeatures(LintRule):
             name = type_def.get("name", "")
 
             for j, gparam in enumerate(type_def.get("generic_params", [])):
-                gparam_name = gparam.get("name", "")
-                kind = gparam.get("kind", "type_var")
-                required_version = self.KIND_VERSIONS.get(kind, "3.8")
-
-                if version_compare(required_version, min_version) > 0:
-                    yield LintIssue(
-                        rule="V004",
-                        severity=severity,
-                        message=(
-                            f"Generic parameter '{gparam_name}' uses {kind} "
-                            f"(Python {required_version}+) but library requires "
-                            f"Python {min_version}+"
-                        ),
-                        path=f"$.library.types[{i}].generic_params[{j}].kind",
-                        ref=f"#/types/{name}/generic_params/{gparam_name}",
-                    )
+                yield from self._check_gparam(
+                    gparam, j, name, "types", i, min_version, severity
+                )
 
         # Check functions
         for i, func in enumerate(library.get("functions", [])):
             name = func.get("name", "")
 
             for j, gparam in enumerate(func.get("generic_params", [])):
-                gparam_name = gparam.get("name", "")
-                kind = gparam.get("kind", "type_var")
-                required_version = self.KIND_VERSIONS.get(kind, "3.8")
+                yield from self._check_gparam(
+                    gparam, j, name, "functions", i, min_version, severity
+                )
 
-                if version_compare(required_version, min_version) > 0:
+
+@RuleRegistry.register
+class ExceptionGroupVersionFeatures(LintRule):
+    """Check that exception group features match python_requires."""
+
+    id = "V005"
+    name = "exception-group-version"
+    description = "Exception groups require Python 3.11+"
+    default_severity = Severity.WARNING
+    category = "version"
+
+    # Exception group types (PEP 654, Python 3.11)
+    EXCEPTION_GROUP_TYPES = {"BaseExceptionGroup", "ExceptionGroup"}
+    REQUIRED_VERSION = "3.11"
+
+    def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
+        library = spec.get("library", {})
+        python_requires = library.get("python_requires")
+        severity = self.get_severity(config)
+
+        if python_requires is None:
+            return
+
+        min_version = parse_python_requires(python_requires)
+        if min_version is None:
+            return
+
+        # Only check if library requires < 3.11
+        if version_compare(self.REQUIRED_VERSION, min_version) <= 0:
+            return
+
+        # Check types for raises clauses
+        for i, type_def in enumerate(library.get("types", [])):
+            type_name = type_def.get("name", "")
+
+            # Check methods
+            for j, method in enumerate(type_def.get("methods", [])):
+                method_name = method.get("name", "")
+                for k, raises in enumerate(method.get("raises", [])):
+                    exc_type = raises.get("type", "")
+                    if exc_type in self.EXCEPTION_GROUP_TYPES:
+                        yield LintIssue(
+                            rule="V005",
+                            severity=severity,
+                            message=(
+                                f"Method '{method_name}' raises {exc_type} "
+                                f"(Python {self.REQUIRED_VERSION}+) but library requires "
+                                f"Python {min_version}+"
+                            ),
+                            path=f"$.library.types[{i}].methods[{j}].raises[{k}].type",
+                            ref=f"#/types/{type_name}/methods/{method_name}",
+                        )
+
+            # Check class methods
+            for j, method in enumerate(type_def.get("class_methods", [])):
+                method_name = method.get("name", "")
+                for k, raises in enumerate(method.get("raises", [])):
+                    exc_type = raises.get("type", "")
+                    if exc_type in self.EXCEPTION_GROUP_TYPES:
+                        yield LintIssue(
+                            rule="V005",
+                            severity=severity,
+                            message=(
+                                f"Class method '{method_name}' raises {exc_type} "
+                                f"(Python {self.REQUIRED_VERSION}+) but library requires "
+                                f"Python {min_version}+"
+                            ),
+                            path=f"$.library.types[{i}].class_methods[{j}].raises[{k}].type",
+                            ref=f"#/types/{type_name}/class_methods/{method_name}",
+                        )
+
+            # Check constructor
+            constructor = type_def.get("construction")
+            if constructor:
+                for k, raises in enumerate(constructor.get("raises", [])):
+                    exc_type = raises.get("type", "")
+                    if exc_type in self.EXCEPTION_GROUP_TYPES:
+                        yield LintIssue(
+                            rule="V005",
+                            severity=severity,
+                            message=(
+                                f"Constructor of '{type_name}' raises {exc_type} "
+                                f"(Python {self.REQUIRED_VERSION}+) but library requires "
+                                f"Python {min_version}+"
+                            ),
+                            path=f"$.library.types[{i}].construction.raises[{k}].type",
+                            ref=f"#/types/{type_name}/construction",
+                        )
+
+        # Check functions
+        for i, func in enumerate(library.get("functions", [])):
+            func_name = func.get("name", "")
+            for k, raises in enumerate(func.get("raises", [])):
+                exc_type = raises.get("type", "")
+                if exc_type in self.EXCEPTION_GROUP_TYPES:
                     yield LintIssue(
-                        rule="V004",
+                        rule="V005",
                         severity=severity,
                         message=(
-                            f"Generic parameter '{gparam_name}' uses {kind} "
-                            f"(Python {required_version}+) but library requires "
+                            f"Function '{func_name}' raises {exc_type} "
+                            f"(Python {self.REQUIRED_VERSION}+) but library requires "
                             f"Python {min_version}+"
                         ),
-                        path=f"$.library.functions[{i}].generic_params[{j}].kind",
-                        ref=f"#/functions/{name}/generic_params/{gparam_name}",
+                        path=f"$.library.functions[{i}].raises[{k}].type",
+                        ref=f"#/functions/{func_name}",
                     )
