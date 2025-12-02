@@ -429,11 +429,11 @@ libspec lint -r S001 -r S002 -r S003
 
 **Current limitations:**
 
-- `--tree` flag on `modules` command not yet implemented
-- `--threshold` flag on `coverage` command not yet implemented
-- Extension schema merging in validation is incomplete (TODO in codebase)
-- No `--fix` flag for auto-fixing lint issues
-- External cross-reference validation (other_lib#/types/X) not implemented
+- `modules --tree` flag is accepted but ignored; output is always a flat list.
+- `coverage --threshold` is parsed but unused; coverage never fails based on the value.
+- Extension schema merging during validation is TODO, so extension fields are not validated against their schemas.
+- No lint auto-fix path: there is no `--fix` flag and no rules invoke `fix()`, so issues are only reported.
+- External cross-reference validation is skipped (e.g., `other_lib#/types/X` are not checked for existence).
 
 **jq dependency:**
 
@@ -447,17 +447,17 @@ The `query` command requires jq to be installed separately:
 ## Future Enhancements
 
 **High value:**
-- `libspec diff` - Compare two spec versions, show API changes
-- `libspec generate` - Generate Python stubs from spec
-- `libspec watch` - Watch mode for continuous validation
-- Auto-fix for simple lint issues (kebab-case conversion, etc.)
+- `libspec diff` – Compare two spec versions and surface API changes (no stub exists yet)
+- `libspec generate` – Emit Python stubs from a spec (no command registered)
+- `libspec watch` – Continuous validation while editing (not started)
+- Auto-fix for simple lint issues (e.g., kebab-case conversion); requires wiring a `--fix` mode and rule-level fixers
 
 **Analysis:**
-- Complexity metrics per type/module
-- Breaking change detection between versions
-- Test coverage mapping (link features to actual test files)
+- Complexity metrics per type/module (no metrics calculated today)
+- Breaking change detection between versions (diff logic not present)
+- Test coverage mapping linking features to real test files (only counts statuses now)
 
 **Integration:**
-- Pre-commit hook support
-- GitHub Actions integration
-- VS Code extension for inline validation
+- Pre-commit hook support (no hook config shipped)
+- GitHub Actions integration (no workflow templates in repo)
+- VS Code extension for inline validation (no extension code or manifest yet)
