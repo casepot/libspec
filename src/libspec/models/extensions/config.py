@@ -11,16 +11,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+from pydantic import Field
+
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
-
-
-class ConfigurationExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for configuration: settings, environment variables, profiles, secrets.',
-        title='Configuration Extension',
-    )
 
 
 class SettingSpec(ExtensionModel):
@@ -103,7 +96,7 @@ class ProfileSpec(ExtensionModel):
     )
 
 
-class Storage(Enum):
+class SecretsStorage(Enum):
     env = 'env'
     keyring = 'keyring'
     vault = 'vault'
@@ -115,7 +108,7 @@ class Storage(Enum):
 
 class SecretsSpec(ExtensionModel):
     fields: list[str] | None = Field(None, description='Setting names that are secrets')
-    storage: Storage | None = Field(None, description='Where secrets are stored')
+    storage: SecretsStorage | None = Field(None, description='Where secrets are stored')
     masking: bool | None = Field(True, description='Whether secrets are masked in logs')
     rotation_supported: bool | None = Field(
         None, description='Whether secret rotation is supported'

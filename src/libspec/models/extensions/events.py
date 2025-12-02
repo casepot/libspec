@@ -11,16 +11,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+from pydantic import Field, confloat, conint
+
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, confloat, conint
-
-
-class EventsExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for event-driven architectures: events, handlers, buses, pub/sub.',
-        title='Events Extension',
-    )
 
 
 class EventsTypeFields(ExtensionModel):
@@ -38,7 +31,7 @@ class EventsMethodFields(ExtensionModel):
     )
 
 
-class Category(Enum):
+class EventCategory(Enum):
     domain = 'domain'
     integration = 'integration'
     notification = 'notification'
@@ -102,7 +95,7 @@ class EventFilterSpec(ExtensionModel):
     value: Any | None = Field(None, description='Filter value')
 
 
-class Type(Enum):
+class EventBusType(Enum):
     in_memory = 'in_memory'
     redis = 'redis'
     rabbitmq = 'rabbitmq'
@@ -120,7 +113,7 @@ class OrderingGuarantee(Enum):
 
 
 class EventBusSpec(ExtensionModel):
-    type: Type | None = Field(None, description='Event bus type')
+    type: EventBusType | None = Field(None, description='Event bus type')
     async_dispatch: bool | None = Field(None, description='Whether dispatch is async')
     guaranteed_delivery: bool | None = Field(
         None, description='Whether delivery is guaranteed'
@@ -185,7 +178,7 @@ class CompensationSpec(ExtensionModel):
 class EventSpec(ExtensionModel):
     name: str = Field(..., description='Event type name')
     type: str | None = Field(None, description='Event class reference')
-    category: Category | None = Field(None, description='Event category')
+    category: EventCategory | None = Field(None, description='Event category')
     payload: list[EventFieldSpec] | None = Field(
         None, description='Event payload fields'
     )

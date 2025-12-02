@@ -9,18 +9,10 @@ This module defines models for plugin system specifications:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import Field, conint
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, conint
-
-
-class PluginsExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for plugin architectures: extension points, hooks, registries, discovery.',
-        title='Plugins Extension',
-    )
 
 
 class PluginsTypeFields(ExtensionModel):
@@ -64,7 +56,7 @@ class ExtensionPointSpec(ExtensionModel):
     description: str | None = None
 
 
-class Type(Enum):
+class HookType(Enum):
     filter = 'filter'
     action = 'action'
     event = 'event'
@@ -117,7 +109,7 @@ class RegistryMethodsSpec(ExtensionModel):
     has: str | None = Field(None, description='Check existence method name')
 
 
-class Type1(Enum):
+class DiscoveryMechanismType(Enum):
     entry_points = 'entry_points'
     namespace_packages = 'namespace_packages'
     directory_scan = 'directory_scan'
@@ -127,7 +119,7 @@ class Type1(Enum):
 
 
 class DiscoveryMechanismSpec(ExtensionModel):
-    type: Type1 = Field(..., description='Discovery mechanism type')
+    type: DiscoveryMechanismType = Field(..., description='Discovery mechanism type')
     entry_point_group: str | None = Field(
         None, description='Entry point group name (for entry_points)'
     )
@@ -166,7 +158,7 @@ class PluginLifecycleSpec(ExtensionModel):
 
 class HookSpec(ExtensionModel):
     name: str = Field(..., description='Hook name')
-    type: Type | None = Field(None, description='Hook type')
+    type: HookType | None = Field(None, description='Hook type')
     signature: str | None = Field(None, description='Hook callback signature')
     parameters: list[HookParamSpec] | None = Field(None, description='Hook parameters')
     returns: str | None = Field(None, description='Return type (for filters)')

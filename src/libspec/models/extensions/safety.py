@@ -9,18 +9,10 @@ This module defines models for thread safety and concurrency:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
-
-
-class SafetyExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for safety guarantees: thread safety, reentrancy, memory safety.',
-        title='Safety Extension',
-    )
 
 
 class SafetyMethodFields(ExtensionModel):
@@ -47,7 +39,7 @@ class SafetyFunctionFields(ExtensionModel):
     atomic: bool | None = Field(None, description='Whether this operation is atomic')
 
 
-class Mode(Enum):
+class ThreadSafetyMode(Enum):
     immutable = 'immutable'
     synchronized = 'synchronized'
     thread_local = 'thread_local'
@@ -73,7 +65,7 @@ class LockGranularity(Enum):
 
 class ThreadSafetySpec(ExtensionModel):
     safe: bool | None = Field(None, description='Whether the type is thread-safe')
-    mode: Mode | None = Field(None, description='How thread safety is achieved')
+    mode: ThreadSafetyMode | None = Field(None, description='How thread safety is achieved')
     lock_type: LockType | None = Field(
         None, description='Type of lock used (if synchronized)'
     )

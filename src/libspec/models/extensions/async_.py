@@ -11,28 +11,20 @@ This module defines models for async/concurrent system semantics:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import Field, confloat, conint
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, confloat, conint
 
 
-class AsyncExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for async/concurrent system semantics: lifecycle, cancellation, synchronization, observables.',
-        title='Async Extension',
-    )
-
-
-class Mode(Enum):
+class CancellationMode(Enum):
     cooperative = 'cooperative'
     immediate = 'immediate'
     none = 'none'
 
 
 class CancellationSpec(ExtensionModel):
-    mode: Mode | None = Field(None, description='Cancellation mode')
+    mode: CancellationMode | None = Field(None, description='Cancellation mode')
     cleanup: str | None = Field(
         None, description='What cleanup happens on cancellation'
     )
@@ -82,7 +74,7 @@ class Semantics(Enum):
     lifo = 'lifo'
 
 
-class Backpressure(Enum):
+class SyncBackpressure(Enum):
     block = 'block'
     drop = 'drop'
     error = 'error'
@@ -99,7 +91,7 @@ class SyncSpec(ExtensionModel):
     capacity: conint(ge=0) | None = Field(
         None, description='Maximum capacity (if bounded)'
     )
-    backpressure: Backpressure | None = Field(
+    backpressure: SyncBackpressure | None = Field(
         None, description='What happens when capacity is reached'
     )
 
@@ -109,7 +101,7 @@ class Kind(Enum):
     cold = 'cold'
 
 
-class Backpressure1(Enum):
+class ObservableBackpressure(Enum):
     buffer = 'buffer'
     drop = 'drop'
     block = 'block'
@@ -121,7 +113,7 @@ class ObservableSpec(ExtensionModel):
     kind: Kind | None = Field(
         None, description='Hot (live) or cold (replay) observable'
     )
-    backpressure: Backpressure1 | None = Field(
+    backpressure: ObservableBackpressure | None = Field(
         None, description='Backpressure strategy'
     )
     replay: bool | None = Field(

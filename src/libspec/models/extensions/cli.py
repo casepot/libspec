@@ -11,16 +11,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+from pydantic import Field, conint
+
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, conint
-
-
-class CliExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for command-line interfaces: commands, arguments, options, subcommands.',
-        title='CLI Extension',
-    )
 
 
 class ExampleSpec(ExtensionModel):
@@ -52,7 +45,7 @@ class ShellCompletionSpec(ExtensionModel):
     )
 
 
-class Type(Enum):
+class CompletionType(Enum):
     path = 'path'
     file = 'file'
     directory = 'directory'
@@ -62,7 +55,7 @@ class Type(Enum):
 
 
 class CompletionSpec(ExtensionModel):
-    type: Type | None = Field(None, description='Completion type')
+    type: CompletionType | None = Field(None, description='Completion type')
     function: str | None = Field(
         None, description='Custom completion function reference'
     )

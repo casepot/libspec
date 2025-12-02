@@ -9,18 +9,10 @@ This module defines models for performance specifications:
 from __future__ import annotations
 
 from datetime import date as date_aliased
-from typing import Any
+
+from pydantic import Field, condecimal, conint
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, condecimal, conint
-
-
-class PerformanceExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for performance characteristics: complexity, benchmarks, scaling.',
-        title='Performance Extension',
-    )
 
 
 class ComplexitySpec(ExtensionModel):

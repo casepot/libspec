@@ -9,21 +9,13 @@ This module defines models for state management:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import Field, conint
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, conint
 
 
-class StateExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for state management: state machines, reducers, selectors, stores.',
-        title='State Extension',
-    )
-
-
-class Type(Enum):
+class StoreType(Enum):
     redux = 'redux'
     mobx = 'mobx'
     zustand = 'zustand'
@@ -54,7 +46,7 @@ class SliceSpec(ExtensionModel):
     )
 
 
-class Type1(Enum):
+class MachineStateType(Enum):
     atomic = 'atomic'
     compound = 'compound'
     parallel = 'parallel'
@@ -64,7 +56,7 @@ class Type1(Enum):
 
 class MachineStateSpec(ExtensionModel):
     name: str = Field(..., description='State name')
-    type: Type1 | None = Field(None, description='State type')
+    type: MachineStateType | None = Field(None, description='State type')
     entry: list[str] | None = Field(None, description='Entry actions')
     exit: list[str] | None = Field(None, description='Exit actions')
     on: dict[str, str] | None = Field(
@@ -103,7 +95,7 @@ class GuardSpec(ExtensionModel):
     condition: str | None = Field(None, description='Condition description')
 
 
-class Type2(Enum):
+class MachineActionType(Enum):
     assign = 'assign'
     raise_ = 'raise'
     send = 'send'
@@ -114,11 +106,11 @@ class Type2(Enum):
 class MachineActionSpec(ExtensionModel):
     name: str = Field(..., description='Action name')
     function: str | None = Field(None, description='Action function reference')
-    type: Type2 | None = Field(None, description='Action type')
+    type: MachineActionType | None = Field(None, description='Action type')
     description: str | None = None
 
 
-class Type3(Enum):
+class ServiceType(Enum):
     promise = 'promise'
     callback = 'callback'
     observable = 'observable'
@@ -127,7 +119,7 @@ class Type3(Enum):
 
 class ServiceSpec(ExtensionModel):
     name: str = Field(..., description='Service name')
-    type: Type3 | None = Field(None, description='Service type')
+    type: ServiceType | None = Field(None, description='Service type')
     src: str | None = Field(None, description='Service source/function reference')
     on_done: str | None = Field(None, description='Transition on success')
     on_error: str | None = Field(None, description='Transition on error')
@@ -179,7 +171,7 @@ class StateShapeSpec(ExtensionModel):
     entities_key: str | None = Field('entities', description='Key for entity maps')
 
 
-class Storage(Enum):
+class PersistenceStorage(Enum):
     localStorage = 'localStorage'
     sessionStorage = 'sessionStorage'
     indexedDB = 'indexedDB'
@@ -188,7 +180,7 @@ class Storage(Enum):
 
 
 class PersistenceSpec(ExtensionModel):
-    storage: Storage | None = Field(None, description='Storage type')
+    storage: PersistenceStorage | None = Field(None, description='Storage type')
     key: str | None = Field(None, description='Storage key')
     whitelist: list[str] | None = Field(None, description='Paths to persist')
     blacklist: list[str] | None = Field(None, description='Paths to exclude')
@@ -204,7 +196,7 @@ class StateTypeFields(ExtensionModel):
 
 class StoreSpec(ExtensionModel):
     name: str = Field(..., description='Store name')
-    type: Type | None = Field(None, description='Store implementation type')
+    type: StoreType | None = Field(None, description='Store implementation type')
     state_type: str | None = Field(None, description='State type reference')
     initial_state: str | None = Field(
         None, description='Initial state factory reference'

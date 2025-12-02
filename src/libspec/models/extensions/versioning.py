@@ -9,18 +9,10 @@ This module defines models for API versioning and deprecation:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import AnyUrl, Field
 
 from libspec.models.base import ExtensionModel
-from pydantic import AnyUrl, Field, RootModel
-
-
-class VersioningExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for API evolution: deprecations, breaking changes, migrations.',
-        title='Versioning Extension',
-    )
 
 
 class Stability(Enum):

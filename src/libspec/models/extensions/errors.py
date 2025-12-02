@@ -9,18 +9,10 @@ This module defines models for error handling specifications:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import AnyUrl, Field
 
 from libspec.models.base import ExtensionModel
-from pydantic import AnyUrl, Field, RootModel
-
-
-class ErrorsExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for error taxonomy: exception hierarchy, error codes, recovery strategies.',
-        title='Errors Extension',
-    )
 
 
 class ErrorHierarchyNode(ExtensionModel):

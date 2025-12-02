@@ -9,18 +9,10 @@ This module defines models for data processing and transformation:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import Field, conint
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, conint
-
-
-class DataExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for data processing libraries: transforms, pipelines, dtype behavior, evaluation strategies.',
-        title='Data Extension',
-    )
 
 
 class CopySemantics(Enum):
@@ -30,7 +22,7 @@ class CopySemantics(Enum):
     configurable = 'configurable'
 
 
-class Category(Enum):
+class DTypeCategory(Enum):
     numeric = 'numeric'
     string = 'string'
     temporal = 'temporal'
@@ -44,7 +36,7 @@ class Category(Enum):
 
 class DTypeSpec(ExtensionModel):
     name: str = Field(..., description='Data type name')
-    category: Category | None = Field(None, description='Type category')
+    category: DTypeCategory | None = Field(None, description='Type category')
     numpy_equivalent: str | None = Field(None, description='Equivalent NumPy dtype')
     python_type: str | None = Field(None, description='Python type for scalar values')
     nullable: bool | None = Field(None, description='Whether null values are supported')
@@ -74,7 +66,7 @@ class CoercionRule(ExtensionModel):
     )
 
 
-class Category1(Enum):
+class TransformCategory(Enum):
     select = 'select'
     filter = 'filter'
     aggregate = 'aggregate'
@@ -89,7 +81,7 @@ class Category1(Enum):
 
 class TransformSpec(ExtensionModel):
     name: str = Field(..., description='Transform name')
-    category: Category1 = Field(..., description='Transform category')
+    category: TransformCategory = Field(..., description='Transform category')
     method: str | None = Field(None, description='Method reference')
     input_shape: str | None = Field(
         None, description="Expected input shape (e.g., '1D', '2D', 'any')"
@@ -117,7 +109,7 @@ class MethodChainingSpec(ExtensionModel):
     )
 
 
-class Type(Enum):
+class PipelineType(Enum):
     sequential = 'sequential'
     dag = 'dag'
     streaming = 'streaming'
@@ -311,7 +303,7 @@ class DTypeBehaviorSpec(ExtensionModel):
 
 class PipelineSpec(ExtensionModel):
     name: str = Field(..., description='Pipeline name')
-    type: Type | None = Field(None, description='Pipeline type')
+    type: PipelineType | None = Field(None, description='Pipeline type')
     stages: list[PipelineStage] | None = Field(None, description='Pipeline stages')
     error_handling: ErrorHandling | None = Field(
         None, description='How errors are handled'

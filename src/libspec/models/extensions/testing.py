@@ -17,7 +17,6 @@ from pydantic import Field, confloat, conint
 
 from libspec.models.base import ExtensionModel
 
-
 # -----------------------------------------------------------------------------
 # Enums
 # -----------------------------------------------------------------------------

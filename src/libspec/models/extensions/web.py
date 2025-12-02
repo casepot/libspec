@@ -11,16 +11,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+from pydantic import Field, conint
+
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, conint
-
-
-class WebExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for web frameworks: routes, middleware, request/response, dependencies.',
-        title='Web Extension',
-    )
 
 
 class Method(Enum):

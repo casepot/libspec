@@ -9,18 +9,10 @@ This module defines models for observability specifications:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+
+from pydantic import Field, PositiveFloat, confloat, conint
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, PositiveFloat, RootModel, confloat, conint
-
-
-class ObservabilityExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for debugging and monitoring: logging, metrics, tracing, health checks.',
-        title='Observability Extension',
-    )
 
 
 class LevelsUsedEnum(Enum):
@@ -51,7 +43,7 @@ class LoggingSpec(ExtensionModel):
     sampling: bool | None = Field(None, description='Whether log sampling is supported')
 
 
-class Type(Enum):
+class MetricType(Enum):
     counter = 'counter'
     gauge = 'gauge'
     histogram = 'histogram'
@@ -61,7 +53,7 @@ class Type(Enum):
 
 class MetricSpec(ExtensionModel):
     name: str = Field(..., description="Metric name (e.g., 'mylib_requests_total')")
-    type: Type = Field(..., description='Metric type')
+    type: MetricType = Field(..., description='Metric type')
     description: str | None = Field(None, description='What this metric measures')
     labels: list[str] | None = Field(None, description='Label names for this metric')
     unit: str | None = Field(
@@ -103,7 +95,7 @@ class TracingSpec(ExtensionModel):
     baggage: list[str] | None = Field(None, description='Baggage items propagated')
 
 
-class Type1(Enum):
+class HealthCheckType(Enum):
     liveness = 'liveness'
     readiness = 'readiness'
     startup = 'startup'
@@ -111,7 +103,7 @@ class Type1(Enum):
 
 class HealthCheckSpec(ExtensionModel):
     name: str = Field(..., description='Health check name')
-    type: Type1 = Field(..., description='Health check type')
+    type: HealthCheckType = Field(..., description='Health check type')
     endpoint: str | None = Field(None, description='HTTP endpoint path')
     method: str | None = Field(None, description='Method to call for health check')
     timeout: PositiveFloat | None = Field(None, description='Timeout in seconds')
