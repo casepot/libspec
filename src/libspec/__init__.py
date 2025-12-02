@@ -15,16 +15,68 @@ Usage:
 
     # Validate a spec file
     validate_spec("path/to/libspec.json")
+
+    # Validate with structured errors
+    issues = validate_spec("path/to/libspec.json", structured=True)
 """
 
+from copy import deepcopy
+from dataclasses import dataclass, field
+from enum import Enum
 from importlib.resources import files
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 __version__ = "0.1.0"
 
 # Schema version this package provides
 SCHEMA_VERSION = "1.0"
+
+
+class ValidationSeverity(str, Enum):
+    """Severity level for validation issues."""
+
+    ERROR = "error"
+    WARNING = "warning"
+
+
+@dataclass
+class ValidationIssue:
+    """Structured validation issue with context."""
+
+    message: str
+    path: str = "$"
+    severity: ValidationSeverity = ValidationSeverity.ERROR
+    schema_path: str | None = None
+    context: dict[str, Any] | None = field(default=None)
+
+
+# Extension names (defined before functions that use them)
+DOMAIN_EXTENSIONS = frozenset([
+    "async",
+    "web",
+    "data",
+    "cli",
+    "orm",
+    "testing",
+    "events",
+    "state",
+    "plugins",
+    "ml",
+    "serialization",
+])
+
+CONCERN_EXTENSIONS = frozenset([
+    "errors",
+    "perf",
+    "safety",
+    "config",
+    "versioning",
+    "observability",
+    "lifecycle",
+])
+
+ALL_EXTENSIONS = DOMAIN_EXTENSIONS | CONCERN_EXTENSIONS
 
 
 def get_schema_path(schema_name: str = "core.schema.json") -> Path:
@@ -56,20 +108,117 @@ def get_core_schema() -> dict:
         The core JSON Schema as a dict
     """
     import json
+
     schema_path = get_schema_path("core.schema.json")
     with open(schema_path) as f:
         return json.load(f)
 
 
-def validate_spec(spec_path: Union[str, Path]) -> list[str]:
+def get_extension_schema(extension_name: str) -> dict:
+    """
+    Load an extension schema by name.
+
+    Args:
+        extension_name: Name of the extension (e.g., "async", "web", "errors")
+
+    Returns:
+        The extension JSON Schema as a dict
+
+    Raises:
+        ValueError: If the extension name is not recognized
+        FileNotFoundError: If the extension schema file doesn't exist
+    """
+    import json
+
+    if extension_name not in ALL_EXTENSIONS:
+        raise ValueError(
+            f"Unknown extension: {extension_name!r}. "
+            f"Valid extensions: {sorted(ALL_EXTENSIONS)}"
+        )
+
+    schema_path = get_schema_path(f"extensions/{extension_name}.schema.json")
+    with open(schema_path) as f:
+        return json.load(f)
+
+
+def merge_schemas(
+    core_schema: dict, extension_names: list[str]
+) -> tuple[dict, list[ValidationIssue]]:
+    """
+    Merge core schema with extension schemas.
+
+    This performs a deep merge of $defs from each extension schema into
+    the core schema, allowing validation of extension-specific fields.
+
+    Args:
+        core_schema: The core libspec schema
+        extension_names: List of extension names to merge
+
+    Returns:
+        Tuple of (merged_schema, warnings) where warnings contains any
+        issues encountered during merging (e.g., unknown extensions)
+    """
+    merged = deepcopy(core_schema)
+    warnings: list[ValidationIssue] = []
+
+    # Ensure $defs exists
+    if "$defs" not in merged:
+        merged["$defs"] = {}
+
+    for ext_name in extension_names:
+        if ext_name not in ALL_EXTENSIONS:
+            warnings.append(
+                ValidationIssue(
+                    message=f"Unknown extension: {ext_name!r}",
+                    path="$.extensions",
+                    severity=ValidationSeverity.WARNING,
+                    context={"extension": ext_name, "valid": sorted(ALL_EXTENSIONS)},
+                )
+            )
+            continue
+
+        try:
+            ext_schema = get_extension_schema(ext_name)
+        except FileNotFoundError:
+            warnings.append(
+                ValidationIssue(
+                    message=f"Extension schema not found: {ext_name}",
+                    path="$.extensions",
+                    severity=ValidationSeverity.WARNING,
+                    context={"extension": ext_name},
+                )
+            )
+            continue
+
+        # Merge $defs from extension into core
+        if "$defs" in ext_schema:
+            for def_name, def_schema in ext_schema["$defs"].items():
+                if def_name in merged["$defs"]:
+                    # Skip if already defined (core takes precedence)
+                    continue
+                merged["$defs"][def_name] = def_schema
+
+    return merged, warnings
+
+
+def validate_spec(
+    spec_path: Union[str, Path],
+    *,
+    structured: bool = False,
+) -> Union[list[str], list[ValidationIssue]]:
     """
     Validate a libspec specification file against the schema.
 
+    Automatically detects and merges extension schemas based on the
+    "extensions" field in the spec.
+
     Args:
         spec_path: Path to the specification file to validate
+        structured: If True, return ValidationIssue objects instead of strings
 
     Returns:
-        List of validation errors (empty if valid)
+        List of validation errors (empty if valid). If structured=True,
+        returns ValidationIssue objects with full context.
     """
     import json
 
@@ -79,38 +228,31 @@ def validate_spec(spec_path: Union[str, Path]) -> list[str]:
     with open(spec_path) as f:
         spec = json.load(f)
 
-    # Determine which schema to use based on extensions
+    # Start with core schema
     schema = get_core_schema()
+    issues: list[ValidationIssue] = []
 
-    # TODO: Merge extension schemas based on spec["extensions"]
+    # Merge extension schemas based on spec["extensions"]
+    extensions = spec.get("extensions", [])
+    if extensions:
+        schema, merge_warnings = merge_schemas(schema, extensions)
+        issues.extend(merge_warnings)
 
+    # Validate
     validator = Draft202012Validator(schema)
-    errors = list(validator.iter_errors(spec))
-    return [str(e.message) for e in errors]
+    for error in validator.iter_errors(spec):
+        path = "$" + "".join(
+            f"[{p!r}]" if isinstance(p, str) else f"[{p}]" for p in error.absolute_path
+        )
+        issues.append(
+            ValidationIssue(
+                message=error.message,
+                path=path,
+                severity=ValidationSeverity.ERROR,
+                schema_path=error.json_path if hasattr(error, "json_path") else None,
+            )
+        )
 
-
-# Extension names
-DOMAIN_EXTENSIONS = frozenset([
-    "async",
-    "web",
-    "data",
-    "cli",
-    "orm",
-    "testing",
-    "events",
-    "state",
-    "plugins",
-    "ml",
-])
-
-CONCERN_EXTENSIONS = frozenset([
-    "errors",
-    "perf",
-    "safety",
-    "config",
-    "versioning",
-    "observability",
-    "lifecycle",
-])
-
-ALL_EXTENSIONS = DOMAIN_EXTENSIONS | CONCERN_EXTENSIONS
+    if structured:
+        return issues
+    return [issue.message for issue in issues if issue.severity == ValidationSeverity.ERROR]
