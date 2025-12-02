@@ -33,6 +33,7 @@ from libspec.models.extensions import orm as orm_ext
 from libspec.models.extensions import perf as perf_ext
 from libspec.models.extensions import plugins as plugins_ext
 from libspec.models.extensions import safety as safety_ext
+from libspec.models.extensions import serialization as serialization_ext
 from libspec.models.extensions import state as state_ext
 from libspec.models.extensions import testing as testing_ext
 from libspec.models.extensions import versioning as versioning_ext
@@ -130,6 +131,16 @@ EXTENSIONS: dict[str, tuple[str, str, list[type]]] = {
             safety_ext.SafetyFunctionFields,
             safety_ext.SafetyMethodFields,
             safety_ext.SafetyTypeFields,
+        ],
+    ),
+    "serialization": (
+        "Serialization Extension",
+        "Extension for data serialization: formats, encoders/decoders, type coercion, schemas.",
+        [
+            serialization_ext.SerializationLibraryFields,
+            serialization_ext.SerializationTypeFields,
+            serialization_ext.SerializationMethodFields,
+            serialization_ext.SerializationFunctionFields,
         ],
     ),
     "state": (
