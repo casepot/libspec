@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/config.schema.json",
+  "title": "Configuration Extension",
+  "description": "Extension for configuration: settings, environment variables, profiles, secrets.",
+
+  "$defs": {
+    "ConfigLibraryFields": {
+      "description": "Fields added to Library when config extension is active",
+      "type": "object",
+      "properties": {
+        "settings": {
+          "type": "array",
+          "description": "Configuration settings",
+          "items": { "$ref": "#/$defs/SettingSpec" }
+        },
+        "config_sources": {
+          "$ref": "#/$defs/ConfigSourcesSpec"
+        },
+        "profiles": {
+          "type": "array",
+          "description": "Configuration profiles",
+          "items": { "$ref": "#/$defs/ProfileSpec" }
+        },
+        "secrets": {
+          "$ref": "#/$defs/SecretsSpec"
+        }
+      }
+    },
+
+    "SettingSpec": {
+      "type": "object",
+      "description": "A configuration setting",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Setting name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Setting type (str, int, float, bool, list, dict)"
+        },
+        "default": {
+          "description": "Default value"
+        },
+        "env_var": {
+          "type": "string",
+          "description": "Environment variable name"
+        },
+        "cli_flag": {
+          "type": "string",
+          "description": "CLI flag (e.g., '--timeout')"
+        },
+        "cli_short": {
+          "type": "string",
+          "description": "Short CLI flag (e.g., '-t')"
+        },
+        "validation": {
+          "type": "string",
+          "description": "Validation rule (e.g., 'gt(0)', 'regex(...)')"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this setting controls"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether this setting must be provided",
+          "default": false
+        },
+        "secret": {
+          "type": "boolean",
+          "description": "Whether this is a secret value",
+          "default": false
+        },
+        "deprecated": {
+          "type": "boolean",
+          "description": "Whether this setting is deprecated",
+          "default": false
+        },
+        "deprecated_message": {
+          "type": "string",
+          "description": "Deprecation message with migration guidance"
+        },
+        "choices": {
+          "type": "array",
+          "description": "Valid choices for enum-like settings",
+          "items": {}
+        }
+      }
+    },
+
+    "ConfigSourcesSpec": {
+      "type": "object",
+      "description": "Configuration source priority and locations",
+      "properties": {
+        "priority": {
+          "type": "array",
+          "description": "Source priority (first = highest)",
+          "items": {
+            "type": "string",
+            "enum": ["cli", "env", "file", "defaults", "remote", "secrets_manager"]
+          }
+        },
+        "file_formats": {
+          "type": "array",
+          "description": "Supported config file formats",
+          "items": {
+            "type": "string",
+            "enum": ["toml", "yaml", "json", "ini", "env"]
+          }
+        },
+        "file_locations": {
+          "type": "array",
+          "description": "Config file search paths",
+          "items": { "type": "string" }
+        },
+        "file_name_pattern": {
+          "type": "string",
+          "description": "Config file name pattern (e.g., '{name}.toml')"
+        },
+        "env_prefix": {
+          "type": "string",
+          "description": "Environment variable prefix (e.g., 'MYLIB_')"
+        },
+        "nested_delimiter": {
+          "type": "string",
+          "description": "Delimiter for nested settings in env vars",
+          "default": "__"
+        }
+      }
+    },
+
+    "ProfileSpec": {
+      "type": "object",
+      "description": "A configuration profile",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Profile name (e.g., 'development', 'production')"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this profile is for"
+        },
+        "inherits": {
+          "type": "string",
+          "description": "Base profile to inherit from"
+        },
+        "overrides": {
+          "type": "object",
+          "description": "Setting overrides for this profile",
+          "additionalProperties": true
+        },
+        "env_var_trigger": {
+          "type": "string",
+          "description": "Env var that activates this profile"
+        }
+      }
+    },
+
+    "SecretsSpec": {
+      "type": "object",
+      "description": "Secrets handling configuration",
+      "properties": {
+        "fields": {
+          "type": "array",
+          "description": "Setting names that are secrets",
+          "items": { "type": "string" }
+        },
+        "storage": {
+          "type": "string",
+          "description": "Where secrets are stored",
+          "enum": ["env", "keyring", "vault", "aws_secrets", "gcp_secrets", "azure_keyvault", "file"]
+        },
+        "masking": {
+          "type": "boolean",
+          "description": "Whether secrets are masked in logs",
+          "default": true
+        },
+        "rotation_supported": {
+          "type": "boolean",
+          "description": "Whether secret rotation is supported"
+        }
+      }
+    }
+  }
+}

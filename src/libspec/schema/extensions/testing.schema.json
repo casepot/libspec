@@ -1,0 +1,405 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/testing.schema.json",
+  "title": "Testing Extension",
+  "description": "Extension for testing utilities: fixtures, mocks, test patterns, assertions.",
+
+  "$defs": {
+    "TestingLibraryFields": {
+      "description": "Fields added to Library when testing extension is active",
+      "type": "object",
+      "properties": {
+        "fixtures": {
+          "type": "array",
+          "description": "Test fixture definitions",
+          "items": { "$ref": "#/$defs/FixtureSpec" }
+        },
+        "mocks": {
+          "type": "array",
+          "description": "Mock/stub utilities",
+          "items": { "$ref": "#/$defs/MockSpec" }
+        },
+        "factories": {
+          "type": "array",
+          "description": "Test data factories",
+          "items": { "$ref": "#/$defs/FactorySpec" }
+        },
+        "assertions": {
+          "type": "array",
+          "description": "Custom assertions",
+          "items": { "$ref": "#/$defs/AssertionSpec" }
+        },
+        "test_patterns": {
+          "type": "array",
+          "description": "Recommended test patterns",
+          "items": { "$ref": "#/$defs/TestPatternSpec" }
+        },
+        "coverage": {
+          "$ref": "#/$defs/CoverageSpec"
+        }
+      }
+    },
+
+    "TestingTypeFields": {
+      "description": "Fields added to TypeDef when testing extension is active",
+      "type": "object",
+      "properties": {
+        "testable": {
+          "type": "boolean",
+          "description": "Whether type is designed for testing"
+        },
+        "test_double": {
+          "$ref": "#/$defs/TestDoubleSpec"
+        },
+        "golden_tests": {
+          "type": "array",
+          "description": "Golden test file references",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "FixtureSpec": {
+      "type": "object",
+      "description": "A test fixture definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Fixture name"
+        },
+        "scope": {
+          "type": "string",
+          "description": "Fixture scope",
+          "enum": ["function", "class", "module", "package", "session"]
+        },
+        "type": {
+          "type": "string",
+          "description": "Return type"
+        },
+        "factory": {
+          "type": "string",
+          "description": "Factory function reference"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Other fixtures this depends on",
+          "items": { "type": "string" }
+        },
+        "autouse": {
+          "type": "boolean",
+          "description": "Whether fixture is automatically used"
+        },
+        "params": {
+          "type": "array",
+          "description": "Parameterization values",
+          "items": {}
+        },
+        "yields": {
+          "type": "boolean",
+          "description": "Whether fixture uses yield (generator)"
+        },
+        "async": {
+          "type": "boolean",
+          "description": "Whether fixture is async"
+        },
+        "cleanup": {
+          "type": "string",
+          "description": "Cleanup behavior description"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "MockSpec": {
+      "type": "object",
+      "description": "A mock/stub utility",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Mock utility name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Mock type",
+          "enum": ["mock", "stub", "spy", "fake", "dummy"]
+        },
+        "target": {
+          "type": "string",
+          "description": "What this mocks (type reference)"
+        },
+        "factory": {
+          "type": "string",
+          "description": "Factory function reference"
+        },
+        "configurable": {
+          "type": "array",
+          "description": "Configurable behaviors",
+          "items": { "type": "string" }
+        },
+        "auto_spec": {
+          "type": "boolean",
+          "description": "Whether spec is auto-generated from target"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "FactorySpec": {
+      "type": "object",
+      "description": "A test data factory",
+      "required": ["name", "model"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Factory name"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model type this creates"
+        },
+        "fields": {
+          "type": "array",
+          "description": "Field definitions",
+          "items": { "$ref": "#/$defs/FactoryFieldSpec" }
+        },
+        "traits": {
+          "type": "array",
+          "description": "Named trait variations",
+          "items": { "$ref": "#/$defs/TraitSpec" }
+        },
+        "sequences": {
+          "type": "array",
+          "description": "Sequence generators",
+          "items": { "$ref": "#/$defs/SequenceSpec" }
+        },
+        "subfactories": {
+          "type": "array",
+          "description": "Related subfactories",
+          "items": { "type": "string" }
+        },
+        "lazy_attributes": {
+          "type": "array",
+          "description": "Lazily evaluated attributes",
+          "items": { "type": "string" }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "FactoryFieldSpec": {
+      "type": "object",
+      "description": "A factory field definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Field name"
+        },
+        "default": {
+          "description": "Default value or generator"
+        },
+        "faker": {
+          "type": "string",
+          "description": "Faker provider (e.g., 'name', 'email')"
+        },
+        "sequence": {
+          "type": "boolean",
+          "description": "Whether this is a sequence"
+        },
+        "lazy": {
+          "type": "boolean",
+          "description": "Whether value is lazily evaluated"
+        },
+        "subfactory": {
+          "type": "string",
+          "description": "Subfactory reference"
+        }
+      }
+    },
+
+    "TraitSpec": {
+      "type": "object",
+      "description": "A factory trait",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Trait name"
+        },
+        "overrides": {
+          "type": "object",
+          "description": "Field overrides",
+          "additionalProperties": true
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "SequenceSpec": {
+      "type": "object",
+      "description": "A sequence generator",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Sequence name"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Pattern with {n} placeholder"
+        },
+        "start": {
+          "type": "integer",
+          "description": "Starting value",
+          "default": 1
+        }
+      }
+    },
+
+    "AssertionSpec": {
+      "type": "object",
+      "description": "A custom assertion",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Assertion name"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Function signature"
+        },
+        "checks": {
+          "type": "string",
+          "description": "What this assertion checks"
+        },
+        "failure_message": {
+          "type": "string",
+          "description": "Message format on failure"
+        },
+        "negated_name": {
+          "type": "string",
+          "description": "Name of negated version (if exists)"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "TestPatternSpec": {
+      "type": "object",
+      "description": "A recommended test pattern",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Pattern name"
+        },
+        "category": {
+          "type": "string",
+          "description": "Pattern category",
+          "enum": ["unit", "integration", "e2e", "property", "snapshot", "contract", "performance"]
+        },
+        "applies_to": {
+          "type": "array",
+          "description": "Types/features this pattern applies to",
+          "items": { "type": "string" }
+        },
+        "setup": {
+          "type": "string",
+          "description": "Setup instructions"
+        },
+        "example": {
+          "type": "string",
+          "description": "Example test code"
+        },
+        "fixtures_used": {
+          "type": "array",
+          "description": "Fixtures typically used",
+          "items": { "type": "string" }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "TestDoubleSpec": {
+      "type": "object",
+      "description": "Test double configuration for a type",
+      "properties": {
+        "provided": {
+          "type": "boolean",
+          "description": "Whether library provides a test double"
+        },
+        "type": {
+          "type": "string",
+          "description": "Test double type reference"
+        },
+        "builder": {
+          "type": "string",
+          "description": "Builder function reference"
+        },
+        "configurable_behaviors": {
+          "type": "array",
+          "description": "Behaviors that can be configured",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "CoverageSpec": {
+      "type": "object",
+      "description": "Test coverage configuration",
+      "properties": {
+        "tool": {
+          "type": "string",
+          "description": "Coverage tool",
+          "enum": ["coverage.py", "pytest-cov", "istanbul", "jacoco", "custom"]
+        },
+        "targets": {
+          "type": "array",
+          "description": "Coverage targets",
+          "items": { "$ref": "#/$defs/CoverageTargetSpec" }
+        },
+        "exclude_patterns": {
+          "type": "array",
+          "description": "Patterns to exclude from coverage",
+          "items": { "type": "string" }
+        },
+        "branch_coverage": {
+          "type": "boolean",
+          "description": "Whether branch coverage is tracked"
+        }
+      }
+    },
+
+    "CoverageTargetSpec": {
+      "type": "object",
+      "description": "A coverage target",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path or module"
+        },
+        "minimum": {
+          "type": "number",
+          "description": "Minimum coverage percentage",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}

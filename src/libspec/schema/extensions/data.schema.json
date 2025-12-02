@@ -1,0 +1,489 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/data.schema.json",
+  "title": "Data Extension",
+  "description": "Extension for data processing libraries: transforms, pipelines, dtype behavior, evaluation strategies.",
+
+  "$defs": {
+    "DataLibraryFields": {
+      "description": "Fields added to Library when data extension is active",
+      "type": "object",
+      "properties": {
+        "dtypes": {
+          "type": "array",
+          "description": "Data types supported by the library",
+          "items": { "$ref": "#/$defs/DTypeSpec" }
+        },
+        "transforms": {
+          "type": "array",
+          "description": "Data transformation operations",
+          "items": { "$ref": "#/$defs/TransformSpec" }
+        },
+        "pipelines": {
+          "type": "array",
+          "description": "Pipeline/workflow definitions",
+          "items": { "$ref": "#/$defs/PipelineSpec" }
+        },
+        "io_formats": {
+          "type": "array",
+          "description": "Supported I/O formats",
+          "items": { "$ref": "#/$defs/IOFormatSpec" }
+        },
+        "evaluation_strategy": {
+          "$ref": "#/$defs/EvaluationStrategySpec"
+        }
+      }
+    },
+
+    "DataTypeFields": {
+      "description": "Fields added to TypeDef when data extension is active",
+      "type": "object",
+      "properties": {
+        "dtype_behavior": {
+          "$ref": "#/$defs/DTypeBehaviorSpec"
+        },
+        "method_chaining": {
+          "$ref": "#/$defs/MethodChainingSpec"
+        },
+        "memory_layout": {
+          "$ref": "#/$defs/MemoryLayoutSpec"
+        },
+        "parallelism": {
+          "$ref": "#/$defs/ParallelismSpec"
+        }
+      }
+    },
+
+    "DataMethodFields": {
+      "description": "Fields added to Method when data extension is active",
+      "type": "object",
+      "properties": {
+        "lazy": {
+          "type": "boolean",
+          "description": "Whether this method is lazily evaluated"
+        },
+        "in_place": {
+          "type": "boolean",
+          "description": "Whether this method modifies data in place"
+        },
+        "copy_semantics": {
+          "type": "string",
+          "description": "Copy behavior",
+          "enum": ["copy", "view", "copy_on_write", "configurable"]
+        },
+        "broadcasting": {
+          "$ref": "#/$defs/BroadcastingSpec"
+        },
+        "dtype_promotion": {
+          "$ref": "#/$defs/DTypePromotionSpec"
+        },
+        "parallelizable": {
+          "type": "boolean",
+          "description": "Whether this operation can be parallelized"
+        },
+        "chunked": {
+          "type": "boolean",
+          "description": "Whether this operation supports chunked processing"
+        }
+      }
+    },
+
+    "DTypeSpec": {
+      "type": "object",
+      "description": "A data type definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Data type name"
+        },
+        "category": {
+          "type": "string",
+          "description": "Type category",
+          "enum": ["numeric", "string", "temporal", "boolean", "categorical", "nested", "binary", "null", "custom"]
+        },
+        "numpy_equivalent": {
+          "type": "string",
+          "description": "Equivalent NumPy dtype"
+        },
+        "python_type": {
+          "type": "string",
+          "description": "Python type for scalar values"
+        },
+        "nullable": {
+          "type": "boolean",
+          "description": "Whether null values are supported"
+        },
+        "bit_width": {
+          "type": "integer",
+          "description": "Bit width (for numeric types)"
+        },
+        "signed": {
+          "type": "boolean",
+          "description": "Whether signed (for integer types)"
+        },
+        "precision": {
+          "type": "string",
+          "description": "Precision (for temporal/decimal types)"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "DTypeBehaviorSpec": {
+      "type": "object",
+      "description": "Data type handling behavior for a type",
+      "properties": {
+        "supported_dtypes": {
+          "type": "array",
+          "description": "Supported data types",
+          "items": { "type": "string" }
+        },
+        "default_dtype": {
+          "type": "string",
+          "description": "Default dtype when not specified"
+        },
+        "dtype_inference": {
+          "type": "boolean",
+          "description": "Whether dtype is inferred automatically"
+        },
+        "strict_typing": {
+          "type": "boolean",
+          "description": "Whether type mismatches raise errors"
+        },
+        "coercion_rules": {
+          "type": "array",
+          "description": "Type coercion rules",
+          "items": { "$ref": "#/$defs/CoercionRule" }
+        }
+      }
+    },
+
+    "CoercionRule": {
+      "type": "object",
+      "description": "A type coercion rule",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Source type"
+        },
+        "to": {
+          "type": "string",
+          "description": "Target type"
+        },
+        "behavior": {
+          "type": "string",
+          "description": "What happens during coercion",
+          "enum": ["implicit", "explicit", "error", "warning"]
+        },
+        "lossy": {
+          "type": "boolean",
+          "description": "Whether conversion may lose information"
+        }
+      }
+    },
+
+    "TransformSpec": {
+      "type": "object",
+      "description": "A data transformation operation",
+      "required": ["name", "category"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Transform name"
+        },
+        "category": {
+          "type": "string",
+          "description": "Transform category",
+          "enum": ["select", "filter", "aggregate", "join", "reshape", "sort", "window", "fill", "cast", "custom"]
+        },
+        "method": {
+          "type": "string",
+          "description": "Method reference"
+        },
+        "input_shape": {
+          "type": "string",
+          "description": "Expected input shape (e.g., '1D', '2D', 'any')"
+        },
+        "output_shape": {
+          "type": "string",
+          "description": "Resulting output shape"
+        },
+        "preserves_order": {
+          "type": "boolean",
+          "description": "Whether row order is preserved"
+        },
+        "preserves_index": {
+          "type": "boolean",
+          "description": "Whether index is preserved"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "MethodChainingSpec": {
+      "type": "object",
+      "description": "Method chaining behavior",
+      "properties": {
+        "fluent_api": {
+          "type": "boolean",
+          "description": "Whether methods return self for chaining"
+        },
+        "immutable_chain": {
+          "type": "boolean",
+          "description": "Whether each chain step creates new instance"
+        },
+        "chainable_methods": {
+          "type": "array",
+          "description": "Methods that support chaining",
+          "items": { "type": "string" }
+        },
+        "terminal_methods": {
+          "type": "array",
+          "description": "Methods that break the chain (return different type)",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "PipelineSpec": {
+      "type": "object",
+      "description": "A data pipeline definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Pipeline name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Pipeline type",
+          "enum": ["sequential", "dag", "streaming", "batch"]
+        },
+        "stages": {
+          "type": "array",
+          "description": "Pipeline stages",
+          "items": { "$ref": "#/$defs/PipelineStage" }
+        },
+        "error_handling": {
+          "type": "string",
+          "description": "How errors are handled",
+          "enum": ["fail_fast", "collect", "skip", "retry"]
+        },
+        "checkpointing": {
+          "type": "boolean",
+          "description": "Whether checkpointing is supported"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "PipelineStage": {
+      "type": "object",
+      "description": "A pipeline stage",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Stage name"
+        },
+        "transform": {
+          "type": "string",
+          "description": "Transform to apply"
+        },
+        "inputs": {
+          "type": "array",
+          "description": "Input names (for DAG)",
+          "items": { "type": "string" }
+        },
+        "output": {
+          "type": "string",
+          "description": "Output name"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "Whether stage can be skipped"
+        }
+      }
+    },
+
+    "IOFormatSpec": {
+      "type": "object",
+      "description": "A supported I/O format",
+      "required": ["format"],
+      "properties": {
+        "format": {
+          "type": "string",
+          "description": "Format name (e.g., 'csv', 'parquet', 'json')"
+        },
+        "read_method": {
+          "type": "string",
+          "description": "Method for reading this format"
+        },
+        "write_method": {
+          "type": "string",
+          "description": "Method for writing this format"
+        },
+        "streaming": {
+          "type": "boolean",
+          "description": "Whether streaming read/write is supported"
+        },
+        "compression": {
+          "type": "array",
+          "description": "Supported compression codecs",
+          "items": { "type": "string" }
+        },
+        "schema_support": {
+          "type": "boolean",
+          "description": "Whether format supports schema"
+        },
+        "partitioning": {
+          "type": "boolean",
+          "description": "Whether partitioned read/write is supported"
+        }
+      }
+    },
+
+    "EvaluationStrategySpec": {
+      "type": "object",
+      "description": "Evaluation strategy configuration",
+      "properties": {
+        "default": {
+          "type": "string",
+          "description": "Default evaluation strategy",
+          "enum": ["eager", "lazy", "configurable"]
+        },
+        "lazy_operations": {
+          "type": "array",
+          "description": "Operations that are always lazy",
+          "items": { "type": "string" }
+        },
+        "eager_triggers": {
+          "type": "array",
+          "description": "Operations that trigger evaluation",
+          "items": { "type": "string" }
+        },
+        "collect_method": {
+          "type": "string",
+          "description": "Method to trigger full evaluation"
+        },
+        "streaming_collect": {
+          "type": "boolean",
+          "description": "Whether streaming evaluation is supported"
+        },
+        "query_optimization": {
+          "type": "boolean",
+          "description": "Whether query optimization is performed"
+        },
+        "explain_method": {
+          "type": "string",
+          "description": "Method to explain query plan"
+        }
+      }
+    },
+
+    "MemoryLayoutSpec": {
+      "type": "object",
+      "description": "Memory layout configuration",
+      "properties": {
+        "layout": {
+          "type": "string",
+          "description": "Memory layout",
+          "enum": ["row_major", "column_major", "chunked", "arrow", "custom"]
+        },
+        "contiguous": {
+          "type": "boolean",
+          "description": "Whether data is stored contiguously"
+        },
+        "zero_copy": {
+          "type": "boolean",
+          "description": "Whether zero-copy operations are supported"
+        },
+        "memory_mapped": {
+          "type": "boolean",
+          "description": "Whether memory mapping is supported"
+        },
+        "string_storage": {
+          "type": "string",
+          "description": "String storage strategy",
+          "enum": ["utf8", "large_utf8", "dictionary", "fixed_size"]
+        }
+      }
+    },
+
+    "ParallelismSpec": {
+      "type": "object",
+      "description": "Parallelism configuration",
+      "properties": {
+        "backend": {
+          "type": "string",
+          "description": "Parallelism backend",
+          "enum": ["threads", "processes", "dask", "ray", "spark", "none"]
+        },
+        "default_threads": {
+          "type": "integer",
+          "description": "Default thread count"
+        },
+        "auto_parallel": {
+          "type": "boolean",
+          "description": "Whether operations auto-parallelize"
+        },
+        "min_size_for_parallel": {
+          "type": "integer",
+          "description": "Minimum data size for parallel execution"
+        },
+        "parallel_operations": {
+          "type": "array",
+          "description": "Operations that support parallelism",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "BroadcastingSpec": {
+      "type": "object",
+      "description": "Broadcasting behavior for operations",
+      "properties": {
+        "supported": {
+          "type": "boolean",
+          "description": "Whether broadcasting is supported"
+        },
+        "rules": {
+          "type": "string",
+          "description": "Broadcasting rules (e.g., 'numpy', 'strict')"
+        },
+        "scalar_expansion": {
+          "type": "boolean",
+          "description": "Whether scalars are expanded"
+        }
+      }
+    },
+
+    "DTypePromotionSpec": {
+      "type": "object",
+      "description": "Data type promotion behavior",
+      "properties": {
+        "rules": {
+          "type": "string",
+          "description": "Promotion rule set",
+          "enum": ["numpy", "pandas", "strict", "custom"]
+        },
+        "result_dtype": {
+          "type": "string",
+          "description": "Result dtype for this operation"
+        },
+        "overflow_behavior": {
+          "type": "string",
+          "description": "Behavior on overflow",
+          "enum": ["wrap", "saturate", "error", "promote"]
+        }
+      }
+    }
+  }
+}

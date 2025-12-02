@@ -1,0 +1,459 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/web.schema.json",
+  "title": "Web Extension",
+  "description": "Extension for web frameworks: routes, middleware, request/response, dependencies.",
+
+  "$defs": {
+    "WebLibraryFields": {
+      "description": "Fields added to Library when web extension is active",
+      "type": "object",
+      "properties": {
+        "routes": {
+          "type": "array",
+          "description": "HTTP route definitions",
+          "items": { "$ref": "#/$defs/RouteSpec" }
+        },
+        "middleware": {
+          "type": "array",
+          "description": "Middleware stack",
+          "items": { "$ref": "#/$defs/MiddlewareSpec" }
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Dependency injection definitions",
+          "items": { "$ref": "#/$defs/DependencySpec" }
+        },
+        "websockets": {
+          "type": "array",
+          "description": "WebSocket endpoint definitions",
+          "items": { "$ref": "#/$defs/WebSocketSpec" }
+        },
+        "error_handlers": {
+          "type": "array",
+          "description": "Exception to HTTP response mappings",
+          "items": { "$ref": "#/$defs/ErrorHandlerSpec" }
+        }
+      }
+    },
+
+    "RouteSpec": {
+      "type": "object",
+      "description": "An HTTP route definition",
+      "required": ["path", "method"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "URL path pattern (e.g., '/users/{user_id}')"
+        },
+        "method": {
+          "type": "string",
+          "description": "HTTP method",
+          "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "*"]
+        },
+        "handler": {
+          "type": "string",
+          "description": "Handler function reference"
+        },
+        "name": {
+          "type": "string",
+          "description": "Route name for URL generation"
+        },
+        "path_params": {
+          "type": "array",
+          "description": "Path parameter definitions",
+          "items": { "$ref": "#/$defs/PathParamSpec" }
+        },
+        "query_params": {
+          "type": "array",
+          "description": "Query parameter definitions",
+          "items": { "$ref": "#/$defs/QueryParamSpec" }
+        },
+        "headers": {
+          "type": "array",
+          "description": "Required/optional header definitions",
+          "items": { "$ref": "#/$defs/HeaderSpec" }
+        },
+        "request_body": {
+          "$ref": "#/$defs/RequestBodySpec"
+        },
+        "response": {
+          "$ref": "#/$defs/ResponseSpec"
+        },
+        "errors": {
+          "type": "array",
+          "description": "Error responses",
+          "items": { "$ref": "#/$defs/ErrorResponseSpec" }
+        },
+        "auth": {
+          "type": "string",
+          "description": "Authentication requirement",
+          "enum": ["required", "optional", "none"]
+        },
+        "permissions": {
+          "type": "array",
+          "description": "Required permissions",
+          "items": { "type": "string" }
+        },
+        "rate_limit": {
+          "$ref": "#/$defs/RateLimitSpec"
+        },
+        "tags": {
+          "type": "array",
+          "description": "OpenAPI tags",
+          "items": { "type": "string" }
+        },
+        "deprecated": {
+          "type": "boolean",
+          "description": "Whether this route is deprecated"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Short summary for OpenAPI"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description"
+        }
+      }
+    },
+
+    "PathParamSpec": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Parameter name in path"
+        },
+        "type": {
+          "type": "string",
+          "description": "Parameter type"
+        },
+        "description": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regex pattern for validation"
+        }
+      }
+    },
+
+    "QueryParamSpec": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Query parameter name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Parameter type"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "default": {
+          "type": "string",
+          "description": "Default value"
+        },
+        "description": {
+          "type": "string"
+        },
+        "multiple": {
+          "type": "boolean",
+          "description": "Whether multiple values allowed",
+          "default": false
+        }
+      }
+    },
+
+    "HeaderSpec": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Header name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Value type"
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "RequestBodySpec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Request body model type"
+        },
+        "content_type": {
+          "type": "string",
+          "description": "Expected content type",
+          "default": "application/json"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "ResponseSpec": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Response model type"
+        },
+        "status": {
+          "type": "integer",
+          "description": "HTTP status code",
+          "default": 200
+        },
+        "content_type": {
+          "type": "string",
+          "description": "Response content type",
+          "default": "application/json"
+        },
+        "headers": {
+          "type": "array",
+          "description": "Response headers",
+          "items": { "$ref": "#/$defs/HeaderSpec" }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "ErrorResponseSpec": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "integer",
+          "description": "HTTP status code"
+        },
+        "type": {
+          "type": "string",
+          "description": "Error response model type"
+        },
+        "exception": {
+          "type": "string",
+          "description": "Exception type that triggers this response"
+        },
+        "when": {
+          "type": "string",
+          "description": "When this error occurs"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "MiddlewareSpec": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Middleware name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Middleware class/function reference"
+        },
+        "order": {
+          "type": "integer",
+          "description": "Execution order (lower = earlier)"
+        },
+        "applies_to": {
+          "type": "string",
+          "description": "Which routes this applies to",
+          "enum": ["all", "tagged", "specific"]
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags to match (if applies_to='tagged')",
+          "items": { "type": "string" }
+        },
+        "routes": {
+          "type": "array",
+          "description": "Route paths (if applies_to='specific')",
+          "items": { "type": "string" }
+        },
+        "position": {
+          "type": "string",
+          "description": "When middleware runs",
+          "enum": ["before", "after", "wrap"]
+        },
+        "config": {
+          "type": "object",
+          "description": "Middleware configuration",
+          "additionalProperties": true
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "DependencySpec": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Dependency name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Dependency type"
+        },
+        "factory": {
+          "type": "string",
+          "description": "Factory function reference"
+        },
+        "scope": {
+          "type": "string",
+          "description": "Dependency lifetime",
+          "enum": ["request", "session", "app", "singleton"]
+        },
+        "cacheable": {
+          "type": "boolean",
+          "description": "Whether result can be cached",
+          "default": true
+        },
+        "async": {
+          "type": "boolean",
+          "description": "Whether factory is async"
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Other dependencies this requires",
+          "items": { "type": "string" }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "WebSocketSpec": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "WebSocket endpoint path"
+        },
+        "handler": {
+          "type": "string",
+          "description": "Handler function reference"
+        },
+        "subprotocols": {
+          "type": "array",
+          "description": "Supported subprotocols",
+          "items": { "type": "string" }
+        },
+        "auth": {
+          "type": "string",
+          "enum": ["required", "optional", "none"]
+        },
+        "message_types": {
+          "type": "array",
+          "description": "Message type definitions",
+          "items": { "$ref": "#/$defs/WSMessageSpec" }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "WSMessageSpec": {
+      "type": "object",
+      "required": ["name", "direction"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Message type name"
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["client_to_server", "server_to_client", "bidirectional"]
+        },
+        "type": {
+          "type": "string",
+          "description": "Message payload type"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "ErrorHandlerSpec": {
+      "type": "object",
+      "required": ["exception", "status"],
+      "properties": {
+        "exception": {
+          "type": "string",
+          "description": "Exception type to handle"
+        },
+        "status": {
+          "type": "integer",
+          "description": "HTTP status code"
+        },
+        "response_type": {
+          "type": "string",
+          "description": "Response model type"
+        },
+        "handler": {
+          "type": "string",
+          "description": "Custom handler function"
+        }
+      }
+    },
+
+    "RateLimitSpec": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "integer",
+          "description": "Number of requests allowed"
+        },
+        "window": {
+          "type": "string",
+          "description": "Time window (e.g., '1m', '1h')"
+        },
+        "key": {
+          "type": "string",
+          "description": "Rate limit key (e.g., 'ip', 'user')"
+        },
+        "burst": {
+          "type": "integer",
+          "description": "Burst allowance"
+        }
+      }
+    }
+  }
+}

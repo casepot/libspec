@@ -1,0 +1,454 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/orm.schema.json",
+  "title": "ORM Extension",
+  "description": "Extension for object-relational mapping: models, relationships, queries, migrations.",
+
+  "$defs": {
+    "ORMLibraryFields": {
+      "description": "Fields added to Library when ORM extension is active",
+      "type": "object",
+      "properties": {
+        "models": {
+          "type": "array",
+          "description": "ORM model definitions",
+          "items": { "$ref": "#/$defs/ModelSpec" }
+        },
+        "session_management": {
+          "$ref": "#/$defs/SessionManagementSpec"
+        },
+        "query_patterns": {
+          "type": "array",
+          "description": "Common query patterns",
+          "items": { "$ref": "#/$defs/QueryPatternSpec" }
+        },
+        "migrations": {
+          "$ref": "#/$defs/MigrationSpec"
+        },
+        "database_support": {
+          "type": "array",
+          "description": "Supported databases",
+          "items": { "$ref": "#/$defs/DatabaseSupportSpec" }
+        }
+      }
+    },
+
+    "ModelSpec": {
+      "type": "object",
+      "description": "An ORM model definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Model class name"
+        },
+        "table": {
+          "type": "string",
+          "description": "Database table name"
+        },
+        "schema": {
+          "type": "string",
+          "description": "Database schema (if applicable)"
+        },
+        "columns": {
+          "type": "array",
+          "description": "Column definitions",
+          "items": { "$ref": "#/$defs/ColumnSpec" }
+        },
+        "primary_key": {
+          "type": "array",
+          "description": "Primary key columns",
+          "items": { "type": "string" }
+        },
+        "relationships": {
+          "type": "array",
+          "description": "Relationships to other models",
+          "items": { "$ref": "#/$defs/RelationshipSpec" }
+        },
+        "indexes": {
+          "type": "array",
+          "description": "Index definitions",
+          "items": { "$ref": "#/$defs/IndexSpec" }
+        },
+        "constraints": {
+          "type": "array",
+          "description": "Table constraints",
+          "items": { "$ref": "#/$defs/ConstraintSpec" }
+        },
+        "mixins": {
+          "type": "array",
+          "description": "Mixin classes applied",
+          "items": { "type": "string" }
+        },
+        "polymorphic": {
+          "$ref": "#/$defs/PolymorphicSpec"
+        },
+        "soft_delete": {
+          "type": "boolean",
+          "description": "Whether soft delete is enabled"
+        },
+        "timestamps": {
+          "$ref": "#/$defs/TimestampSpec"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "ColumnSpec": {
+      "type": "object",
+      "description": "A database column definition",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Column name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Column type (e.g., 'Integer', 'String(255)', 'JSON')"
+        },
+        "nullable": {
+          "type": "boolean",
+          "description": "Whether column allows NULL",
+          "default": true
+        },
+        "primary_key": {
+          "type": "boolean",
+          "description": "Whether this is a primary key"
+        },
+        "auto_increment": {
+          "type": "boolean",
+          "description": "Whether value auto-increments"
+        },
+        "default": {
+          "description": "Default value or callable"
+        },
+        "server_default": {
+          "type": "string",
+          "description": "Server-side default expression"
+        },
+        "unique": {
+          "type": "boolean",
+          "description": "Whether value must be unique"
+        },
+        "index": {
+          "type": "boolean",
+          "description": "Whether column is indexed"
+        },
+        "foreign_key": {
+          "type": "string",
+          "description": "Foreign key reference (e.g., 'users.id')"
+        },
+        "on_update": {
+          "type": "string",
+          "description": "ON UPDATE action",
+          "enum": ["CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT", "NO ACTION"]
+        },
+        "on_delete": {
+          "type": "string",
+          "description": "ON DELETE action",
+          "enum": ["CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT", "NO ACTION"]
+        },
+        "check": {
+          "type": "string",
+          "description": "CHECK constraint expression"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Column comment"
+        },
+        "python_type": {
+          "type": "string",
+          "description": "Python type for this column"
+        }
+      }
+    },
+
+    "RelationshipSpec": {
+      "type": "object",
+      "description": "A model relationship",
+      "required": ["name", "type", "target"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Relationship attribute name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Relationship type",
+          "enum": ["one_to_one", "one_to_many", "many_to_one", "many_to_many"]
+        },
+        "target": {
+          "type": "string",
+          "description": "Target model name"
+        },
+        "back_populates": {
+          "type": "string",
+          "description": "Back-reference attribute on target"
+        },
+        "secondary": {
+          "type": "string",
+          "description": "Association table (for many-to-many)"
+        },
+        "foreign_keys": {
+          "type": "array",
+          "description": "Explicit foreign keys",
+          "items": { "type": "string" }
+        },
+        "lazy": {
+          "type": "string",
+          "description": "Loading strategy",
+          "enum": ["select", "joined", "subquery", "selectin", "raise", "dynamic", "write_only"]
+        },
+        "cascade": {
+          "type": "string",
+          "description": "Cascade options (e.g., 'all, delete-orphan')"
+        },
+        "uselist": {
+          "type": "boolean",
+          "description": "Whether relationship returns list"
+        },
+        "viewonly": {
+          "type": "boolean",
+          "description": "Whether relationship is read-only"
+        },
+        "order_by": {
+          "type": "string",
+          "description": "Default ordering"
+        }
+      }
+    },
+
+    "IndexSpec": {
+      "type": "object",
+      "description": "An index definition",
+      "required": ["columns"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Index name"
+        },
+        "columns": {
+          "type": "array",
+          "description": "Columns in the index",
+          "items": { "type": "string" }
+        },
+        "unique": {
+          "type": "boolean",
+          "description": "Whether index is unique"
+        },
+        "type": {
+          "type": "string",
+          "description": "Index type (e.g., 'btree', 'hash', 'gin', 'gist')"
+        },
+        "where": {
+          "type": "string",
+          "description": "Partial index condition"
+        },
+        "include": {
+          "type": "array",
+          "description": "Included columns (covering index)",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "ConstraintSpec": {
+      "type": "object",
+      "description": "A table constraint",
+      "required": ["type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Constraint name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Constraint type",
+          "enum": ["check", "unique", "foreign_key", "primary_key", "exclude"]
+        },
+        "columns": {
+          "type": "array",
+          "description": "Columns involved",
+          "items": { "type": "string" }
+        },
+        "expression": {
+          "type": "string",
+          "description": "Constraint expression"
+        },
+        "deferrable": {
+          "type": "boolean",
+          "description": "Whether constraint is deferrable"
+        },
+        "initially": {
+          "type": "string",
+          "description": "Initial constraint mode",
+          "enum": ["IMMEDIATE", "DEFERRED"]
+        }
+      }
+    },
+
+    "PolymorphicSpec": {
+      "type": "object",
+      "description": "Polymorphic inheritance configuration",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Inheritance type",
+          "enum": ["single_table", "joined", "concrete"]
+        },
+        "discriminator": {
+          "type": "string",
+          "description": "Discriminator column"
+        },
+        "identity": {
+          "type": "string",
+          "description": "Polymorphic identity value"
+        }
+      }
+    },
+
+    "TimestampSpec": {
+      "type": "object",
+      "description": "Automatic timestamp configuration",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "description": "Created timestamp column name"
+        },
+        "updated_at": {
+          "type": "string",
+          "description": "Updated timestamp column name"
+        },
+        "deleted_at": {
+          "type": "string",
+          "description": "Soft delete timestamp column name"
+        },
+        "timezone": {
+          "type": "boolean",
+          "description": "Whether timestamps include timezone"
+        }
+      }
+    },
+
+    "SessionManagementSpec": {
+      "type": "object",
+      "description": "Session/unit of work configuration",
+      "properties": {
+        "scoped_session": {
+          "type": "boolean",
+          "description": "Whether scoped sessions are used"
+        },
+        "autoflush": {
+          "type": "boolean",
+          "description": "Default autoflush setting"
+        },
+        "autocommit": {
+          "type": "boolean",
+          "description": "Default autocommit setting"
+        },
+        "expire_on_commit": {
+          "type": "boolean",
+          "description": "Whether objects expire on commit"
+        },
+        "context_manager": {
+          "type": "boolean",
+          "description": "Whether session supports context manager"
+        },
+        "async_support": {
+          "type": "boolean",
+          "description": "Whether async sessions are supported"
+        }
+      }
+    },
+
+    "QueryPatternSpec": {
+      "type": "object",
+      "description": "A common query pattern",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Pattern name"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Query pattern type",
+          "enum": ["repository", "active_record", "data_mapper", "query_builder", "raw_sql"]
+        },
+        "method": {
+          "type": "string",
+          "description": "Method reference"
+        },
+        "description": {
+          "type": "string",
+          "description": "Pattern description"
+        },
+        "example": {
+          "type": "string",
+          "description": "Usage example"
+        }
+      }
+    },
+
+    "MigrationSpec": {
+      "type": "object",
+      "description": "Database migration configuration",
+      "properties": {
+        "tool": {
+          "type": "string",
+          "description": "Migration tool",
+          "enum": ["alembic", "flyway", "django", "custom"]
+        },
+        "directory": {
+          "type": "string",
+          "description": "Migration directory"
+        },
+        "auto_generate": {
+          "type": "boolean",
+          "description": "Whether auto-generation is supported"
+        },
+        "revision_format": {
+          "type": "string",
+          "description": "Revision ID format"
+        },
+        "branching": {
+          "type": "boolean",
+          "description": "Whether migration branching is supported"
+        }
+      }
+    },
+
+    "DatabaseSupportSpec": {
+      "type": "object",
+      "description": "Database support information",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Database name",
+          "enum": ["postgresql", "mysql", "sqlite", "oracle", "mssql", "mariadb", "cockroachdb"]
+        },
+        "dialect": {
+          "type": "string",
+          "description": "SQLAlchemy dialect"
+        },
+        "min_version": {
+          "type": "string",
+          "description": "Minimum supported version"
+        },
+        "features": {
+          "type": "array",
+          "description": "Database-specific features supported",
+          "items": { "type": "string" }
+        },
+        "async_driver": {
+          "type": "string",
+          "description": "Async driver package"
+        }
+      }
+    }
+  }
+}

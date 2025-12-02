@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/safety.schema.json",
+  "title": "Safety Extension",
+  "description": "Extension for safety guarantees: thread safety, reentrancy, memory safety.",
+
+  "$defs": {
+    "SafetyTypeFields": {
+      "description": "Fields added to TypeDef when safety extension is active",
+      "type": "object",
+      "properties": {
+        "thread_safety": {
+          "$ref": "#/$defs/ThreadSafetySpec"
+        },
+        "reentrancy": {
+          "$ref": "#/$defs/ReentrancySpec"
+        },
+        "memory_safety": {
+          "$ref": "#/$defs/MemorySafetySpec"
+        },
+        "concurrency_model": {
+          "$ref": "#/$defs/ConcurrencyModelSpec"
+        }
+      }
+    },
+
+    "SafetyMethodFields": {
+      "description": "Fields added to Method when safety extension is active",
+      "type": "object",
+      "properties": {
+        "thread_safe": {
+          "type": "boolean",
+          "description": "Whether this method is thread-safe"
+        },
+        "reentrant": {
+          "type": "boolean",
+          "description": "Whether this method is reentrant"
+        },
+        "signal_safe": {
+          "type": "boolean",
+          "description": "Whether safe to call from signal handlers"
+        },
+        "atomic": {
+          "type": "boolean",
+          "description": "Whether this operation is atomic"
+        }
+      }
+    },
+
+    "SafetyFunctionFields": {
+      "description": "Fields added to FunctionDef when safety extension is active",
+      "type": "object",
+      "properties": {
+        "thread_safe": {
+          "type": "boolean",
+          "description": "Whether this function is thread-safe"
+        },
+        "reentrant": {
+          "type": "boolean",
+          "description": "Whether this function is reentrant"
+        },
+        "signal_safe": {
+          "type": "boolean",
+          "description": "Whether safe to call from signal handlers"
+        },
+        "atomic": {
+          "type": "boolean",
+          "description": "Whether this operation is atomic"
+        }
+      }
+    },
+
+    "ThreadSafetySpec": {
+      "type": "object",
+      "description": "Thread safety characteristics",
+      "properties": {
+        "safe": {
+          "type": "boolean",
+          "description": "Whether the type is thread-safe"
+        },
+        "mode": {
+          "type": "string",
+          "description": "How thread safety is achieved",
+          "enum": ["immutable", "synchronized", "thread_local", "lock_free", "wait_free", "none"]
+        },
+        "lock_type": {
+          "type": "string",
+          "description": "Type of lock used (if synchronized)",
+          "enum": ["Lock", "RLock", "RWLock", "Semaphore", "none"]
+        },
+        "lock_granularity": {
+          "type": "string",
+          "description": "Granularity of locking",
+          "enum": ["global", "per_instance", "per_method", "fine_grained"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional thread safety notes"
+        }
+      }
+    },
+
+    "ReentrancySpec": {
+      "type": "object",
+      "description": "Reentrancy characteristics",
+      "properties": {
+        "reentrant": {
+          "type": "boolean",
+          "description": "Whether the type/method is reentrant"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why it's not reentrant (if applicable)"
+        },
+        "safe_methods": {
+          "type": "array",
+          "description": "Methods that are reentrant even if type isn't",
+          "items": { "type": "string" }
+        },
+        "unsafe_methods": {
+          "type": "array",
+          "description": "Methods that are not reentrant even if type is",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "MemorySafetySpec": {
+      "type": "object",
+      "description": "Memory safety characteristics",
+      "properties": {
+        "leaks": {
+          "type": "string",
+          "description": "Memory leak potential",
+          "enum": ["none", "possible", "managed", "external"]
+        },
+        "cleanup": {
+          "type": "string",
+          "description": "How resources are cleaned up",
+          "enum": ["automatic", "manual", "context_manager", "destructor", "ref_counted"]
+        },
+        "weak_refs_supported": {
+          "type": "boolean",
+          "description": "Whether weak references are supported"
+        },
+        "cyclic_refs_safe": {
+          "type": "boolean",
+          "description": "Whether cyclic references are handled safely"
+        }
+      }
+    },
+
+    "ConcurrencyModelSpec": {
+      "type": "object",
+      "description": "Concurrency model semantics",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Concurrency model used",
+          "enum": ["shared_nothing", "actor", "csp", "shared_memory", "stm", "none"]
+        },
+        "races_possible": {
+          "type": "boolean",
+          "description": "Whether data races are possible"
+        },
+        "deadlock_free": {
+          "type": "boolean",
+          "description": "Whether deadlocks are impossible by design"
+        },
+        "starvation_free": {
+          "type": "boolean",
+          "description": "Whether starvation is impossible by design"
+        }
+      }
+    },
+
+    "SignalSafetySpec": {
+      "type": "object",
+      "description": "Signal handler safety",
+      "properties": {
+        "safe": {
+          "type": "boolean",
+          "description": "Whether safe in signal handlers"
+        },
+        "unsafe_operations": {
+          "type": "array",
+          "description": "Operations that make it unsafe",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

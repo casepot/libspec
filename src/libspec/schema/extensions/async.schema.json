@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/async.schema.json",
+  "title": "Async Extension",
+  "description": "Extension for async/concurrent system semantics: lifecycle, cancellation, synchronization, observables.",
+
+  "$defs": {
+    "AsyncMethodFields": {
+      "description": "Fields added to Method when async extension is active",
+      "type": "object",
+      "properties": {
+        "async": {
+          "type": "boolean",
+          "description": "Whether this is an async method",
+          "default": false
+        },
+        "awaitable": {
+          "type": "boolean",
+          "description": "Whether the return value is awaitable"
+        },
+        "blocking": {
+          "type": "boolean",
+          "description": "Whether this method blocks the event loop"
+        },
+        "cancellation": {
+          "$ref": "#/$defs/CancellationSpec"
+        }
+      }
+    },
+
+    "AsyncTypeFields": {
+      "description": "Fields added to TypeDef when async extension is active",
+      "type": "object",
+      "properties": {
+        "lifecycle": {
+          "$ref": "#/$defs/LifecycleSpec"
+        },
+        "synchronization": {
+          "$ref": "#/$defs/SyncSpec"
+        },
+        "observable": {
+          "$ref": "#/$defs/ObservableSpec"
+        },
+        "scheduling": {
+          "$ref": "#/$defs/SchedulingSpec"
+        }
+      }
+    },
+
+    "AsyncFunctionFields": {
+      "description": "Fields added to FunctionDef when async extension is active",
+      "type": "object",
+      "properties": {
+        "async": {
+          "type": "boolean",
+          "description": "Whether this is an async function",
+          "default": false
+        },
+        "awaitable": {
+          "type": "boolean",
+          "description": "Whether the return value is awaitable"
+        },
+        "blocking": {
+          "type": "boolean",
+          "description": "Whether this function blocks the event loop"
+        },
+        "cancellation": {
+          "$ref": "#/$defs/CancellationSpec"
+        }
+      }
+    },
+
+    "CancellationSpec": {
+      "type": "object",
+      "description": "How this async operation handles cancellation",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "Cancellation mode",
+          "enum": ["cooperative", "immediate", "none"]
+        },
+        "cleanup": {
+          "type": "string",
+          "description": "What cleanup happens on cancellation"
+        },
+        "propagates": {
+          "type": "boolean",
+          "description": "Whether cancellation propagates to children",
+          "default": true
+        }
+      }
+    },
+
+    "LifecycleSpec": {
+      "type": "object",
+      "description": "State machine lifecycle for async types",
+      "properties": {
+        "states": {
+          "type": "array",
+          "description": "All possible states",
+          "items": { "$ref": "#/$defs/StateSpec" }
+        },
+        "initial_state": {
+          "type": "string",
+          "description": "Initial state name"
+        },
+        "transitions": {
+          "type": "array",
+          "description": "Valid state transitions",
+          "items": { "$ref": "#/$defs/TransitionSpec" }
+        }
+      }
+    },
+
+    "StateSpec": {
+      "type": "object",
+      "description": "A lifecycle state",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "State name"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this state represents"
+        },
+        "terminal": {
+          "type": "boolean",
+          "description": "Whether this is a terminal state",
+          "default": false
+        },
+        "on_enter": {
+          "type": "string",
+          "description": "Action to run on entering this state"
+        },
+        "on_exit": {
+          "type": "string",
+          "description": "Action to run on exiting this state"
+        }
+      }
+    },
+
+    "TransitionSpec": {
+      "type": "object",
+      "description": "A state transition",
+      "required": ["from", "to", "trigger"],
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Source state name"
+        },
+        "to": {
+          "type": "string",
+          "description": "Target state name"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "What causes this transition (method call, event, etc.)"
+        },
+        "guard": {
+          "type": "string",
+          "description": "Condition that must be true for transition"
+        },
+        "side_effects": {
+          "type": "array",
+          "description": "Side effects of this transition",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "SyncSpec": {
+      "type": "object",
+      "description": "Synchronization primitive semantics",
+      "properties": {
+        "primitive": {
+          "type": "string",
+          "description": "Type of synchronization primitive",
+          "enum": ["mailbox", "channel", "lock", "semaphore", "event", "barrier", "condition"]
+        },
+        "semantics": {
+          "type": "string",
+          "description": "Ordering/delivery semantics",
+          "enum": ["fifo", "priority", "broadcast", "lifo"]
+        },
+        "bounded": {
+          "type": "boolean",
+          "description": "Whether the primitive has a capacity limit"
+        },
+        "capacity": {
+          "type": "integer",
+          "description": "Maximum capacity (if bounded)",
+          "minimum": 0
+        },
+        "backpressure": {
+          "type": "string",
+          "description": "What happens when capacity is reached",
+          "enum": ["block", "drop", "error"]
+        }
+      }
+    },
+
+    "ObservableSpec": {
+      "type": "object",
+      "description": "Observable/stream semantics",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Hot (live) or cold (replay) observable",
+          "enum": ["hot", "cold"]
+        },
+        "backpressure": {
+          "type": "string",
+          "description": "Backpressure strategy",
+          "enum": ["buffer", "drop", "block", "error", "latest"]
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "Whether late subscribers receive past events"
+        },
+        "replay_buffer": {
+          "type": "integer",
+          "description": "Number of past events to replay",
+          "minimum": 0
+        },
+        "multicasting": {
+          "type": "boolean",
+          "description": "Whether multiple subscribers share the same stream"
+        }
+      }
+    },
+
+    "SchedulingSpec": {
+      "type": "object",
+      "description": "Execution scheduling semantics",
+      "properties": {
+        "executor": {
+          "type": "string",
+          "description": "Where this runs",
+          "enum": ["event_loop", "thread_pool", "process_pool", "custom"]
+        },
+        "priority": {
+          "type": "string",
+          "description": "Scheduling priority",
+          "enum": ["low", "normal", "high", "realtime"]
+        },
+        "preemptible": {
+          "type": "boolean",
+          "description": "Whether execution can be preempted"
+        },
+        "timeout_default": {
+          "type": "number",
+          "description": "Default timeout in seconds"
+        }
+      }
+    }
+  }
+}

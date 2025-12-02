@@ -1,0 +1,442 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/plugins.schema.json",
+  "title": "Plugins Extension",
+  "description": "Extension for plugin architectures: extension points, hooks, registries, discovery.",
+
+  "$defs": {
+    "PluginsLibraryFields": {
+      "description": "Fields added to Library when plugins extension is active",
+      "type": "object",
+      "properties": {
+        "extension_points": {
+          "type": "array",
+          "description": "Extension point definitions",
+          "items": { "$ref": "#/$defs/ExtensionPointSpec" }
+        },
+        "hooks": {
+          "type": "array",
+          "description": "Hook definitions",
+          "items": { "$ref": "#/$defs/HookSpec" }
+        },
+        "registries": {
+          "type": "array",
+          "description": "Plugin registries",
+          "items": { "$ref": "#/$defs/RegistrySpec" }
+        },
+        "discovery": {
+          "$ref": "#/$defs/DiscoverySpec"
+        },
+        "builtin_plugins": {
+          "type": "array",
+          "description": "Built-in plugins",
+          "items": { "$ref": "#/$defs/PluginSpec" }
+        }
+      }
+    },
+
+    "PluginsTypeFields": {
+      "description": "Fields added to TypeDef when plugins extension is active",
+      "type": "object",
+      "properties": {
+        "extensible": {
+          "type": "boolean",
+          "description": "Whether this type is an extension point"
+        },
+        "extension_of": {
+          "type": "string",
+          "description": "Extension point this type implements"
+        },
+        "plugin_api": {
+          "type": "boolean",
+          "description": "Whether this type is part of the plugin API"
+        }
+      }
+    },
+
+    "ExtensionPointSpec": {
+      "type": "object",
+      "description": "An extension point definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Extension point name"
+        },
+        "interface": {
+          "type": "string",
+          "description": "Interface type reference"
+        },
+        "protocol": {
+          "type": "string",
+          "description": "Protocol type reference"
+        },
+        "multiple": {
+          "type": "boolean",
+          "description": "Whether multiple implementations allowed"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether at least one implementation required"
+        },
+        "default": {
+          "type": "string",
+          "description": "Default implementation reference"
+        },
+        "priority_ordered": {
+          "type": "boolean",
+          "description": "Whether implementations are priority ordered"
+        },
+        "lifecycle": {
+          "type": "string",
+          "description": "Extension lifecycle",
+          "enum": ["singleton", "per_request", "transient"]
+        },
+        "version": {
+          "type": "string",
+          "description": "Extension point API version"
+        },
+        "deprecated": {
+          "type": "boolean",
+          "description": "Whether extension point is deprecated"
+        },
+        "replacement": {
+          "type": "string",
+          "description": "Replacement extension point"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "HookSpec": {
+      "type": "object",
+      "description": "A hook definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Hook name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Hook type",
+          "enum": ["filter", "action", "event", "wrapper"]
+        },
+        "signature": {
+          "type": "string",
+          "description": "Hook callback signature"
+        },
+        "parameters": {
+          "type": "array",
+          "description": "Hook parameters",
+          "items": { "$ref": "#/$defs/HookParamSpec" }
+        },
+        "returns": {
+          "type": "string",
+          "description": "Return type (for filters)"
+        },
+        "async": {
+          "type": "boolean",
+          "description": "Whether hook is async"
+        },
+        "execution_order": {
+          "type": "string",
+          "description": "How multiple handlers execute",
+          "enum": ["sequential", "parallel", "pipeline", "first_match"]
+        },
+        "priority_support": {
+          "type": "boolean",
+          "description": "Whether handlers can specify priority"
+        },
+        "stoppable": {
+          "type": "boolean",
+          "description": "Whether propagation can be stopped"
+        },
+        "result_collection": {
+          "type": "string",
+          "description": "How results are collected",
+          "enum": ["none", "first", "last", "all", "merge"]
+        },
+        "when": {
+          "type": "string",
+          "description": "When this hook is called"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "HookParamSpec": {
+      "type": "object",
+      "description": "A hook parameter",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Parameter name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Parameter type"
+        },
+        "mutable": {
+          "type": "boolean",
+          "description": "Whether parameter can be modified"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "RegistrySpec": {
+      "type": "object",
+      "description": "A plugin registry",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Registry name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Registry class reference"
+        },
+        "key_type": {
+          "type": "string",
+          "description": "Registration key type"
+        },
+        "value_type": {
+          "type": "string",
+          "description": "Registered value type"
+        },
+        "singleton": {
+          "type": "boolean",
+          "description": "Whether registry is a singleton"
+        },
+        "thread_safe": {
+          "type": "boolean",
+          "description": "Whether registry is thread-safe"
+        },
+        "lazy_loading": {
+          "type": "boolean",
+          "description": "Whether entries are lazily loaded"
+        },
+        "validation": {
+          "type": "string",
+          "description": "Entry validation behavior",
+          "enum": ["none", "on_register", "on_access", "both"]
+        },
+        "override_policy": {
+          "type": "string",
+          "description": "How duplicate registrations are handled",
+          "enum": ["error", "warn", "replace", "ignore"]
+        },
+        "methods": {
+          "$ref": "#/$defs/RegistryMethodsSpec"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "RegistryMethodsSpec": {
+      "type": "object",
+      "description": "Registry method names",
+      "properties": {
+        "register": {
+          "type": "string",
+          "description": "Registration method name"
+        },
+        "unregister": {
+          "type": "string",
+          "description": "Unregistration method name"
+        },
+        "get": {
+          "type": "string",
+          "description": "Retrieval method name"
+        },
+        "list": {
+          "type": "string",
+          "description": "List all method name"
+        },
+        "has": {
+          "type": "string",
+          "description": "Check existence method name"
+        }
+      }
+    },
+
+    "DiscoverySpec": {
+      "type": "object",
+      "description": "Plugin discovery configuration",
+      "properties": {
+        "mechanisms": {
+          "type": "array",
+          "description": "Discovery mechanisms",
+          "items": { "$ref": "#/$defs/DiscoveryMechanismSpec" }
+        },
+        "auto_discover": {
+          "type": "boolean",
+          "description": "Whether auto-discovery is enabled"
+        },
+        "discovery_order": {
+          "type": "array",
+          "description": "Order of discovery mechanisms",
+          "items": { "type": "string" }
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Plugin namespace"
+        }
+      }
+    },
+
+    "DiscoveryMechanismSpec": {
+      "type": "object",
+      "description": "A plugin discovery mechanism",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Discovery mechanism type",
+          "enum": ["entry_points", "namespace_packages", "directory_scan", "config_file", "explicit", "decorator"]
+        },
+        "entry_point_group": {
+          "type": "string",
+          "description": "Entry point group name (for entry_points)"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Package namespace (for namespace_packages)"
+        },
+        "directories": {
+          "type": "array",
+          "description": "Directories to scan (for directory_scan)",
+          "items": { "type": "string" }
+        },
+        "pattern": {
+          "type": "string",
+          "description": "File pattern (for directory_scan)"
+        },
+        "config_key": {
+          "type": "string",
+          "description": "Config key (for config_file)"
+        },
+        "decorator": {
+          "type": "string",
+          "description": "Decorator function (for decorator)"
+        }
+      }
+    },
+
+    "PluginSpec": {
+      "type": "object",
+      "description": "A plugin definition",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Plugin name"
+        },
+        "version": {
+          "type": "string",
+          "description": "Plugin version"
+        },
+        "type": {
+          "type": "string",
+          "description": "Plugin class reference"
+        },
+        "implements": {
+          "type": "array",
+          "description": "Extension points implemented",
+          "items": { "type": "string" }
+        },
+        "hooks": {
+          "type": "array",
+          "description": "Hooks this plugin registers",
+          "items": { "$ref": "#/$defs/PluginHookRegistration" }
+        },
+        "dependencies": {
+          "type": "array",
+          "description": "Plugin dependencies",
+          "items": { "type": "string" }
+        },
+        "conflicts": {
+          "type": "array",
+          "description": "Conflicting plugins",
+          "items": { "type": "string" }
+        },
+        "priority": {
+          "type": "integer",
+          "description": "Plugin priority (lower = earlier)"
+        },
+        "enabled_by_default": {
+          "type": "boolean",
+          "description": "Whether plugin is enabled by default"
+        },
+        "config_schema": {
+          "type": "string",
+          "description": "Configuration schema reference"
+        },
+        "lifecycle": {
+          "$ref": "#/$defs/PluginLifecycleSpec"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+
+    "PluginHookRegistration": {
+      "type": "object",
+      "description": "A plugin's hook registration",
+      "required": ["hook", "handler"],
+      "properties": {
+        "hook": {
+          "type": "string",
+          "description": "Hook name"
+        },
+        "handler": {
+          "type": "string",
+          "description": "Handler method reference"
+        },
+        "priority": {
+          "type": "integer",
+          "description": "Handler priority"
+        }
+      }
+    },
+
+    "PluginLifecycleSpec": {
+      "type": "object",
+      "description": "Plugin lifecycle configuration",
+      "properties": {
+        "on_load": {
+          "type": "string",
+          "description": "Method called when plugin loads"
+        },
+        "on_enable": {
+          "type": "string",
+          "description": "Method called when plugin is enabled"
+        },
+        "on_disable": {
+          "type": "string",
+          "description": "Method called when plugin is disabled"
+        },
+        "on_unload": {
+          "type": "string",
+          "description": "Method called when plugin unloads"
+        },
+        "hot_reload": {
+          "type": "boolean",
+          "description": "Whether plugin supports hot reload"
+        }
+      }
+    }
+  }
+}

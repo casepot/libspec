@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/errors.schema.json",
+  "title": "Errors Extension",
+  "description": "Extension for error taxonomy: exception hierarchy, error codes, recovery strategies.",
+
+  "$defs": {
+    "ErrorsLibraryFields": {
+      "description": "Fields added to Library when errors extension is active",
+      "type": "object",
+      "properties": {
+        "error_hierarchy": {
+          "type": "array",
+          "description": "Exception class hierarchy",
+          "items": { "$ref": "#/$defs/ErrorHierarchyNode" }
+        },
+        "exceptions": {
+          "type": "array",
+          "description": "Detailed exception specifications",
+          "items": { "$ref": "#/$defs/ExceptionSpec" }
+        },
+        "error_codes": {
+          "type": "array",
+          "description": "Enumerated error codes",
+          "items": { "$ref": "#/$defs/ErrorCode" }
+        }
+      }
+    },
+
+    "ErrorHierarchyNode": {
+      "type": "object",
+      "description": "A node in the exception hierarchy tree",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Exception class name"
+        },
+        "base": {
+          "type": "string",
+          "description": "Base class (e.g., 'Exception', 'RuntimeError')"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this exception category represents"
+        },
+        "children": {
+          "type": "array",
+          "description": "Child exception types",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "ExceptionSpec": {
+      "type": "object",
+      "description": "Detailed specification of an exception type",
+      "required": ["type", "module"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Exception class name"
+        },
+        "module": {
+          "type": "string",
+          "description": "Module where exception is defined"
+        },
+        "base": {
+          "type": "string",
+          "description": "Base exception class"
+        },
+        "description": {
+          "type": "string",
+          "description": "When this exception is raised"
+        },
+        "fields": {
+          "type": "array",
+          "description": "Exception attributes",
+          "items": { "$ref": "#/$defs/ExceptionField" }
+        },
+        "raised_by": {
+          "type": "array",
+          "description": "Functions/methods that raise this exception",
+          "items": { "type": "string" }
+        },
+        "recovery": {
+          "type": "string",
+          "description": "Recommended recovery strategy"
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "Whether the operation can be retried"
+        },
+        "user_facing": {
+          "type": "boolean",
+          "description": "Whether this error should be shown to end users"
+        },
+        "error_code": {
+          "type": "string",
+          "description": "Associated error code (if any)"
+        }
+      }
+    },
+
+    "ExceptionField": {
+      "type": "object",
+      "description": "An attribute on an exception class",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Field name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Field type"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this field contains"
+        }
+      }
+    },
+
+    "ErrorCode": {
+      "type": "object",
+      "description": "A structured error code",
+      "required": ["code", "description"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Error code (e.g., 'E001', 'AUTH_FAILED')"
+        },
+        "type": {
+          "type": "string",
+          "description": "Associated exception type"
+        },
+        "category": {
+          "type": "string",
+          "description": "Error category for grouping"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description"
+        },
+        "docs_url": {
+          "type": "string",
+          "description": "URL to detailed documentation",
+          "format": "uri"
+        },
+        "severity": {
+          "type": "string",
+          "description": "Error severity level",
+          "enum": ["info", "warning", "error", "critical"]
+        }
+      }
+    }
+  }
+}

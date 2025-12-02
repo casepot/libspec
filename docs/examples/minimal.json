@@ -1,0 +1,23 @@
+{
+  "$schema": "libspec/1.0",
+  "library": {
+    "name": "mylib",
+    "version": "0.1.0",
+    "tagline": "A minimal example library",
+    "types": [
+      {
+        "name": "Greeter",
+        "kind": "class",
+        "module": "mylib",
+        "docstring": "A simple greeter class",
+        "methods": [
+          {
+            "name": "greet",
+            "signature": "(self, name: str) -> str",
+            "description": "Return a greeting for the given name"
+          }
+        ]
+      }
+    ]
+  }
+}
