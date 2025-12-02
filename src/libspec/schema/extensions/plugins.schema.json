@@ -84,7 +84,7 @@
           "title": "Pattern"
         },
         "type": {
-          "$ref": "#/$defs/Type1",
+          "$ref": "#/$defs/DiscoveryMechanismType",
           "description": "Discovery mechanism type"
         }
       },
@@ -93,6 +93,18 @@
       ],
       "title": "DiscoveryMechanismSpec",
       "type": "object"
+    },
+    "DiscoveryMechanismType": {
+      "enum": [
+        "entry_points",
+        "namespace_packages",
+        "directory_scan",
+        "config_file",
+        "explicit",
+        "decorator"
+      ],
+      "title": "DiscoveryMechanismType",
+      "type": "string"
     },
     "DiscoverySpec": {
       "properties": {
@@ -495,7 +507,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type"
+              "$ref": "#/$defs/HookType"
             },
             {
               "type": "null"
@@ -523,6 +535,16 @@
       ],
       "title": "HookSpec",
       "type": "object"
+    },
+    "HookType": {
+      "enum": [
+        "filter",
+        "action",
+        "event",
+        "wrapper"
+      ],
+      "title": "HookType",
+      "type": "string"
     },
     "Lifecycle": {
       "enum": [
@@ -1160,28 +1182,6 @@
         "merge"
       ],
       "title": "ResultCollection",
-      "type": "string"
-    },
-    "Type": {
-      "enum": [
-        "filter",
-        "action",
-        "event",
-        "wrapper"
-      ],
-      "title": "Type",
-      "type": "string"
-    },
-    "Type1": {
-      "enum": [
-        "entry_points",
-        "namespace_packages",
-        "directory_scan",
-        "config_file",
-        "explicit",
-        "decorator"
-      ],
-      "title": "Type1",
       "type": "string"
     },
     "Validation": {

@@ -12,6 +12,21 @@
           "title": "Parameters",
           "type": "array"
         },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this constructor pattern was introduced",
+          "title": "Python Added"
+        },
         "raises": {
           "description": "Exceptions that may be raised during construction",
           "items": {
@@ -39,6 +54,66 @@
         "signature"
       ],
       "title": "Constructor",
+      "type": "object"
+    },
+    "DeprecationInfo": {
+      "additionalProperties": false,
+      "description": "Deprecation information for a function, method, or parameter (PEP 702).",
+      "properties": {
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deprecation message (shown by type checkers and at runtime)",
+          "title": "Message"
+        },
+        "removal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this will be/was removed",
+          "title": "Removal"
+        },
+        "replacement": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Suggested replacement (cross-reference)",
+          "title": "Replacement"
+        },
+        "since": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this was deprecated",
+          "title": "Since"
+        }
+      },
+      "title": "DeprecationInfo",
       "type": "object"
     },
     "EnumValue": {
@@ -167,6 +242,7 @@
         "state",
         "plugins",
         "ml",
+        "serialization",
         "errors",
         "perf",
         "safety",
@@ -235,12 +311,11 @@
           "description": "Implementation status"
         },
         "steps": {
-          "description": "Verification/test steps (at least one)",
+          "description": "Verification/test steps (at least one recommended; enforced by lint rule C001)",
           "items": {
             "minLength": 1,
             "type": "string"
           },
-          "minItems": 1,
           "title": "Steps",
           "type": "array"
         },
@@ -302,6 +377,18 @@
           ],
           "default": null,
           "description": "Yield value specification for async generators"
+        },
+        "deprecation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeprecationInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deprecation information if this function is deprecated (PEP 702)"
         },
         "description": {
           "anyOf": [
@@ -554,7 +641,7 @@
             }
           ],
           "default": null,
-          "description": "Default type if not specified (Python 3.12+ for TypeVar, 3.13+ for ParamSpec/TypeVarTuple)",
+          "description": "Default type if not specified (Python 3.13+, PEP 696)",
           "title": "Default"
         },
         "kind": {
@@ -764,6 +851,18 @@
           "default": null,
           "description": "Yield value specification for async generators"
         },
+        "deprecation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeprecationInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deprecation information if this method is deprecated (PEP 702)"
+        },
         "description": {
           "anyOf": [
             {
@@ -789,6 +888,19 @@
           "default": null,
           "description": "Base class this method is inherited from (if any)",
           "title": "Inherited From"
+        },
+        "is_override": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this method uses @override decorator (PEP 698, Python 3.12+)",
+          "title": "Is Override"
         },
         "name": {
           "description": "Method name",
@@ -994,6 +1106,21 @@
           "title": "Parameters",
           "type": "array"
         },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this overload variant was introduced",
+          "title": "Python Added"
+        },
         "returns": {
           "anyOf": [
             {
@@ -1059,6 +1186,21 @@
           "minLength": 1,
           "title": "Name",
           "type": "string"
+        },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this parameter's type was introduced",
+          "title": "Python Added"
         },
         "type": {
           "anyOf": [
@@ -1253,6 +1395,21 @@
       "additionalProperties": false,
       "description": "An exception that may be raised.",
       "properties": {
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this exception type was introduced",
+          "title": "Python Added"
+        },
         "type": {
           "description": "Exception type name",
           "minLength": 1,
@@ -1295,6 +1452,52 @@
           "default": null,
           "description": "What the return value represents",
           "title": "Description"
+        },
+        "narrowing_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "type_guard",
+                "type_is"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Kind of type narrowing: 'type_guard' (PEP 647) or 'type_is' (PEP 742)",
+          "title": "Narrowing Kind"
+        },
+        "narrows_type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type that input is narrowed to when True (for TypeGuard/TypeIs)",
+          "title": "Narrows Type"
+        },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this return type construct was introduced",
+          "title": "Python Added"
         },
         "type": {
           "description": "Return type annotation",

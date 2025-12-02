@@ -442,7 +442,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type"
+              "$ref": "#/$defs/CompletionType"
             },
             {
               "type": "null"
@@ -454,6 +454,18 @@
       },
       "title": "CompletionSpec",
       "type": "object"
+    },
+    "CompletionType": {
+      "enum": [
+        "path",
+        "file",
+        "directory",
+        "choice",
+        "dynamic",
+        "none"
+      ],
+      "title": "CompletionType",
+      "type": "string"
     },
     "ContextSettingsSpec": {
       "properties": {
@@ -1000,18 +1012,6 @@
       },
       "title": "ShellCompletionSpec",
       "type": "object"
-    },
-    "Type": {
-      "enum": [
-        "path",
-        "file",
-        "directory",
-        "choice",
-        "dynamic",
-        "none"
-      ],
-      "title": "Type",
-      "type": "string"
     }
   },
   "$id": "https://libspec.dev/schema/1.0/extensions/cli.schema.json",

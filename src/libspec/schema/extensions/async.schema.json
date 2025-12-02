@@ -162,24 +162,13 @@
       "title": "AsyncTypeFields",
       "type": "object"
     },
-    "Backpressure": {
+    "CancellationMode": {
       "enum": [
-        "block",
-        "drop",
-        "error"
+        "cooperative",
+        "immediate",
+        "none"
       ],
-      "title": "Backpressure",
-      "type": "string"
-    },
-    "Backpressure1": {
-      "enum": [
-        "buffer",
-        "drop",
-        "block",
-        "error",
-        "latest"
-      ],
-      "title": "Backpressure1",
+      "title": "CancellationMode",
       "type": "string"
     },
     "CancellationSpec": {
@@ -200,7 +189,7 @@
         "mode": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Mode"
+              "$ref": "#/$defs/CancellationMode"
             },
             {
               "type": "null"
@@ -295,13 +284,15 @@
       "title": "LifecycleSpec",
       "type": "object"
     },
-    "Mode": {
+    "ObservableBackpressure": {
       "enum": [
-        "cooperative",
-        "immediate",
-        "none"
+        "buffer",
+        "drop",
+        "block",
+        "error",
+        "latest"
       ],
-      "title": "Mode",
+      "title": "ObservableBackpressure",
       "type": "string"
     },
     "ObservableSpec": {
@@ -309,7 +300,7 @@
         "backpressure": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Backpressure1"
+              "$ref": "#/$defs/ObservableBackpressure"
             },
             {
               "type": "null"
@@ -530,12 +521,21 @@
       "title": "StateSpec",
       "type": "object"
     },
+    "SyncBackpressure": {
+      "enum": [
+        "block",
+        "drop",
+        "error"
+      ],
+      "title": "SyncBackpressure",
+      "type": "string"
+    },
     "SyncSpec": {
       "properties": {
         "backpressure": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Backpressure"
+              "$ref": "#/$defs/SyncBackpressure"
             },
             {
               "type": "null"

@@ -290,7 +290,7 @@
         "storage": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Storage"
+              "$ref": "#/$defs/SecretsStorage"
             },
             {
               "type": "null"
@@ -302,6 +302,19 @@
       },
       "title": "SecretsSpec",
       "type": "object"
+    },
+    "SecretsStorage": {
+      "enum": [
+        "env",
+        "keyring",
+        "vault",
+        "aws_secrets",
+        "gcp_secrets",
+        "azure_keyvault",
+        "file"
+      ],
+      "title": "SecretsStorage",
+      "type": "string"
     },
     "SettingSpec": {
       "properties": {
@@ -464,19 +477,6 @@
       ],
       "title": "SettingSpec",
       "type": "object"
-    },
-    "Storage": {
-      "enum": [
-        "env",
-        "keyring",
-        "vault",
-        "aws_secrets",
-        "gcp_secrets",
-        "azure_keyvault",
-        "file"
-      ],
-      "title": "Storage",
-      "type": "string"
     }
   },
   "$id": "https://libspec.dev/schema/1.0/extensions/config.schema.json",

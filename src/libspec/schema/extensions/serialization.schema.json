@@ -1,0 +1,1752 @@
+{
+  "$defs": {
+    "BinaryEncoding": {
+      "description": "Binary data encoding.",
+      "enum": [
+        "base64",
+        "base64url",
+        "hex",
+        "raw"
+      ],
+      "title": "BinaryEncoding",
+      "type": "string"
+    },
+    "CircularRefHandling": {
+      "description": "How circular references are handled.",
+      "enum": [
+        "error",
+        "ignore",
+        "ref_id",
+        "max_depth"
+      ],
+      "title": "CircularRefHandling",
+      "type": "string"
+    },
+    "CoercionBehavior": {
+      "description": "How type coercion behaves.",
+      "enum": [
+        "implicit",
+        "explicit",
+        "error",
+        "warn"
+      ],
+      "title": "CoercionBehavior",
+      "type": "string"
+    },
+    "CoercionRuleSpec": {
+      "description": "Type coercion rule for deserialization.",
+      "properties": {
+        "behavior": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CoercionBehavior"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Coercion behavior"
+        },
+        "from_type": {
+          "description": "Source type",
+          "title": "From Type",
+          "type": "string"
+        },
+        "lossy": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether coercion may lose information",
+          "title": "Lossy"
+        },
+        "to_type": {
+          "description": "Target type",
+          "title": "To Type",
+          "type": "string"
+        },
+        "validator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Validation function reference",
+          "title": "Validator"
+        }
+      },
+      "required": [
+        "from_type",
+        "to_type"
+      ],
+      "title": "CoercionRuleSpec",
+      "type": "object"
+    },
+    "DateTimeFormat": {
+      "description": "DateTime serialization format.",
+      "enum": [
+        "iso8601",
+        "rfc2822",
+        "rfc3339",
+        "unix_timestamp",
+        "unix_timestamp_ms",
+        "custom"
+      ],
+      "title": "DateTimeFormat",
+      "type": "string"
+    },
+    "DecoderRegistrySpec": {
+      "description": "Registry of custom decoders.",
+      "properties": {
+        "decoders": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/DecoderSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Registered decoders",
+          "title": "Decoders"
+        },
+        "fallback": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fallback decoder reference",
+          "title": "Fallback"
+        },
+        "name": {
+          "description": "Registry name",
+          "title": "Name",
+          "type": "string"
+        },
+        "strict": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error on unhandled types vs returning raw",
+          "title": "Strict"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "DecoderRegistrySpec",
+      "type": "object"
+    },
+    "DecoderSpec": {
+      "description": "Custom decoder specification.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "factory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Factory method on the type",
+          "title": "Factory"
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Decoder function reference",
+          "title": "Function"
+        },
+        "name": {
+          "description": "Decoder name",
+          "title": "Name",
+          "type": "string"
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Priority when multiple decoders match",
+          "title": "Priority"
+        },
+        "type": {
+          "description": "Type this decoder produces",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "DecoderSpec",
+      "type": "object"
+    },
+    "EncoderRegistrySpec": {
+      "description": "Registry of custom encoders.",
+      "properties": {
+        "encoders": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/EncoderSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Registered encoders",
+          "title": "Encoders"
+        },
+        "fallback": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fallback encoder reference",
+          "title": "Fallback"
+        },
+        "name": {
+          "description": "Registry name",
+          "title": "Name",
+          "type": "string"
+        },
+        "strict": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error on unhandled types vs using repr",
+          "title": "Strict"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "EncoderRegistrySpec",
+      "type": "object"
+    },
+    "EncoderSpec": {
+      "description": "Custom encoder specification.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Encoder function reference",
+          "title": "Function"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Encoder method on the type",
+          "title": "Method"
+        },
+        "name": {
+          "description": "Encoder name",
+          "title": "Name",
+          "type": "string"
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Priority when multiple encoders match",
+          "title": "Priority"
+        },
+        "type": {
+          "description": "Type this encoder handles",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "EncoderSpec",
+      "type": "object"
+    },
+    "EncodingStrategy": {
+      "description": "Encoding strategy for complex types.",
+      "enum": [
+        "iso8601",
+        "timestamp",
+        "unix_epoch",
+        "base64",
+        "hex",
+        "string",
+        "dict",
+        "custom"
+      ],
+      "title": "EncodingStrategy",
+      "type": "string"
+    },
+    "NamingConvention": {
+      "description": "Field naming conventions.",
+      "enum": [
+        "snake_case",
+        "camel_case",
+        "pascal_case",
+        "kebab_case",
+        "preserve"
+      ],
+      "title": "NamingConvention",
+      "type": "string"
+    },
+    "NullHandling": {
+      "description": "How null/None values are handled.",
+      "enum": [
+        "include",
+        "exclude",
+        "use_default"
+      ],
+      "title": "NullHandling",
+      "type": "string"
+    },
+    "SchemaFieldSpec": {
+      "description": "Field in a generated schema.",
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value",
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "examples": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Example values",
+          "title": "Examples"
+        },
+        "name": {
+          "description": "Field name",
+          "title": "Name",
+          "type": "string"
+        },
+        "nullable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether field can be null",
+          "title": "Nullable"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "description": "Whether field is required",
+          "title": "Required"
+        },
+        "type": {
+          "description": "Field type in schema",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "SchemaFieldSpec",
+      "type": "object"
+    },
+    "SchemaFormat": {
+      "description": "Schema output format.",
+      "enum": [
+        "json_schema",
+        "openapi",
+        "avro_schema",
+        "protobuf_schema",
+        "xml_schema",
+        "custom"
+      ],
+      "title": "SchemaFormat",
+      "type": "string"
+    },
+    "SchemaSpec": {
+      "description": "Schema definition for serialization.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "fields": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SchemaFieldSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema fields",
+          "title": "Fields"
+        },
+        "format": {
+          "$ref": "#/$defs/SchemaFormat",
+          "description": "Schema format"
+        },
+        "generator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema generator function",
+          "title": "Generator"
+        },
+        "name": {
+          "description": "Schema name",
+          "title": "Name",
+          "type": "string"
+        },
+        "strict": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether unknown fields cause errors",
+          "title": "Strict"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python type this schema represents",
+          "title": "Type"
+        },
+        "validator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema validator function",
+          "title": "Validator"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema version",
+          "title": "Version"
+        }
+      },
+      "required": [
+        "name",
+        "format"
+      ],
+      "title": "SchemaSpec",
+      "type": "object"
+    },
+    "SerializationErrorKind": {
+      "description": "Types of serialization errors.",
+      "enum": [
+        "encoding_error",
+        "decoding_error",
+        "validation_error",
+        "type_error",
+        "circular_ref",
+        "missing_field",
+        "unknown_field",
+        "schema_error"
+      ],
+      "title": "SerializationErrorKind",
+      "type": "string"
+    },
+    "SerializationErrorSpec": {
+      "description": "Serialization error specification.",
+      "properties": {
+        "exception": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exception class raised",
+          "title": "Exception"
+        },
+        "kind": {
+          "$ref": "#/$defs/SerializationErrorKind",
+          "description": "Error kind"
+        },
+        "message_template": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error message template",
+          "title": "Message Template"
+        },
+        "recoverable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether error is recoverable",
+          "title": "Recoverable"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SerializationErrorSpec",
+      "type": "object"
+    },
+    "SerializationFormat": {
+      "description": "Supported serialization formats.",
+      "enum": [
+        "json",
+        "yaml",
+        "toml",
+        "msgpack",
+        "pickle",
+        "protobuf",
+        "avro",
+        "parquet",
+        "xml",
+        "csv",
+        "custom"
+      ],
+      "title": "SerializationFormat",
+      "type": "string"
+    },
+    "SerializationFunctionFields": {
+      "description": "Extension fields for functions.",
+      "properties": {
+        "deserializes": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this function deserializes data",
+          "title": "Deserializes"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SerializationFormat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Format this function handles"
+        },
+        "serializes": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this function serializes data",
+          "title": "Serializes"
+        },
+        "streaming": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether function supports streaming",
+          "title": "Streaming"
+        }
+      },
+      "title": "SerializationFunctionFields",
+      "type": "object"
+    },
+    "SerializationLibraryFields": {
+      "description": "Extension fields for libraries.",
+      "properties": {
+        "coercion_rules": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CoercionRuleSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type coercion rules",
+          "title": "Coercion Rules"
+        },
+        "decoder_registry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DecoderRegistrySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "encoder_registry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncoderRegistrySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "errors": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SerializationErrorSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Serialization errors",
+          "title": "Errors"
+        },
+        "performance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SerializationPerformanceSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "schemas": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SchemaSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema definitions",
+          "title": "Schemas"
+        },
+        "serializers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SerializerSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Available serializers",
+          "title": "Serializers"
+        },
+        "settings": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SerializationSettingsSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type_mappings": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TypeMappingSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type mappings",
+          "title": "Type Mappings"
+        }
+      },
+      "title": "SerializationLibraryFields",
+      "type": "object"
+    },
+    "SerializationMethodFields": {
+      "description": "Extension fields for methods.",
+      "properties": {
+        "deserializes": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this method deserializes data",
+          "title": "Deserializes"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SerializationFormat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Format this method handles"
+        },
+        "serializes": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this method serializes data",
+          "title": "Serializes"
+        },
+        "streaming": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether method supports streaming",
+          "title": "Streaming"
+        }
+      },
+      "title": "SerializationMethodFields",
+      "type": "object"
+    },
+    "SerializationPerformanceSpec": {
+      "description": "Performance characteristics of serialization.",
+      "properties": {
+        "buffer_size": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default buffer size",
+          "title": "Buffer Size"
+        },
+        "compression": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supported compression algorithms",
+          "title": "Compression"
+        },
+        "estimated_overhead": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Estimated size overhead ratio",
+          "title": "Estimated Overhead"
+        },
+        "incremental": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether incremental parsing is supported",
+          "title": "Incremental"
+        },
+        "lazy_loading": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether lazy loading is supported",
+          "title": "Lazy Loading"
+        },
+        "streaming": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether streaming is supported",
+          "title": "Streaming"
+        },
+        "zero_copy": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether zero-copy is possible",
+          "title": "Zero Copy"
+        }
+      },
+      "title": "SerializationPerformanceSpec",
+      "type": "object"
+    },
+    "SerializationSettingsSpec": {
+      "description": "Global serialization settings.",
+      "properties": {
+        "binary_encoding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BinaryEncoding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default binary encoding"
+        },
+        "coercion_behavior": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CoercionBehavior"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default coercion behavior"
+        },
+        "datetime_custom_format": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom datetime format string",
+          "title": "Datetime Custom Format"
+        },
+        "datetime_format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DateTimeFormat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default datetime format"
+        },
+        "default_format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SerializationFormat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default serialization format"
+        },
+        "encoding": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Text encoding (e.g., 'utf-8')",
+          "title": "Encoding"
+        },
+        "max_collection_size": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maximum collection size",
+          "title": "Max Collection Size"
+        },
+        "max_nesting_depth": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maximum nesting depth",
+          "title": "Max Nesting Depth"
+        },
+        "max_string_length": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maximum string length",
+          "title": "Max String Length"
+        },
+        "naming_convention": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NamingConvention"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default naming convention"
+        },
+        "pretty_print": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to pretty print output",
+          "title": "Pretty Print"
+        },
+        "validation_mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ValidationMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Validation strictness"
+        }
+      },
+      "title": "SerializationSettingsSpec",
+      "type": "object"
+    },
+    "SerializationTypeFields": {
+      "description": "Extension fields for types.",
+      "properties": {
+        "custom_decoder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom decoder for this type",
+          "title": "Custom Decoder"
+        },
+        "custom_encoder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom encoder for this type",
+          "title": "Custom Encoder"
+        },
+        "exclude_fields": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fields to exclude from serialization",
+          "title": "Exclude Fields"
+        },
+        "field_aliases": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Field name aliases for serialization",
+          "title": "Field Aliases"
+        },
+        "include_fields": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only serialize these fields",
+          "title": "Include Fields"
+        },
+        "schema_spec": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchemaSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Schema specification for this type"
+        },
+        "serializable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this type is serializable",
+          "title": "Serializable"
+        },
+        "serialize_as": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type to serialize as",
+          "title": "Serialize As"
+        }
+      },
+      "title": "SerializationTypeFields",
+      "type": "object"
+    },
+    "SerializerOptionSpec": {
+      "description": "Configuration option for a serializer.",
+      "properties": {
+        "choices": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Valid choices",
+          "title": "Choices"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value (as string)",
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this option controls",
+          "title": "Description"
+        },
+        "name": {
+          "description": "Option name",
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "description": "Option type",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "SerializerOptionSpec",
+      "type": "object"
+    },
+    "SerializerSpec": {
+      "description": "Serializer definition.",
+      "properties": {
+        "binary_encoding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BinaryEncoding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Binary data encoding"
+        },
+        "circular_ref_handling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CircularRefHandling"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Circular reference handling"
+        },
+        "datetime_format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DateTimeFormat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "DateTime format"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "deserialize_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method to deserialize data",
+          "title": "Deserialize Method"
+        },
+        "ensure_ascii": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to escape non-ASCII characters",
+          "title": "Ensure Ascii"
+        },
+        "format": {
+          "$ref": "#/$defs/SerializationFormat",
+          "description": "Output format"
+        },
+        "indent": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Indentation for pretty printing",
+          "title": "Indent"
+        },
+        "max_depth": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maximum nesting depth",
+          "title": "Max Depth"
+        },
+        "name": {
+          "description": "Serializer name",
+          "title": "Name",
+          "type": "string"
+        },
+        "naming_convention": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NamingConvention"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Field naming convention"
+        },
+        "null_handling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NullHandling"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null value handling"
+        },
+        "options": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SerializerOptionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Configuration options",
+          "title": "Options"
+        },
+        "serialize_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method to serialize objects",
+          "title": "Serialize Method"
+        },
+        "sort_keys": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to sort dictionary keys",
+          "title": "Sort Keys"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Serializer class reference",
+          "title": "Type"
+        },
+        "type_handlers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TypeHandlerSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom type handlers",
+          "title": "Type Handlers"
+        }
+      },
+      "required": [
+        "name",
+        "format"
+      ],
+      "title": "SerializerSpec",
+      "type": "object"
+    },
+    "TypeHandlerSpec": {
+      "description": "Combined encoder/decoder for a type.",
+      "properties": {
+        "decoder": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DecoderSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "encoder": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncoderSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "format_hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Format hint for custom encodings",
+          "title": "Format Hint"
+        },
+        "strategy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EncodingStrategy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Encoding strategy"
+        },
+        "type": {
+          "description": "Type this handler manages",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "TypeHandlerSpec",
+      "type": "object"
+    },
+    "TypeMappingSpec": {
+      "description": "Mapping between Python types and serialization types.",
+      "properties": {
+        "bidirectional": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "description": "Whether mapping works both ways",
+          "title": "Bidirectional"
+        },
+        "decoder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom decoder function reference",
+          "title": "Decoder"
+        },
+        "encoder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom encoder function reference",
+          "title": "Encoder"
+        },
+        "python_type": {
+          "description": "Python type to map",
+          "title": "Python Type",
+          "type": "string"
+        },
+        "serialized_type": {
+          "description": "Type in serialized format",
+          "title": "Serialized Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "python_type",
+        "serialized_type"
+      ],
+      "title": "TypeMappingSpec",
+      "type": "object"
+    },
+    "ValidationMode": {
+      "description": "Validation strictness mode.",
+      "enum": [
+        "strict",
+        "lax",
+        "coerce",
+        "none"
+      ],
+      "title": "ValidationMode",
+      "type": "string"
+    }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/serialization.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for data serialization: formats, encoders/decoders, type coercion, schemas.",
+  "title": "Serialization Extension"
+}

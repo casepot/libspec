@@ -165,7 +165,7 @@
           "title": "Timeout"
         },
         "type": {
-          "$ref": "#/$defs/Type1",
+          "$ref": "#/$defs/HealthCheckType",
           "description": "Health check type"
         }
       },
@@ -175,6 +175,15 @@
       ],
       "title": "HealthCheckSpec",
       "type": "object"
+    },
+    "HealthCheckType": {
+      "enum": [
+        "liveness",
+        "readiness",
+        "startup"
+      ],
+      "title": "HealthCheckType",
+      "type": "string"
     },
     "LevelsUsedEnum": {
       "enum": [
@@ -347,7 +356,7 @@
           "type": "string"
         },
         "type": {
-          "$ref": "#/$defs/Type",
+          "$ref": "#/$defs/MetricType",
           "description": "Metric type"
         },
         "unit": {
@@ -370,6 +379,17 @@
       ],
       "title": "MetricSpec",
       "type": "object"
+    },
+    "MetricType": {
+      "enum": [
+        "counter",
+        "gauge",
+        "histogram",
+        "summary",
+        "info"
+      ],
+      "title": "MetricType",
+      "type": "string"
     },
     "ObservabilityLibraryFields": {
       "properties": {
@@ -583,26 +603,6 @@
       },
       "title": "TracingSpec",
       "type": "object"
-    },
-    "Type": {
-      "enum": [
-        "counter",
-        "gauge",
-        "histogram",
-        "summary",
-        "info"
-      ],
-      "title": "Type",
-      "type": "string"
-    },
-    "Type1": {
-      "enum": [
-        "liveness",
-        "readiness",
-        "startup"
-      ],
-      "title": "Type1",
-      "type": "string"
     }
   },
   "$id": "https://libspec.dev/schema/1.0/extensions/observability.schema.json",

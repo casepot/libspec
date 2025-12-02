@@ -163,7 +163,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type2"
+              "$ref": "#/$defs/MachineActionType"
             },
             {
               "type": "null"
@@ -178,6 +178,17 @@
       ],
       "title": "MachineActionSpec",
       "type": "object"
+    },
+    "MachineActionType": {
+      "enum": [
+        "assign",
+        "raise",
+        "send",
+        "log",
+        "custom"
+      ],
+      "title": "MachineActionType",
+      "type": "string"
     },
     "MachineEventSpec": {
       "properties": {
@@ -349,7 +360,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type1"
+              "$ref": "#/$defs/MachineStateType"
             },
             {
               "type": "null"
@@ -364,6 +375,17 @@
       ],
       "title": "MachineStateSpec",
       "type": "object"
+    },
+    "MachineStateType": {
+      "enum": [
+        "atomic",
+        "compound",
+        "parallel",
+        "final",
+        "history"
+      ],
+      "title": "MachineStateType",
+      "type": "string"
     },
     "PersistenceSpec": {
       "properties": {
@@ -412,7 +434,7 @@
         "storage": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Storage"
+              "$ref": "#/$defs/PersistenceStorage"
             },
             {
               "type": "null"
@@ -454,6 +476,17 @@
       },
       "title": "PersistenceSpec",
       "type": "object"
+    },
+    "PersistenceStorage": {
+      "enum": [
+        "localStorage",
+        "sessionStorage",
+        "indexedDB",
+        "asyncStorage",
+        "custom"
+      ],
+      "title": "PersistenceStorage",
+      "type": "string"
     },
     "ReducerSpec": {
       "properties": {
@@ -653,7 +686,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type3"
+              "$ref": "#/$defs/ServiceType"
             },
             {
               "type": "null"
@@ -668,6 +701,16 @@
       ],
       "title": "ServiceSpec",
       "type": "object"
+    },
+    "ServiceType": {
+      "enum": [
+        "promise",
+        "callback",
+        "observable",
+        "machine"
+      ],
+      "title": "ServiceType",
+      "type": "string"
     },
     "SliceSpec": {
       "properties": {
@@ -1205,17 +1248,6 @@
       "title": "StateTypeFields",
       "type": "object"
     },
-    "Storage": {
-      "enum": [
-        "localStorage",
-        "sessionStorage",
-        "indexedDB",
-        "asyncStorage",
-        "custom"
-      ],
-      "title": "Storage",
-      "type": "string"
-    },
     "StoreSpec": {
       "properties": {
         "description": {
@@ -1320,7 +1352,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type"
+              "$ref": "#/$defs/StoreType"
             },
             {
               "type": "null"
@@ -1335,6 +1367,18 @@
       ],
       "title": "StoreSpec",
       "type": "object"
+    },
+    "StoreType": {
+      "enum": [
+        "redux",
+        "mobx",
+        "zustand",
+        "recoil",
+        "pinia",
+        "custom"
+      ],
+      "title": "StoreType",
+      "type": "string"
     },
     "TransitionSpec": {
       "properties": {
@@ -1434,50 +1478,6 @@
       },
       "title": "TransitionSpec",
       "type": "object"
-    },
-    "Type": {
-      "enum": [
-        "redux",
-        "mobx",
-        "zustand",
-        "recoil",
-        "pinia",
-        "custom"
-      ],
-      "title": "Type",
-      "type": "string"
-    },
-    "Type1": {
-      "enum": [
-        "atomic",
-        "compound",
-        "parallel",
-        "final",
-        "history"
-      ],
-      "title": "Type1",
-      "type": "string"
-    },
-    "Type2": {
-      "enum": [
-        "assign",
-        "raise",
-        "send",
-        "log",
-        "custom"
-      ],
-      "title": "Type2",
-      "type": "string"
-    },
-    "Type3": {
-      "enum": [
-        "promise",
-        "callback",
-        "observable",
-        "machine"
-      ],
-      "title": "Type3",
-      "type": "string"
     }
   },
   "$id": "https://libspec.dev/schema/1.0/extensions/state.schema.json",

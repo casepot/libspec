@@ -255,7 +255,7 @@
           "title": "Name"
         },
         "type": {
-          "$ref": "#/$defs/Type1",
+          "$ref": "#/$defs/ConstraintType",
           "description": "Constraint type"
         }
       },
@@ -264,6 +264,17 @@
       ],
       "title": "ConstraintSpec",
       "type": "object"
+    },
+    "ConstraintType": {
+      "enum": [
+        "check",
+        "unique",
+        "foreign_key",
+        "primary_key",
+        "exclude"
+      ],
+      "title": "ConstraintType",
+      "type": "string"
     },
     "DatabaseSupportSpec": {
       "properties": {
@@ -417,6 +428,15 @@
       ],
       "title": "IndexSpec",
       "type": "object"
+    },
+    "InheritanceType": {
+      "enum": [
+        "single_table",
+        "joined",
+        "concrete"
+      ],
+      "title": "InheritanceType",
+      "type": "string"
     },
     "Initially": {
       "enum": [
@@ -845,7 +865,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type2"
+              "$ref": "#/$defs/InheritanceType"
             },
             {
               "type": "null"
@@ -1016,7 +1036,7 @@
           "type": "string"
         },
         "type": {
-          "$ref": "#/$defs/Type",
+          "$ref": "#/$defs/RelationshipType",
           "description": "Relationship type"
         },
         "uselist": {
@@ -1053,6 +1073,16 @@
       ],
       "title": "RelationshipSpec",
       "type": "object"
+    },
+    "RelationshipType": {
+      "enum": [
+        "one_to_one",
+        "one_to_many",
+        "many_to_one",
+        "many_to_many"
+      ],
+      "title": "RelationshipType",
+      "type": "string"
     },
     "SessionManagementSpec": {
       "properties": {
@@ -1204,36 +1234,6 @@
         "custom"
       ],
       "title": "Tool",
-      "type": "string"
-    },
-    "Type": {
-      "enum": [
-        "one_to_one",
-        "one_to_many",
-        "many_to_one",
-        "many_to_many"
-      ],
-      "title": "Type",
-      "type": "string"
-    },
-    "Type1": {
-      "enum": [
-        "check",
-        "unique",
-        "foreign_key",
-        "primary_key",
-        "exclude"
-      ],
-      "title": "Type1",
-      "type": "string"
-    },
-    "Type2": {
-      "enum": [
-        "single_table",
-        "joined",
-        "concrete"
-      ],
-      "title": "Type2",
       "type": "string"
     }
   },

@@ -67,37 +67,6 @@
       "title": "BroadcastingSpec",
       "type": "object"
     },
-    "Category": {
-      "enum": [
-        "numeric",
-        "string",
-        "temporal",
-        "boolean",
-        "categorical",
-        "nested",
-        "binary",
-        "null",
-        "custom"
-      ],
-      "title": "Category",
-      "type": "string"
-    },
-    "Category1": {
-      "enum": [
-        "select",
-        "filter",
-        "aggregate",
-        "join",
-        "reshape",
-        "sort",
-        "window",
-        "fill",
-        "cast",
-        "custom"
-      ],
-      "title": "Category1",
-      "type": "string"
-    },
     "CoercionRule": {
       "properties": {
         "behavior": {
@@ -242,6 +211,21 @@
       "title": "DTypeBehaviorSpec",
       "type": "object"
     },
+    "DTypeCategory": {
+      "enum": [
+        "numeric",
+        "string",
+        "temporal",
+        "boolean",
+        "categorical",
+        "nested",
+        "binary",
+        "null",
+        "custom"
+      ],
+      "title": "DTypeCategory",
+      "type": "string"
+    },
     "DTypePromotionSpec": {
       "properties": {
         "overflow_behavior": {
@@ -304,7 +288,7 @@
         "category": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Category"
+              "$ref": "#/$defs/DTypeCategory"
             },
             {
               "type": "null"
@@ -1133,7 +1117,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type"
+              "$ref": "#/$defs/PipelineType"
             },
             {
               "type": "null"
@@ -1218,6 +1202,16 @@
       "title": "PipelineStage",
       "type": "object"
     },
+    "PipelineType": {
+      "enum": [
+        "sequential",
+        "dag",
+        "streaming",
+        "batch"
+      ],
+      "title": "PipelineType",
+      "type": "string"
+    },
     "Rules": {
       "enum": [
         "numpy",
@@ -1238,10 +1232,26 @@
       "title": "StringStorage",
       "type": "string"
     },
+    "TransformCategory": {
+      "enum": [
+        "select",
+        "filter",
+        "aggregate",
+        "join",
+        "reshape",
+        "sort",
+        "window",
+        "fill",
+        "cast",
+        "custom"
+      ],
+      "title": "TransformCategory",
+      "type": "string"
+    },
     "TransformSpec": {
       "properties": {
         "category": {
-          "$ref": "#/$defs/Category1",
+          "$ref": "#/$defs/TransformCategory",
           "description": "Transform category"
         },
         "description": {
@@ -1333,16 +1343,6 @@
       ],
       "title": "TransformSpec",
       "type": "object"
-    },
-    "Type": {
-      "enum": [
-        "sequential",
-        "dag",
-        "streaming",
-        "batch"
-      ],
-      "title": "Type",
-      "type": "string"
     }
   },
   "$id": "https://libspec.dev/schema/1.0/extensions/data.schema.json",

@@ -10,18 +10,6 @@
       "title": "Backoff",
       "type": "string"
     },
-    "Category": {
-      "enum": [
-        "domain",
-        "integration",
-        "notification",
-        "system",
-        "command",
-        "query"
-      ],
-      "title": "Category",
-      "type": "string"
-    },
     "CompensationSpec": {
       "properties": {
         "action": {
@@ -163,7 +151,7 @@
         "type": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Type"
+              "$ref": "#/$defs/EventBusType"
             },
             {
               "type": "null"
@@ -175,6 +163,32 @@
       },
       "title": "EventBusSpec",
       "type": "object"
+    },
+    "EventBusType": {
+      "enum": [
+        "in_memory",
+        "redis",
+        "rabbitmq",
+        "kafka",
+        "sqs",
+        "pubsub",
+        "nats",
+        "custom"
+      ],
+      "title": "EventBusType",
+      "type": "string"
+    },
+    "EventCategory": {
+      "enum": [
+        "domain",
+        "integration",
+        "notification",
+        "system",
+        "command",
+        "query"
+      ],
+      "title": "EventCategory",
+      "type": "string"
     },
     "EventFieldSpec": {
       "properties": {
@@ -268,7 +282,7 @@
         "category": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Category"
+              "$ref": "#/$defs/EventCategory"
             },
             {
               "type": "null"
@@ -1162,20 +1176,6 @@
       ],
       "title": "TopicSpec",
       "type": "object"
-    },
-    "Type": {
-      "enum": [
-        "in_memory",
-        "redis",
-        "rabbitmq",
-        "kafka",
-        "sqs",
-        "pubsub",
-        "nats",
-        "custom"
-      ],
-      "title": "Type",
-      "type": "string"
     }
   },
   "$id": "https://libspec.dev/schema/1.0/extensions/events.schema.json",

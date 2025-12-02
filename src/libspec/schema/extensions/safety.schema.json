@@ -155,18 +155,6 @@
       "title": "MemorySafetySpec",
       "type": "object"
     },
-    "Mode": {
-      "enum": [
-        "immutable",
-        "synchronized",
-        "thread_local",
-        "lock_free",
-        "wait_free",
-        "none"
-      ],
-      "title": "Mode",
-      "type": "string"
-    },
     "Model": {
       "enum": [
         "shared_nothing",
@@ -409,6 +397,18 @@
       "title": "SafetyTypeFields",
       "type": "object"
     },
+    "ThreadSafetyMode": {
+      "enum": [
+        "immutable",
+        "synchronized",
+        "thread_local",
+        "lock_free",
+        "wait_free",
+        "none"
+      ],
+      "title": "ThreadSafetyMode",
+      "type": "string"
+    },
     "ThreadSafetySpec": {
       "properties": {
         "lock_granularity": {
@@ -438,7 +438,7 @@
         "mode": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Mode"
+              "$ref": "#/$defs/ThreadSafetyMode"
             },
             {
               "type": "null"
