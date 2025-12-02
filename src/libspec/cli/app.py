@@ -17,11 +17,13 @@ class Context:
         text: bool,
         no_meta: bool,
         config: LibspecConfig,
+        strict_models: bool,
     ):
         self.spec_path = spec_path
         self.text = text
         self.no_meta = no_meta
         self.config = config
+        self.strict_models = strict_models
         self._spec: LoadedSpec | None = None
 
     def get_spec(self) -> LoadedSpec:
@@ -33,7 +35,7 @@ class Context:
                     "No spec file found. Use --spec or set spec_path in [tool.libspec]"
                 )
             try:
-                self._spec = load_spec(path)
+                self._spec = load_spec(path, strict=self.strict_models)
             except SpecLoadError as e:
                 raise click.ClickException(str(e))
         return self._spec
@@ -66,6 +68,11 @@ pass_context = click.make_pass_decorator(Context)
     type=click.Path(exists=True),
     help="Path to pyproject.toml for [tool.libspec] config",
 )
+@click.option(
+    "--strict-models/--no-strict-models",
+    default=None,
+    help="Enable strict Pydantic parsing (no coercion, extra fields rejected when extensions absent)",
+)
 @click.version_option(version="0.1.0", prog_name="libspec")
 @click.pass_context
 def cli(
@@ -74,6 +81,7 @@ def cli(
     text: bool,
     no_meta: bool,
     config: str | None,
+    strict_models: bool | None,
 ) -> None:
     """
     libspec - Query and analyze library specifications.
@@ -89,7 +97,14 @@ def cli(
         libspec lint --strict           # Lint and fail on issues
     """
     cfg = LibspecConfig.load(Path(config) if config else None)
-    ctx.obj = Context(spec_path=spec, text=text, no_meta=no_meta, config=cfg)
+    effective_strict = cfg.strict_models if strict_models is None else strict_models
+    ctx.obj = Context(
+        spec_path=spec,
+        text=text,
+        no_meta=no_meta,
+        config=cfg,
+        strict_models=effective_strict,
+    )
 
 
 # Import and register command groups (must be after cli definition to avoid circular imports)

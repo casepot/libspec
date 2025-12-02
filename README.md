@@ -58,6 +58,12 @@ if errors:
         print(f"Error: {e}")
 ```
 
+## Development Notes
+
+- **Pydantic-first**: Models live in `src/libspec/models/`; JSON Schemas are generated artifacts. Regenerate extension models with `uv run python tools/generate_models.py` (uses `datamodel-codegen`, auto-renames `async.py` → `async_.py`).
+- **Drift check**: `uv run python tools/check_generated.py` fails if regenerated extension models differ from the repo.
+- **Strict parsing**: Add `--strict-models` to CLI commands (or `[tool.libspec].strict_models = true` in `pyproject.toml`) to enable strict Pydantic validation and duplicate detection.
+
 ## Schema Structure
 
 ### Core Schema

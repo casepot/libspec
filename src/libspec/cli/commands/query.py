@@ -21,7 +21,10 @@ def parse_ref(ref: str) -> list[str]:
     """
     if ref.startswith("#/"):
         ref = ref[2:]
-    return ref.split("/")
+    parts = ref.split("/")
+    if parts and parts[0] == "library":
+        parts = parts[1:]
+    return parts
 
 
 def resolve_ref(spec_data: dict[str, Any], ref: str) -> tuple[Any, list[str | int]] | None:

@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from typing import Annotated, Literal, Union
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, AnyUrl, conlist, field_validator, model_validator
 from typing_extensions import Self
 
 from ..base import ExtensionModel
@@ -32,7 +32,7 @@ class PrEvidence(EvidenceBase):
     """Pull/merge request evidence."""
 
     type: Literal["pr"]
-    url: str  # URL to the PR
+    url: AnyUrl  # URL to the PR
     author: str | None = None
 
     @field_validator("url")
@@ -80,7 +80,7 @@ class DocsEvidence(EvidenceBase):
     """Documentation URL evidence."""
 
     type: Literal["docs"]
-    url: str
+    url: AnyUrl
 
     @field_validator("url")
     @classmethod
@@ -129,7 +129,7 @@ class CustomEvidence(EvidenceBase):
     type: Literal["custom"]
     type_name: str  # References workflow evidence_types
     reference: str | None = None
-    url: str | None = None
+    url: AnyUrl | None = None
     path: str | None = None
     author: str | None = None
 
@@ -242,7 +242,7 @@ class LifecycleFields(ExtensionModel):
 
     lifecycle_state: str | None = None
     workflow: str | None = None  # Workflow override (uses default if not set)
-    state_evidence: list[EvidenceSpec] = Field(default_factory=list)
+    state_evidence: conlist(EvidenceSpec, min_length=1) = Field(default_factory=list)
 
 
 class LifecycleLibraryFields(ExtensionModel):

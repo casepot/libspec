@@ -55,6 +55,7 @@ class LibspecConfig(BaseModel):
 
     spec_path: str = "specs/libspec.json"
     lint: LintConfig = Field(default_factory=LintConfig)
+    strict_models: bool = False
 
     @classmethod
     def load(cls, config_path: Path | None = None) -> "LibspecConfig":

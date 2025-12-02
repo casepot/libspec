@@ -41,6 +41,8 @@ Key files:
 - `spec_loader.py` - Spec file loading and parsing
 - `output.py` - JSON/text output formatting
 - `config.py` - `[tool.libspec]` config loading from pyproject.toml
+- `tools/generate_models.py` - Regenerates extension models from JSON Schema (auto-renames `async.py` → `async_.py`); `tools/check_generated.py` fails if drift is detected.
+- CLI flag `--strict-models` (or `[tool.libspec].strict_models = true`) enables strict Pydantic parsing plus duplicate detection.
 
 ### Lint System (`src/libspec/cli/lint/`)
 

@@ -116,7 +116,81 @@ class SpecLoadError(Exception):
     pass
 
 
-def load_spec(path: Path, *, validate: bool = True) -> LoadedSpec:
+def _ensure_no_extra_fields_when_extensions_absent(data: dict[str, Any]) -> None:
+    """In strict mode, reject unexpected fields when no extensions are enabled."""
+    extensions: list[str] = data.get("extensions", []) or []
+    if extensions:
+        return  # Extensions declared; allow extra fields for forward compatibility
+
+    core_type_fields = set(TypeDef.model_fields.keys())
+    core_func_fields = set(FunctionDef.model_fields.keys())
+    core_feature_fields = set(Feature.model_fields.keys())
+    core_module_fields = set(Module.model_fields.keys())
+    core_principle_fields = set(Principle.model_fields.keys())
+
+    for i, type_def in enumerate(data.get("library", {}).get("types", [])):
+        extra = set(type_def.keys()) - core_type_fields
+        if extra:
+            raise SpecLoadError(
+                f"Unexpected fields in type '{type_def.get('name', '?')}': {sorted(extra)} "
+                "(no extensions declared; use --strict-models to enforce this check)"
+            )
+    for i, fn in enumerate(data.get("library", {}).get("functions", [])):
+        extra = set(fn.keys()) - core_func_fields
+        if extra:
+            raise SpecLoadError(
+                f"Unexpected fields in function '{fn.get('name', '?')}': {sorted(extra)} "
+                "(no extensions declared; use --strict-models to enforce this check)"
+            )
+    for i, feat in enumerate(data.get("library", {}).get("features", [])):
+        extra = set(feat.keys()) - core_feature_fields
+        if extra:
+            raise SpecLoadError(
+                f"Unexpected fields in feature '{feat.get('id', '?')}': {sorted(extra)} "
+                "(no extensions declared; use --strict-models to enforce this check)"
+            )
+    for mod in data.get("library", {}).get("modules", []):
+        extra = set(mod.keys()) - core_module_fields
+        if extra:
+            raise SpecLoadError(
+                f"Unexpected fields in module '{mod.get('path', '?')}': {sorted(extra)} "
+                "(no extensions declared; use --strict-models to enforce this check)"
+            )
+    for principle in data.get("library", {}).get("principles", []):
+        extra = set(principle.keys()) - core_principle_fields
+        if extra:
+            raise SpecLoadError(
+                f"Unexpected fields in principle '{principle.get('id', '?')}': {sorted(extra)} "
+                "(no extensions declared; use --strict-models to enforce this check)"
+            )
+
+
+def _ensure_uniqueness(spec: LibspecSpec) -> None:
+    """Enforce uniqueness of type names, feature ids, and module paths."""
+    types = [t.name for t in spec.library.types]
+    features = [f.id for f in spec.library.features]
+    modules = [m.path for m in spec.library.modules]
+
+    def _first_duplicate(items: list[str]) -> str | None:
+        seen: set[str] = set()
+        for item in items:
+            if item in seen:
+                return item
+            seen.add(item)
+        return None
+
+    dup_type = _first_duplicate(types)
+    if dup_type:
+        raise SpecLoadError(f"Duplicate type name '{dup_type}' found (strict models enabled)")
+    dup_feat = _first_duplicate(features)
+    if dup_feat:
+        raise SpecLoadError(f"Duplicate feature id '{dup_feat}' found (strict models enabled)")
+    dup_mod = _first_duplicate(modules)
+    if dup_mod:
+        raise SpecLoadError(f"Duplicate module path '{dup_mod}' found (strict models enabled)")
+
+
+def load_spec(path: Path, *, validate: bool = True, strict: bool = False) -> LoadedSpec:
     """
     Load a libspec file from disk.
 
@@ -148,8 +222,12 @@ def load_spec(path: Path, *, validate: bool = True) -> LoadedSpec:
         raise SpecLoadError("Spec must have a 'library' field")
 
     if validate:
+        if strict:
+            _ensure_no_extra_fields_when_extensions_absent(data)
         try:
-            spec = LibspecSpec.model_validate(data)
+            spec = LibspecSpec.model_validate(data, strict=strict)
+            if strict:
+                _ensure_uniqueness(spec)
         except ValidationError as e:
             # Format validation errors nicely
             errors = []

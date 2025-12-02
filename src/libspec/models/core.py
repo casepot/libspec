@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AnyUrl, Field, conlist, field_validator, model_validator
 from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
@@ -340,8 +340,8 @@ class Feature(ExtensibleModel):
     description: str | None = Field(
         default=None, description="Detailed description (Markdown supported)"
     )
-    steps: list[str] = Field(
-        default_factory=list, description="Verification/test steps"
+    steps: conlist(str, min_length=1) = Field(
+        default_factory=list, description="Verification/test steps (at least one)"
     )
     references: list[str] = Field(
         default_factory=list, description="Related types, functions, or features"
@@ -415,10 +415,10 @@ class Library(ExtensibleModel):
     description: str | None = Field(
         default=None, description="Longer description (Markdown supported)"
     )
-    repository: str | None = Field(
+    repository: AnyUrl | None = Field(
         default=None, description="URL to source repository"
     )
-    documentation: str | None = Field(
+    documentation: AnyUrl | None = Field(
         default=None, description="URL to documentation"
     )
     principles: list[Principle] = Field(
