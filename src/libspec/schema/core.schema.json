@@ -19,7 +19,7 @@
         "type": "string",
         "enum": [
           "async", "web", "data", "cli", "orm", "testing", "events", "state", "plugins", "ml",
-          "errors", "perf", "safety", "config", "versioning", "observability"
+          "errors", "perf", "safety", "config", "versioning", "observability", "lifecycle"
         ]
       },
       "uniqueItems": true,

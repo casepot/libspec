@@ -1,0 +1,492 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://libspec.dev/schema/1.0/extensions/lifecycle.schema.json",
+  "title": "Lifecycle Extension",
+  "description": "Extension for entity development lifecycle: workflows, states, transitions, gates, and evidence tracking.",
+
+  "$defs": {
+    "LifecycleLibraryFields": {
+      "description": "Fields added to Library when lifecycle extension is active",
+      "type": "object",
+      "properties": {
+        "workflows": {
+          "type": "array",
+          "description": "Named workflow definitions for tracking entity maturity",
+          "items": { "$ref": "#/$defs/WorkflowSpec" }
+        },
+        "default_workflow": {
+          "type": "string",
+          "description": "Name of the default workflow for entities without explicit workflow"
+        }
+      }
+    },
+
+    "LifecycleTypeFields": {
+      "description": "Fields added to TypeDef when lifecycle extension is active",
+      "type": "object",
+      "properties": {
+        "lifecycle_state": {
+          "type": "string",
+          "description": "Current lifecycle state of this type"
+        },
+        "workflow": {
+          "type": "string",
+          "description": "Workflow override (uses default_workflow if not specified)"
+        },
+        "state_evidence": {
+          "type": "array",
+          "description": "Evidence supporting current lifecycle state",
+          "items": { "$ref": "#/$defs/EvidenceSpec" }
+        }
+      }
+    },
+
+    "LifecycleMethodFields": {
+      "description": "Fields added to Method when lifecycle extension is active",
+      "type": "object",
+      "properties": {
+        "lifecycle_state": {
+          "type": "string",
+          "description": "Current lifecycle state of this method"
+        },
+        "workflow": {
+          "type": "string",
+          "description": "Workflow override"
+        },
+        "state_evidence": {
+          "type": "array",
+          "description": "Evidence supporting current lifecycle state",
+          "items": { "$ref": "#/$defs/EvidenceSpec" }
+        }
+      }
+    },
+
+    "LifecycleFunctionFields": {
+      "description": "Fields added to FunctionDef when lifecycle extension is active",
+      "type": "object",
+      "properties": {
+        "lifecycle_state": {
+          "type": "string",
+          "description": "Current lifecycle state of this function"
+        },
+        "workflow": {
+          "type": "string",
+          "description": "Workflow override"
+        },
+        "state_evidence": {
+          "type": "array",
+          "description": "Evidence supporting current lifecycle state",
+          "items": { "$ref": "#/$defs/EvidenceSpec" }
+        }
+      }
+    },
+
+    "LifecycleFeatureFields": {
+      "description": "Fields added to Feature when lifecycle extension is active",
+      "type": "object",
+      "properties": {
+        "lifecycle_state": {
+          "type": "string",
+          "description": "Current lifecycle state of this feature"
+        },
+        "workflow": {
+          "type": "string",
+          "description": "Workflow override"
+        },
+        "state_evidence": {
+          "type": "array",
+          "description": "Evidence supporting current lifecycle state",
+          "items": { "$ref": "#/$defs/EvidenceSpec" }
+        }
+      }
+    },
+
+    "WorkflowSpec": {
+      "type": "object",
+      "description": "A named workflow defining development lifecycle states and transitions",
+      "required": ["name", "states", "initial_state"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique workflow name (kebab-case)",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this workflow is for"
+        },
+        "states": {
+          "type": "array",
+          "description": "All possible states in this workflow",
+          "items": { "$ref": "#/$defs/DevStateSpec" },
+          "minItems": 1
+        },
+        "initial_state": {
+          "type": "string",
+          "description": "Starting state for new entities"
+        },
+        "transitions": {
+          "type": "array",
+          "description": "Valid state transitions with gates",
+          "items": { "$ref": "#/$defs/DevTransitionSpec" }
+        },
+        "allow_skip": {
+          "type": "boolean",
+          "description": "Whether skipping intermediate states is allowed",
+          "default": false
+        },
+        "evidence_types": {
+          "type": "array",
+          "description": "Custom evidence types for this workflow",
+          "items": { "$ref": "#/$defs/EvidenceTypeSpec" }
+        }
+      }
+    },
+
+    "DevStateSpec": {
+      "type": "object",
+      "description": "A development lifecycle state",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "State name (lowercase with hyphens)",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this state represents"
+        },
+        "terminal": {
+          "type": "boolean",
+          "description": "Whether this is a terminal state (no outgoing transitions)",
+          "default": false
+        },
+        "required_evidence": {
+          "type": "array",
+          "description": "Evidence types required to enter this state",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "type": "integer",
+          "description": "State order for progression tracking (higher = more mature)",
+          "minimum": 0
+        }
+      }
+    },
+
+    "DevTransitionSpec": {
+      "type": "object",
+      "description": "A valid state transition with optional gate criteria",
+      "required": ["from_state", "to_state"],
+      "properties": {
+        "from_state": {
+          "type": "string",
+          "description": "Source state name"
+        },
+        "to_state": {
+          "type": "string",
+          "description": "Target state name"
+        },
+        "gates": {
+          "type": "array",
+          "description": "Gates that must be satisfied for this transition",
+          "items": { "$ref": "#/$defs/GateSpec" }
+        },
+        "description": {
+          "type": "string",
+          "description": "What this transition represents"
+        }
+      }
+    },
+
+    "GateSpec": {
+      "type": "object",
+      "description": "A gate condition for a transition",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of gate"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Whether this gate is required or advisory",
+          "default": true
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional context for this gate"
+        },
+        "validator": {
+          "type": "string",
+          "description": "For custom gates: reference to validation function"
+        }
+      }
+    },
+
+    "EvidenceTypeSpec": {
+      "type": "object",
+      "description": "Custom evidence type definition for a workflow",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Evidence type name (snake_case)",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this evidence type represents"
+        },
+        "required_fields": {
+          "type": "array",
+          "description": "Fields required for this evidence type",
+          "items": {
+            "type": "string",
+            "enum": ["reference", "url", "path", "author", "date"]
+          }
+        },
+        "reference_pattern": {
+          "type": "string",
+          "description": "Regex pattern for validating reference field"
+        },
+        "url_pattern": {
+          "type": "string",
+          "description": "Regex pattern for validating url field"
+        }
+      }
+    },
+
+    "EvidenceSpec": {
+      "description": "Evidence supporting an entity's lifecycle state",
+      "oneOf": [
+        { "$ref": "#/$defs/PrEvidence" },
+        { "$ref": "#/$defs/TestsEvidence" },
+        { "$ref": "#/$defs/DesignDocEvidence" },
+        { "$ref": "#/$defs/DocsEvidence" },
+        { "$ref": "#/$defs/ApprovalEvidence" },
+        { "$ref": "#/$defs/BenchmarkEvidence" },
+        { "$ref": "#/$defs/MigrationGuideEvidence" },
+        { "$ref": "#/$defs/DeprecationNoticeEvidence" },
+        { "$ref": "#/$defs/CustomEvidence" }
+      ]
+    },
+
+    "EvidenceBase": {
+      "type": "object",
+      "description": "Common fields for all evidence types",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Additional context about this evidence"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "When this evidence was created/added"
+        },
+        "author": {
+          "type": "string",
+          "description": "Who provided this evidence"
+        }
+      }
+    },
+
+    "PrEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "url"],
+          "properties": {
+            "type": { "const": "pr" },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL to the pull/merge request"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "TestsEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "path"],
+          "properties": {
+            "type": { "const": "tests" },
+            "path": {
+              "type": "string",
+              "description": "Path to test file or directory"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "DesignDocEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "reference"],
+          "properties": {
+            "type": { "const": "design_doc" },
+            "reference": {
+              "type": "string",
+              "description": "URL or path to design document"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "DocsEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "url"],
+          "properties": {
+            "type": { "const": "docs" },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL to documentation"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "ApprovalEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "reference", "author"],
+          "properties": {
+            "type": { "const": "approval" },
+            "reference": {
+              "type": "string",
+              "description": "URL or reference to approval (e.g., issue comment)"
+            },
+            "author": {
+              "type": "string",
+              "description": "Who approved"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "BenchmarkEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "reference"],
+          "properties": {
+            "type": { "const": "benchmark" },
+            "reference": {
+              "type": "string",
+              "description": "URL or path to benchmark results"
+            },
+            "metrics": {
+              "type": "object",
+              "description": "Key benchmark metrics",
+              "additionalProperties": {
+                "type": ["number", "string"]
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "MigrationGuideEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "reference"],
+          "properties": {
+            "type": { "const": "migration_guide" },
+            "reference": {
+              "type": "string",
+              "description": "URL or path to migration guide"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "DeprecationNoticeEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "reference", "date"],
+          "properties": {
+            "type": { "const": "deprecation_notice" },
+            "reference": {
+              "type": "string",
+              "description": "URL or reference to deprecation announcement"
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "description": "When deprecation was announced"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "CustomEvidence": {
+      "allOf": [
+        { "$ref": "#/$defs/EvidenceBase" },
+        {
+          "type": "object",
+          "required": ["type", "type_name"],
+          "properties": {
+            "type": { "const": "custom" },
+            "type_name": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$",
+              "description": "Name of custom evidence type defined in workflow"
+            },
+            "reference": {
+              "type": "string",
+              "description": "URL or path reference"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL reference"
+            },
+            "path": {
+              "type": "string",
+              "description": "File path reference"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

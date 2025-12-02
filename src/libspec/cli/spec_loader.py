@@ -61,6 +61,16 @@ class LoadedSpec(BaseModel):
         """Get design principles."""
         return self.library.get("principles", [])
 
+    @property
+    def workflows(self) -> list[dict[str, Any]]:
+        """Get workflow definitions (requires lifecycle extension)."""
+        return self.library.get("workflows", [])
+
+    @property
+    def default_workflow(self) -> str | None:
+        """Get default workflow name."""
+        return self.library.get("default_workflow")
+
 
 class SpecLoadError(Exception):
     """Error loading a spec file."""

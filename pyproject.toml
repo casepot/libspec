@@ -28,24 +28,27 @@ classifiers = [
 
 dependencies = [
     "jsonschema>=4.0.0",
+    "click>=8.0.0",
+    "pydantic>=2.0.0",
 ]
 
 [project.scripts]
 libspec = "libspec.cli:main"
 
 [project.optional-dependencies]
-cli = [
-    "click>=8.0.0",
-    "pydantic>=2.0.0",
-]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "mypy>=1.0.0",
     "ruff>=0.1.0",
 ]
-all = [
-    "libspec[cli,dev]",
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
 ]
 
 [project.urls]

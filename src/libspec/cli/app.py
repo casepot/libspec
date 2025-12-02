@@ -95,7 +95,7 @@ def cli(
 
 
 # Import and register command groups
-from libspec.cli.commands import inspect, query, validate, analyze
+from libspec.cli.commands import inspect, query, validate, analyze, lifecycle
 
 cli.add_command(inspect.info)
 cli.add_command(inspect.types)
@@ -114,3 +114,5 @@ cli.add_command(validate.lint)
 cli.add_command(analyze.coverage)
 cli.add_command(analyze.deps)
 cli.add_command(analyze.surface)
+
+cli.add_command(lifecycle.lifecycle)

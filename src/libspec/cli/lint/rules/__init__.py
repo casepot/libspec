@@ -5,5 +5,6 @@ from libspec.cli.lint.rules import structural
 from libspec.cli.lint.rules import naming
 from libspec.cli.lint.rules import completeness
 from libspec.cli.lint.rules import consistency
+from libspec.cli.lint.rules import lifecycle
 
-__all__ = ["structural", "naming", "completeness", "consistency"]
+__all__ = ["structural", "naming", "completeness", "consistency", "lifecycle"]

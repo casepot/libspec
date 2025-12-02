@@ -19,6 +19,31 @@ from libspec.cli.models.lint import (
     LintResult,
     LintMeta,
 )
+from libspec.cli.models.lifecycle import (
+    # Evidence types
+    EvidenceSpec,
+    PrEvidence,
+    TestsEvidence,
+    DesignDocEvidence,
+    DocsEvidence,
+    ApprovalEvidence,
+    BenchmarkEvidence,
+    MigrationGuideEvidence,
+    DeprecationNoticeEvidence,
+    CustomEvidence,
+    # Workflow types
+    WorkflowSpec,
+    DevStateSpec,
+    DevTransitionSpec,
+    GateSpec,
+    EvidenceTypeSpec,
+    # Entity types
+    LifecycleFields,
+    LifecycleLibraryFields,
+    LifecycleEntity,
+    BlockedItem,
+    GateStatus,
+)
 
 __all__ = [
     "OutputEnvelope",
@@ -36,4 +61,25 @@ __all__ = [
     "LintIssue",
     "LintResult",
     "LintMeta",
+    # Lifecycle types
+    "EvidenceSpec",
+    "PrEvidence",
+    "TestsEvidence",
+    "DesignDocEvidence",
+    "DocsEvidence",
+    "ApprovalEvidence",
+    "BenchmarkEvidence",
+    "MigrationGuideEvidence",
+    "DeprecationNoticeEvidence",
+    "CustomEvidence",
+    "WorkflowSpec",
+    "DevStateSpec",
+    "DevTransitionSpec",
+    "GateSpec",
+    "EvidenceTypeSpec",
+    "LifecycleFields",
+    "LifecycleLibraryFields",
+    "LifecycleEntity",
+    "BlockedItem",
+    "GateStatus",
 ]

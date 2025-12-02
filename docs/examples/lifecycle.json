@@ -1,0 +1,198 @@
+{
+  "$schema": "libspec/1.0",
+  "extensions": ["lifecycle"],
+  "library": {
+    "name": "mylib",
+    "version": "0.2.0",
+    "tagline": "Example library with lifecycle tracking",
+    "default_workflow": "standard",
+    "workflows": [
+      {
+        "name": "standard",
+        "description": "Standard API lifecycle workflow",
+        "initial_state": "idea",
+        "states": [
+          { "name": "idea", "order": 0, "description": "Initial concept or proposal" },
+          { "name": "drafted", "order": 1, "description": "Design drafted", "required_evidence": ["design_doc"] },
+          { "name": "reviewed", "order": 2, "description": "Design reviewed" },
+          { "name": "approved", "order": 3, "description": "Design approved for implementation", "required_evidence": ["approval"] },
+          { "name": "implemented", "order": 4, "description": "Code implemented", "required_evidence": ["pr"] },
+          { "name": "tested", "order": 5, "description": "Tests passing", "required_evidence": ["tests"] },
+          { "name": "documented", "order": 6, "description": "Documentation complete", "required_evidence": ["docs"] },
+          { "name": "released", "order": 7, "description": "Available in a release" },
+          { "name": "deprecated", "order": 8, "description": "Marked for removal", "required_evidence": ["deprecation_notice"] },
+          { "name": "removed", "order": 9, "terminal": true, "description": "Removed from API", "required_evidence": ["migration_guide"] }
+        ],
+        "transitions": [
+          { "from_state": "idea", "to_state": "drafted", "gates": [{ "type": "design_doc", "required": true }] },
+          { "from_state": "drafted", "to_state": "reviewed" },
+          { "from_state": "reviewed", "to_state": "approved", "gates": [{ "type": "approval", "required": true }] },
+          { "from_state": "approved", "to_state": "implemented", "gates": [{ "type": "pr_merged", "required": true }] },
+          { "from_state": "implemented", "to_state": "tested", "gates": [{ "type": "tests_passing", "required": true }] },
+          { "from_state": "tested", "to_state": "documented", "gates": [{ "type": "docs_updated", "required": true }] },
+          { "from_state": "documented", "to_state": "released" },
+          { "from_state": "released", "to_state": "deprecated", "gates": [{ "type": "deprecation_notice", "required": true }] },
+          { "from_state": "deprecated", "to_state": "removed", "gates": [{ "type": "migration_guide", "required": true }] }
+        ],
+        "allow_skip": false,
+        "evidence_types": [
+          {
+            "name": "security_review",
+            "description": "Security team sign-off",
+            "required_fields": ["reference", "author"],
+            "reference_pattern": "^https://github\\.com/org/repo/issues/\\d+"
+          }
+        ]
+      }
+    ],
+    "types": [
+      {
+        "name": "DataProcessor",
+        "kind": "class",
+        "module": "mylib.core",
+        "docstring": "Processes data from various sources",
+        "lifecycle_state": "tested",
+        "state_evidence": [
+          { "type": "design_doc", "reference": "docs/design/data-processor.md", "date": "2024-01-15" },
+          { "type": "approval", "reference": "https://github.com/org/repo/issues/10#issuecomment-123", "author": "lead-dev" },
+          { "type": "pr", "url": "https://github.com/org/repo/pull/42" },
+          { "type": "tests", "path": "tests/test_data_processor.py" }
+        ],
+        "methods": [
+          {
+            "name": "process",
+            "signature": "(self, data: bytes) -> ProcessedData",
+            "description": "Process raw data and return structured result"
+          },
+          {
+            "name": "validate",
+            "signature": "(self, data: bytes) -> bool",
+            "description": "Check if data is valid for processing"
+          }
+        ]
+      },
+      {
+        "name": "AsyncProcessor",
+        "kind": "class",
+        "module": "mylib.async_core",
+        "docstring": "Async version of DataProcessor",
+        "lifecycle_state": "implemented",
+        "state_evidence": [
+          { "type": "design_doc", "reference": "docs/design/async-processor.md" },
+          { "type": "approval", "reference": "https://github.com/org/repo/issues/50#issuecomment-456", "author": "tech-lead" },
+          { "type": "pr", "url": "https://github.com/org/repo/pull/55" }
+        ],
+        "methods": [
+          {
+            "name": "process_async",
+            "signature": "(self, data: bytes) -> Awaitable[ProcessedData]",
+            "description": "Async data processing"
+          }
+        ]
+      },
+      {
+        "name": "LegacyProcessor",
+        "kind": "class",
+        "module": "mylib.legacy",
+        "docstring": "Old processor, scheduled for removal",
+        "lifecycle_state": "deprecated",
+        "state_evidence": [
+          { "type": "deprecation_notice", "reference": "https://github.com/org/repo/issues/100", "date": "2024-06-01" }
+        ],
+        "methods": [
+          {
+            "name": "do_process",
+            "signature": "(self, raw: str) -> str",
+            "description": "Legacy processing method"
+          }
+        ]
+      },
+      {
+        "name": "StreamProcessor",
+        "kind": "class",
+        "module": "mylib.streaming",
+        "docstring": "Real-time stream processing (in design)",
+        "lifecycle_state": "drafted",
+        "state_evidence": [
+          { "type": "design_doc", "reference": "docs/design/stream-processor.md", "date": "2024-11-20" }
+        ]
+      },
+      {
+        "name": "SecureProcessor",
+        "kind": "class",
+        "module": "mylib.secure",
+        "docstring": "Security-reviewed processor",
+        "lifecycle_state": "approved",
+        "state_evidence": [
+          { "type": "design_doc", "reference": "docs/design/secure-processor.md" },
+          { "type": "approval", "reference": "https://github.com/org/repo/issues/120#issuecomment-789", "author": "tech-lead" },
+          {
+            "type": "custom",
+            "type_name": "security_review",
+            "reference": "https://github.com/org/repo/issues/125",
+            "author": "security-team"
+          }
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "process_batch",
+        "kind": "function",
+        "module": "mylib.batch",
+        "signature": "(items: list[bytes], processor: DataProcessor) -> list[ProcessedData]",
+        "description": "Process a batch of items",
+        "lifecycle_state": "released",
+        "state_evidence": [
+          { "type": "design_doc", "reference": "docs/design/batch.md" },
+          { "type": "pr", "url": "https://github.com/org/repo/pull/30" },
+          { "type": "tests", "path": "tests/test_batch.py" },
+          { "type": "docs", "url": "https://mylib.dev/api/batch" }
+        ]
+      },
+      {
+        "name": "validate_schema",
+        "kind": "function",
+        "module": "mylib.validation",
+        "signature": "(data: dict, schema: Schema) -> ValidationResult",
+        "description": "Validate data against a schema",
+        "lifecycle_state": "idea"
+      }
+    ],
+    "features": [
+      {
+        "id": "batch-processing",
+        "category": "PROCESSING",
+        "summary": "Support for batch processing of multiple items",
+        "description": "Process multiple data items efficiently in a single batch operation",
+        "status": "tested",
+        "lifecycle_state": "released",
+        "steps": [
+          "Given a list of 100 data items",
+          "When process_batch is called",
+          "Then all items are processed",
+          "And results are returned in order"
+        ],
+        "references": ["#/functions/process_batch", "#/types/DataProcessor"]
+      },
+      {
+        "id": "async-support",
+        "category": "PROCESSING",
+        "summary": "Async processing support",
+        "description": "Support for asynchronous data processing",
+        "status": "implemented",
+        "lifecycle_state": "implemented",
+        "references": ["#/types/AsyncProcessor"]
+      },
+      {
+        "id": "streaming",
+        "category": "PROCESSING",
+        "summary": "Real-time streaming support",
+        "description": "Process data as a continuous stream",
+        "status": "planned",
+        "lifecycle_state": "drafted",
+        "references": ["#/types/StreamProcessor"]
+      }
+    ]
+  }
+}

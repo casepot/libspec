@@ -99,6 +99,7 @@ Cross-cutting aspects applicable to any library:
 | `config` | Configuration | Settings, env vars, profiles |
 | `versioning` | API evolution | Deprecations, migrations |
 | `observability` | Debugging | Logging, metrics, tracing |
+| `lifecycle` | API maturity | Workflows, states, transitions, evidence |
 
 ## Cross-References
 
@@ -117,6 +118,8 @@ External:   other_lib#/types/SomeType
 
 - [Core Schema Reference](docs/core.md)
 - [Extension Reference](docs/extensions/)
+- [Lifecycle Extension](docs/lifecycle.md)
+- [CLI Reference](docs/cli.md)
 - [Usage Guide](docs/usage.md)
 - [Examples](docs/examples/)
 

@@ -113,6 +113,7 @@ libspec types --kind protocol       # Only protocols
 libspec types --kind enum           # Only enums
 libspec types -m 'mylib\.core'      # Filter by module (regex)
 libspec types --undocumented        # Missing docstrings
+libspec types --lifecycle-state implemented  # Filter by lifecycle
 ```
 
 #### `libspec functions`
@@ -122,6 +123,7 @@ List function definitions.
 ```bash
 libspec functions                   # All functions
 libspec functions --kind decorator  # Only decorators
+libspec functions --lifecycle-state tested  # Filter by lifecycle
 ```
 
 #### `libspec features`
@@ -133,6 +135,7 @@ libspec features                    # All features
 libspec features --status planned   # Not yet implemented
 libspec features --status tested    # With test coverage
 libspec features -c CONNECTION      # Filter by category
+libspec features --lifecycle-state released  # Filter by lifecycle
 ```
 
 #### `libspec modules`
@@ -269,6 +272,36 @@ libspec surface --by-module     # Breakdown per module
 
 ---
 
+### Lifecycle Commands
+
+#### `libspec lifecycle`
+
+Analyze entity lifecycle states and transitions. Requires the `lifecycle` extension.
+
+```bash
+libspec lifecycle                    # Full report
+libspec lifecycle --summary          # Just counts
+libspec lifecycle --blocked          # Show blocked items
+libspec lifecycle --state implemented
+libspec lifecycle --workflow standard
+```
+
+| Option | Description |
+|--------|-------------|
+| `-w, --workflow TEXT` | Filter by workflow name |
+| `-s, --state TEXT` | Filter by lifecycle state |
+| `--blocked` | Show only blocked entities (missing required gates) |
+| `--summary` | Show summary statistics only |
+
+Output includes:
+- Counts by state across all workflows
+- Blocked items missing required gates
+- Entity breakdown by type
+
+See [Lifecycle Extension](lifecycle.md) for full documentation.
+
+---
+
 ## Lint Rules
 
 Rules are organized by category:
@@ -279,6 +312,7 @@ Rules are organized by category:
 | Naming | `N` | Kebab-case IDs, PascalCase types |
 | Completeness | `C` | Features without steps, missing signatures |
 | Consistency | `X` | Dangling refs, duplicates |
+| Lifecycle | `L` | Lifecycle states, transitions, evidence |
 
 ### Available Rules
 
@@ -303,6 +337,15 @@ Rules are organized by category:
 | X002 | error | Duplicate type name |
 | X003 | error | Duplicate feature ID |
 | X006 | warning | Feature marked tested but has no steps |
+| L001 | error | Invalid lifecycle state (not in workflow) |
+| L002 | warning | Missing required evidence for lifecycle state |
+| L003 | error | Dangling workflow reference |
+| L004 | info | Lifecycle/feature status mismatch |
+| L005 | error | Invalid workflow definition |
+| L006 | warning | Evidence reference format invalid for type |
+| L007 | error | Custom evidence references undefined type |
+| L008 | warning | Evidence missing required field for type |
+| L009 | info | Test evidence path doesn't look like a test file |
 
 ### Configuration
 

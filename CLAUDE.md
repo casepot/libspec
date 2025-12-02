@@ -5,14 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate  # Create/activate venv (required)
-pip install -e ".[all]"       # Install with CLI and dev dependencies
-ruff check src/               # Lint (use --fix for auto-fixes)
-mypy src/                     # Type check
-pytest                        # Run tests (none exist yet)
+uv sync                       # Install dependencies (creates .venv automatically)
+uv run libspec                # Run CLI
+uv run pytest                 # Run tests (none exist yet)
+uv run ruff check src/        # Lint (use --fix for auto-fixes)
+uv run mypy src/              # Type check
 ```
 
-CLI entry point: `libspec` (after installing with cli extra)
+Publishing:
+```bash
+uv build                      # Build wheel and sdist
+uv publish                    # Publish to PyPI
+```
 
 ## Architecture
 

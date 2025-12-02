@@ -132,8 +132,15 @@ def info(ctx: Context, counts_only: bool) -> None:
 @click.option("--kind", "-k", help="Filter by kind (class, protocol, enum, dataclass, type_alias)")
 @click.option("--module", "-m", help="Filter by module path (regex pattern)")
 @click.option("--undocumented", is_flag=True, help="Only show types without docstrings")
+@click.option("--lifecycle-state", help="Filter by lifecycle_state (requires lifecycle extension)")
 @pass_context
-def types(ctx: Context, kind: str | None, module: str | None, undocumented: bool) -> None:
+def types(
+    ctx: Context,
+    kind: str | None,
+    module: str | None,
+    undocumented: bool,
+    lifecycle_state: str | None,
+) -> None:
     """
     List type definitions (classes, protocols, enums, etc).
 
@@ -147,6 +154,7 @@ def types(ctx: Context, kind: str | None, module: str | None, undocumented: bool
         libspec types --kind protocol       # Only protocols
         libspec types -m 'mylib\\.core'     # Types in mylib.core
         libspec types --undocumented        # Find missing docstrings
+        libspec types --lifecycle-state implemented
     """
     spec = ctx.get_spec()
     result: list[TypeSummary] = []
@@ -158,6 +166,8 @@ def types(ctx: Context, kind: str | None, module: str | None, undocumented: bool
         if module and not re.search(module, t.get("module", "")):
             continue
         if undocumented and t.get("docstring"):
+            continue
+        if lifecycle_state and t.get("lifecycle_state") != lifecycle_state:
             continue
 
         result.append(
@@ -193,8 +203,14 @@ def types(ctx: Context, kind: str | None, module: str | None, undocumented: bool
 @click.command()
 @click.option("--kind", "-k", help="Filter: function, decorator, context_manager, async_context_manager")
 @click.option("--module", "-m", help="Filter by module path (regex pattern)")
+@click.option("--lifecycle-state", help="Filter by lifecycle_state (requires lifecycle extension)")
 @pass_context
-def functions(ctx: Context, kind: str | None, module: str | None) -> None:
+def functions(
+    ctx: Context,
+    kind: str | None,
+    module: str | None,
+    lifecycle_state: str | None,
+) -> None:
     """
     List function definitions.
 
@@ -202,6 +218,7 @@ def functions(ctx: Context, kind: str | None, module: str | None) -> None:
     Examples:
         libspec functions                   # All functions
         libspec functions --kind decorator  # Only decorators
+        libspec functions --lifecycle-state tested
         libspec functions | jq '.result[].signature'
     """
     spec = ctx.get_spec()
@@ -211,6 +228,8 @@ def functions(ctx: Context, kind: str | None, module: str | None) -> None:
         if kind and f.get("kind") != kind:
             continue
         if module and not re.search(module, f.get("module", "")):
+            continue
+        if lifecycle_state and f.get("lifecycle_state") != lifecycle_state:
             continue
 
         result.append(
@@ -249,8 +268,14 @@ def functions(ctx: Context, kind: str | None, module: str | None) -> None:
     help="Filter by implementation status",
 )
 @click.option("--category", "-c", help="Filter by category (regex, case-insensitive)")
+@click.option("--lifecycle-state", help="Filter by lifecycle_state (requires lifecycle extension)")
 @pass_context
-def features(ctx: Context, status: str | None, category: str | None) -> None:
+def features(
+    ctx: Context,
+    status: str | None,
+    category: str | None,
+    lifecycle_state: str | None,
+) -> None:
     """
     List feature specifications (behavioral contracts).
 
@@ -263,6 +288,7 @@ def features(ctx: Context, status: str | None, category: str | None) -> None:
         libspec features                    # All features
         libspec features --status planned   # Not yet implemented
         libspec features -c CONNECTION      # Category filter
+        libspec features --lifecycle-state drafted
     """
     spec = ctx.get_spec()
     result: list[FeatureSummary] = []
@@ -271,6 +297,8 @@ def features(ctx: Context, status: str | None, category: str | None) -> None:
         if status and f.get("status", "planned") != status:
             continue
         if category and not re.search(category, f.get("category", ""), re.IGNORECASE):
+            continue
+        if lifecycle_state and f.get("lifecycle_state") != lifecycle_state:
             continue
 
         result.append(
