@@ -18,9 +18,11 @@ from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
 from .types import (
+    ExportOrigin,
     ExtensionName,
     FeatureStatus,
     FunctionKind,
+    GenericParamKind,
     GenericVariance,
     KebabCaseId,
     LibraryName,
@@ -28,10 +30,12 @@ from .types import (
     NonEmptyStr,
     ParameterKind,
     PascalCaseName,
+    PythonVersion,
     SchemaVersion,
     ScreamingSnakeCase,
     SemVer,
     TypeKind,
+    Visibility,
 )
 from .utils import ensure_strict_bool
 
@@ -91,18 +95,53 @@ class RaisesClause(LibspecModel):
 
 
 class GenericParam(LibspecModel):
-    """A generic type parameter."""
+    """A generic type parameter (TypeVar, ParamSpec, or TypeVarTuple)."""
 
-    name: NonEmptyStr = Field(description="Parameter name (e.g., 'T', 'K', 'V')")
+    name: NonEmptyStr = Field(description="Parameter name (e.g., 'T', 'P', 'Ts')")
+    kind: GenericParamKind = Field(
+        default=GenericParamKind.TYPE_VAR,
+        description="Kind of generic parameter: type_var (default), param_spec, or type_var_tuple",
+    )
     bound: NonEmptyStr | None = Field(
-        default=None, description="Upper bound type constraint"
+        default=None, description="Upper bound type constraint (TypeVar only)"
     )
     variance: GenericVariance = Field(
-        default=GenericVariance.INVARIANT, description="Variance of the parameter"
+        default=GenericVariance.INVARIANT,
+        description="Variance of the parameter (TypeVar only)",
     )
     default: NonEmptyStr | None = Field(
-        default=None, description="Default type if not specified (Python 3.12+)"
+        default=None,
+        description="Default type if not specified (Python 3.12+ for TypeVar, 3.13+ for ParamSpec/TypeVarTuple)",
     )
+    constraints: list[NonEmptyStr] = Field(
+        default_factory=list,
+        description="Type constraints for TypeVar (e.g., ['int', 'str'] means T can only be int or str)",
+    )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this generic construct was introduced (e.g., '3.10' for ParamSpec)",
+    )
+
+    @model_validator(mode="after")
+    def validate_kind_specific_fields(self) -> Self:
+        """Validate that fields are appropriate for the parameter kind."""
+        if self.kind == GenericParamKind.PARAM_SPEC:
+            if self.bound is not None:
+                raise ValueError("ParamSpec does not support 'bound' constraint")
+            if self.variance != GenericVariance.INVARIANT:
+                raise ValueError(
+                    "ParamSpec does not support variance; it is always invariant"
+                )
+            if self.constraints:
+                raise ValueError("ParamSpec does not support type constraints")
+        elif self.kind == GenericParamKind.TYPE_VAR_TUPLE:
+            if self.bound is not None:
+                raise ValueError("TypeVarTuple does not support 'bound' constraint")
+            if self.variance != GenericVariance.INVARIANT:
+                raise ValueError("TypeVarTuple does not support explicit variance")
+            if self.constraints:
+                raise ValueError("TypeVarTuple does not support type constraints")
+        return self
 
 
 class Property(ExtensibleModel):
@@ -120,6 +159,18 @@ class Property(ExtensibleModel):
     )
     description: str | None = Field(
         default=None, description="What this property represents"
+    )
+    visibility: Visibility | None = Field(
+        default=None,
+        description="Symbol visibility (public/private/mangled). Defaults to public.",
+    )
+    required: bool | None = Field(
+        default=None,
+        description="For TypedDict properties: whether this key is required. None inherits from total.",
+    )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version required for this property's type annotation",
     )
 
 
@@ -140,6 +191,22 @@ class EnumValue(LibspecModel):
 # -----------------------------------------------------------------------------
 
 
+class OverloadSpec(LibspecModel):
+    """An overloaded signature variant for type-checking (@overload decorator)."""
+
+    signature: NonEmptyStr = Field(description="The overloaded signature variant")
+    parameters: list[Parameter] = Field(
+        default_factory=list,
+        description="Parameter specifications for this overload",
+    )
+    returns: ReturnSpec | None = Field(
+        default=None, description="Return type for this overload"
+    )
+    description: str | None = Field(
+        default=None, description="When this overload variant applies"
+    )
+
+
 class Method(ExtensibleModel):
     """A method definition."""
 
@@ -156,6 +223,16 @@ class Method(ExtensibleModel):
     returns: ReturnSpec | None = Field(
         default=None, description="Return value specification"
     )
+    yields: YieldSpec | None = Field(
+        default=None, description="Yield value specification for sync generators"
+    )
+    async_yields: YieldSpec | None = Field(
+        default=None, description="Yield value specification for async generators"
+    )
+    overloads: list["OverloadSpec"] = Field(
+        default_factory=list,
+        description="@overload signature variants for type-checking",
+    )
     preconditions: list[str] = Field(
         default_factory=list,
         description="State requirements before calling this method",
@@ -170,6 +247,14 @@ class Method(ExtensibleModel):
     inherited_from: str | None = Field(
         default=None,
         description="Base class this method is inherited from (if any)",
+    )
+    visibility: Visibility | None = Field(
+        default=None,
+        description="Symbol visibility (public/private/mangled/dunder). Defaults to public.",
+    )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this method or its features were introduced",
     )
 
 
@@ -241,6 +326,19 @@ class TypeDef(ExtensibleModel):
     example: str | None = Field(
         default=None, description="Code example showing typical usage"
     )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this type or its features were introduced",
+    )
+    # TypedDict-specific fields (PEP 589)
+    typed_dict_total: bool | None = Field(
+        default=None,
+        description="For TypedDict: whether all keys are required by default (total=True/False)",
+    )
+    typed_dict_closed: bool | None = Field(
+        default=None,
+        description="For TypedDict: whether extra keys are forbidden (PEP 728, Python 3.13+)",
+    )
 
     @model_validator(mode="after")
     def check_type_completeness(self) -> Self:
@@ -254,6 +352,17 @@ class TypeDef(ExtensibleModel):
             if not self.methods and not self.properties:
                 raise ValueError(
                     f"Protocol '{self.name}' must have methods or properties"
+                )
+
+        # Validate TypedDict-specific fields only apply to TypedDicts
+        if self.kind != TypeKind.TYPED_DICT:
+            if self.typed_dict_total is not None:
+                raise ValueError(
+                    f"'{self.name}': typed_dict_total is only valid for TypedDict types"
+                )
+            if self.typed_dict_closed is not None:
+                raise ValueError(
+                    f"'{self.name}': typed_dict_closed is only valid for TypedDict types"
                 )
 
         return self
@@ -280,7 +389,14 @@ class FunctionDef(ExtensibleModel):
         default=None, description="Return value specification"
     )
     yields: YieldSpec | None = Field(
-        default=None, description="Yield value specification for generators"
+        default=None, description="Yield value specification for sync generators"
+    )
+    async_yields: YieldSpec | None = Field(
+        default=None, description="Yield value specification for async generators"
+    )
+    overloads: list[OverloadSpec] = Field(
+        default_factory=list,
+        description="@overload signature variants for type-checking",
     )
     description: str | None = Field(
         default=None, description="What this function does"
@@ -316,6 +432,10 @@ class FunctionDef(ExtensibleModel):
     example: str | None = Field(
         default=None, description="Code example showing typical usage"
     )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this function or its features were introduced",
+    )
 
     @field_validator("name")
     @classmethod
@@ -333,6 +453,23 @@ class FunctionDef(ExtensibleModel):
     @classmethod
     def enforce_strict_flags(cls, value: Any, info: ValidationInfo) -> Any:
         return ensure_strict_bool(value, info, info.field_name or "flag")
+
+    @model_validator(mode="after")
+    def validate_yield_consistency(self) -> Self:
+        """Validate that yields and async_yields are consistent with function kind."""
+        if self.yields is not None and self.async_yields is not None:
+            raise ValueError(
+                "Cannot specify both 'yields' and 'async_yields'; use one based on generator type"
+            )
+        if self.kind == FunctionKind.GENERATOR and self.async_yields is not None:
+            raise ValueError(
+                "Generator functions should use 'yields', not 'async_yields'"
+            )
+        if self.kind == FunctionKind.ASYNC_GENERATOR and self.yields is not None:
+            raise ValueError(
+                "Async generator functions should use 'async_yields', not 'yields'"
+            )
+        return self
 
 
 class Feature(ExtensibleModel):
@@ -365,6 +502,56 @@ class Feature(ExtensibleModel):
     )
 
 
+class Export(LibspecModel):
+    """A symbol exported from a module with origin tracking."""
+
+    name: NonEmptyStr = Field(description="Exported symbol name")
+    origin: ExportOrigin = Field(
+        default=ExportOrigin.DEFINED,
+        description="How this symbol is exported: defined, reexported, or aliased",
+    )
+    source_module: ModulePath | None = Field(
+        default=None,
+        description="For reexported/aliased: the module the symbol was imported from",
+    )
+    source_name: NonEmptyStr | None = Field(
+        default=None,
+        description="For aliased: the original name of the symbol (if different)",
+    )
+    public: bool = Field(
+        default=True,
+        description="Whether this symbol is in __all__ (public API)",
+    )
+
+    @model_validator(mode="after")
+    def validate_export_fields(self) -> Self:
+        """Validate that origin-specific fields are consistent."""
+        if self.origin == ExportOrigin.DEFINED:
+            if self.source_module is not None or self.source_name is not None:
+                raise ValueError(
+                    "Exports with origin='defined' should not have source_module or source_name"
+                )
+        elif self.origin == ExportOrigin.REEXPORTED:
+            if self.source_module is None:
+                raise ValueError(
+                    "Exports with origin='reexported' must specify source_module"
+                )
+            if self.source_name is not None:
+                raise ValueError(
+                    "Exports with origin='reexported' should not have source_name (use 'aliased' for renamed exports)"
+                )
+        elif self.origin == ExportOrigin.ALIASED:
+            if self.source_module is None:
+                raise ValueError(
+                    "Exports with origin='aliased' must specify source_module"
+                )
+            if self.source_name is None:
+                raise ValueError(
+                    "Exports with origin='aliased' must specify source_name (the original name)"
+                )
+        return self
+
+
 class Module(LibspecModel):
     """A Python module or package."""
 
@@ -372,8 +559,9 @@ class Module(LibspecModel):
     description: str | None = Field(
         default=None, description="What this module provides"
     )
-    exports: list[str] = Field(
-        default_factory=list, description="Public names exported by this module"
+    exports: list[str | Export] = Field(
+        default_factory=list,
+        description="Public names exported by this module (strings for simple names, Export for detailed tracking)",
     )
     depends_on: list[str] = Field(
         default_factory=list, description="Internal module dependencies"

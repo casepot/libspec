@@ -71,6 +71,7 @@ class TypeKind(str, Enum):
     ENUM = "enum"
     TYPE_ALIAS = "type_alias"
     NAMEDTUPLE = "namedtuple"
+    TYPED_DICT = "typed_dict"  # PEP 589
 
 
 class FunctionKind(str, Enum):
@@ -80,6 +81,8 @@ class FunctionKind(str, Enum):
     DECORATOR = "decorator"
     CONTEXT_MANAGER = "context_manager"
     ASYNC_CONTEXT_MANAGER = "async_context_manager"
+    GENERATOR = "generator"
+    ASYNC_GENERATOR = "async_generator"
 
 
 class ParameterKind(str, Enum):
@@ -131,3 +134,42 @@ class ExtensionName(str, Enum):
     VERSIONING = "versioning"
     OBSERVABILITY = "observability"
     LIFECYCLE = "lifecycle"
+
+
+class GenericParamKind(str, Enum):
+    """Kind of generic type parameter.
+
+    Supports the three parameter specification constructs in Python's typing system:
+    - TypeVar (PEP 484): Standard type variable, e.g., T = TypeVar('T')
+    - ParamSpec (PEP 612, Python 3.10+): Captures function parameter types
+    - TypeVarTuple (PEP 646, Python 3.11+): Variadic type variable
+    """
+
+    TYPE_VAR = "type_var"
+    PARAM_SPEC = "param_spec"
+    TYPE_VAR_TUPLE = "type_var_tuple"
+
+
+class ExportOrigin(str, Enum):
+    """Origin of an exported symbol from a module."""
+
+    DEFINED = "defined"  # Symbol is defined in this module
+    REEXPORTED = "reexported"  # Symbol is imported and re-exported
+    ALIASED = "aliased"  # Symbol is re-exported under a different name
+
+
+class Visibility(str, Enum):
+    """Symbol visibility level following Python conventions."""
+
+    PUBLIC = "public"  # Normal public API
+    PRIVATE = "private"  # Single underscore (_name) - internal use
+    MANGLED = "mangled"  # Double underscore (__name) - name mangling
+    DUNDER = "dunder"  # Dunder methods (__init__, __str__) - special
+
+
+# Python version constraint for tracking feature introduction
+PythonVersion = Annotated[
+    str,
+    StringConstraints(pattern=r"^3\.(8|9|10|11|12|13|14)(\+)?$", min_length=3),
+]
+"""Python version string (e.g., '3.10', '3.11+'). For tracking when features were introduced."""

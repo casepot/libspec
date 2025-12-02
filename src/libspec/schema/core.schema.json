@@ -87,6 +87,73 @@
       "title": "EnumValue",
       "type": "object"
     },
+    "Export": {
+      "additionalProperties": false,
+      "description": "A symbol exported from a module with origin tracking.",
+      "properties": {
+        "name": {
+          "description": "Exported symbol name",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "origin": {
+          "$ref": "#/$defs/ExportOrigin",
+          "default": "defined",
+          "description": "How this symbol is exported: defined, reexported, or aliased"
+        },
+        "public": {
+          "default": true,
+          "description": "Whether this symbol is in __all__ (public API)",
+          "title": "Public",
+          "type": "boolean"
+        },
+        "source_module": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For reexported/aliased: the module the symbol was imported from",
+          "title": "Source Module"
+        },
+        "source_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For aliased: the original name of the symbol (if different)",
+          "title": "Source Name"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Export",
+      "type": "object"
+    },
+    "ExportOrigin": {
+      "description": "Origin of an exported symbol from a module.",
+      "enum": [
+        "defined",
+        "reexported",
+        "aliased"
+      ],
+      "title": "ExportOrigin",
+      "type": "string"
+    },
     "ExtensionName": {
       "description": "Available extension names.",
       "enum": [
@@ -224,6 +291,18 @@
     "FunctionDef": {
       "description": "A top-level function definition.",
       "properties": {
+        "async_yields": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/YieldSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Yield value specification for async generators"
+        },
         "description": {
           "anyOf": [
             {
@@ -309,6 +388,14 @@
           "title": "Name",
           "type": "string"
         },
+        "overloads": {
+          "description": "@overload signature variants for type-checking",
+          "items": {
+            "$ref": "#/$defs/OverloadSpec"
+          },
+          "title": "Overloads",
+          "type": "array"
+        },
         "parameters": {
           "description": "Detailed parameter specifications",
           "items": {
@@ -345,6 +432,21 @@
           "default": null,
           "description": "Whether function has no side effects",
           "title": "Pure"
+        },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this function or its features were introduced",
+          "title": "Python Added"
         },
         "raises": {
           "description": "Exceptions this function may raise",
@@ -390,7 +492,7 @@
             }
           ],
           "default": null,
-          "description": "Yield value specification for generators"
+          "description": "Yield value specification for sync generators"
         }
       },
       "required": [
@@ -407,14 +509,16 @@
         "function",
         "decorator",
         "context_manager",
-        "async_context_manager"
+        "async_context_manager",
+        "generator",
+        "async_generator"
       ],
       "title": "FunctionKind",
       "type": "string"
     },
     "GenericParam": {
       "additionalProperties": false,
-      "description": "A generic type parameter.",
+      "description": "A generic type parameter (TypeVar, ParamSpec, or TypeVarTuple).",
       "properties": {
         "bound": {
           "anyOf": [
@@ -427,8 +531,17 @@
             }
           ],
           "default": null,
-          "description": "Upper bound type constraint",
+          "description": "Upper bound type constraint (TypeVar only)",
           "title": "Bound"
+        },
+        "constraints": {
+          "description": "Type constraints for TypeVar (e.g., ['int', 'str'] means T can only be int or str)",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Constraints",
+          "type": "array"
         },
         "default": {
           "anyOf": [
@@ -441,19 +554,39 @@
             }
           ],
           "default": null,
-          "description": "Default type if not specified (Python 3.12+)",
+          "description": "Default type if not specified (Python 3.12+ for TypeVar, 3.13+ for ParamSpec/TypeVarTuple)",
           "title": "Default"
         },
+        "kind": {
+          "$ref": "#/$defs/GenericParamKind",
+          "default": "type_var",
+          "description": "Kind of generic parameter: type_var (default), param_spec, or type_var_tuple"
+        },
         "name": {
-          "description": "Parameter name (e.g., 'T', 'K', 'V')",
+          "description": "Parameter name (e.g., 'T', 'P', 'Ts')",
           "minLength": 1,
           "title": "Name",
           "type": "string"
         },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this generic construct was introduced (e.g., '3.10' for ParamSpec)",
+          "title": "Python Added"
+        },
         "variance": {
           "$ref": "#/$defs/GenericVariance",
           "default": "invariant",
-          "description": "Variance of the parameter"
+          "description": "Variance of the parameter (TypeVar only)"
         }
       },
       "required": [
@@ -461,6 +594,16 @@
       ],
       "title": "GenericParam",
       "type": "object"
+    },
+    "GenericParamKind": {
+      "description": "Kind of generic type parameter.\n\nSupports the three parameter specification constructs in Python's typing system:\n- TypeVar (PEP 484): Standard type variable, e.g., T = TypeVar('T')\n- ParamSpec (PEP 612, Python 3.10+): Captures function parameter types\n- TypeVarTuple (PEP 646, Python 3.11+): Variadic type variable",
+      "enum": [
+        "type_var",
+        "param_spec",
+        "type_var_tuple"
+      ],
+      "title": "GenericParamKind",
+      "type": "string"
     },
     "GenericVariance": {
       "description": "Variance of a generic type parameter.",
@@ -609,6 +752,18 @@
     "Method": {
       "description": "A method definition.",
       "properties": {
+        "async_yields": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/YieldSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Yield value specification for async generators"
+        },
         "description": {
           "anyOf": [
             {
@@ -641,6 +796,14 @@
           "title": "Name",
           "type": "string"
         },
+        "overloads": {
+          "description": "@overload signature variants for type-checking",
+          "items": {
+            "$ref": "#/$defs/OverloadSpec"
+          },
+          "title": "Overloads",
+          "type": "array"
+        },
         "parameters": {
           "description": "Detailed parameter specifications",
           "items": {
@@ -664,6 +827,21 @@
           },
           "title": "Preconditions",
           "type": "array"
+        },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this method or its features were introduced",
+          "title": "Python Added"
         },
         "raises": {
           "description": "Exceptions this method may raise",
@@ -690,6 +868,30 @@
           "minLength": 1,
           "title": "Signature",
           "type": "string"
+        },
+        "visibility": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Visibility"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Symbol visibility (public/private/mangled/dunder). Defaults to public."
+        },
+        "yields": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/YieldSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Yield value specification for sync generators"
         }
       },
       "required": [
@@ -725,9 +927,16 @@
           "title": "Description"
         },
         "exports": {
-          "description": "Public names exported by this module",
+          "description": "Public names exported by this module (strings for simple names, Export for detailed tracking)",
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/Export"
+              }
+            ]
           },
           "title": "Exports",
           "type": "array"
@@ -758,6 +967,56 @@
         "path"
       ],
       "title": "Module",
+      "type": "object"
+    },
+    "OverloadSpec": {
+      "additionalProperties": false,
+      "description": "An overloaded signature variant for type-checking (@overload decorator).",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When this overload variant applies",
+          "title": "Description"
+        },
+        "parameters": {
+          "description": "Parameter specifications for this overload",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "title": "Parameters",
+          "type": "array"
+        },
+        "returns": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReturnSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Return type for this overload"
+        },
+        "signature": {
+          "description": "The overloaded signature variant",
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        }
+      },
+      "required": [
+        "signature"
+      ],
+      "title": "OverloadSpec",
       "type": "object"
     },
     "Parameter": {
@@ -923,11 +1182,39 @@
           "title": "Name",
           "type": "string"
         },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version required for this property's type annotation",
+          "title": "Python Added"
+        },
         "readonly": {
           "default": false,
           "description": "Whether this is a read-only property",
           "title": "Readonly",
           "type": "boolean"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For TypedDict properties: whether this key is required. None inherits from total.",
+          "title": "Required"
         },
         "type": {
           "anyOf": [
@@ -942,6 +1229,18 @@
           "default": null,
           "description": "Property type annotation",
           "title": "Type"
+        },
+        "visibility": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Visibility"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Symbol visibility (public/private/mangled). Defaults to public."
         }
       },
       "required": [
@@ -1117,6 +1416,21 @@
           "title": "Properties",
           "type": "array"
         },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this type or its features were introduced",
+          "title": "Python Added"
+        },
         "related": {
           "description": "Related types or functions (cross-references)",
           "items": {
@@ -1146,6 +1460,32 @@
           "description": "For type_alias: the aliased type",
           "title": "Type Target"
         },
+        "typed_dict_closed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For TypedDict: whether extra keys are forbidden (PEP 728, Python 3.13+)",
+          "title": "Typed Dict Closed"
+        },
+        "typed_dict_total": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For TypedDict: whether all keys are required by default (total=True/False)",
+          "title": "Typed Dict Total"
+        },
         "values": {
           "description": "Enum values (only for kind='enum')",
           "items": {
@@ -1171,9 +1511,21 @@
         "protocol",
         "enum",
         "type_alias",
-        "namedtuple"
+        "namedtuple",
+        "typed_dict"
       ],
       "title": "TypeKind",
+      "type": "string"
+    },
+    "Visibility": {
+      "description": "Symbol visibility level following Python conventions.",
+      "enum": [
+        "public",
+        "private",
+        "mangled",
+        "dunder"
+      ],
+      "title": "Visibility",
       "type": "string"
     },
     "YieldSpec": {
