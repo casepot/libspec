@@ -1,204 +1,491 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/perf.schema.json",
-  "title": "Performance Extension",
-  "description": "Extension for performance characteristics: complexity, benchmarks, scaling.",
   "$defs": {
-    "PerfMethodFields": {
-      "description": "Fields added to Method when perf extension is active",
-      "type": "object",
-      "properties": {
-        "complexity": {
-          "$ref": "#/$defs/ComplexitySpec"
-        },
-        "benchmarks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/BenchmarkSpec"
-          }
-        },
-        "optimization_hints": {
-          "type": "array",
-          "description": "Tips for optimal usage",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PerfFunctionFields": {
-      "description": "Fields added to FunctionDef when perf extension is active",
-      "type": "object",
-      "properties": {
-        "complexity": {
-          "$ref": "#/$defs/ComplexitySpec"
-        },
-        "benchmarks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/BenchmarkSpec"
-          }
-        },
-        "optimization_hints": {
-          "type": "array",
-          "description": "Tips for optimal usage",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PerfTypeFields": {
-      "description": "Fields added to TypeDef when perf extension is active",
-      "type": "object",
-      "properties": {
-        "memory_layout": {
-          "$ref": "#/$defs/MemoryLayoutSpec"
-        },
-        "scaling": {
-          "$ref": "#/$defs/ScalingSpec"
-        }
-      }
-    },
-    "ComplexitySpec": {
-      "type": "object",
-      "description": "Computational complexity specification",
-      "properties": {
-        "time": {
-          "type": "string",
-          "description": "Time complexity (e.g., 'O(n log n)')"
-        },
-        "space": {
-          "type": "string",
-          "description": "Space complexity (e.g., 'O(n)')"
-        },
-        "best_case": {
-          "type": "string",
-          "description": "Best-case time complexity"
-        },
-        "worst_case": {
-          "type": "string",
-          "description": "Worst-case time complexity"
-        },
-        "amortized": {
-          "type": "string",
-          "description": "Amortized time complexity"
-        },
-        "notes": {
-          "type": "string",
-          "description": "Additional notes about complexity"
-        }
-      }
-    },
     "BenchmarkSpec": {
-      "type": "object",
-      "description": "Performance benchmark data",
       "properties": {
-        "operation": {
-          "type": "string",
-          "description": "What was benchmarked"
-        },
-        "input_size": {
-          "type": "string",
-          "description": "Input size/parameters"
-        },
-        "mean": {
-          "type": "number",
-          "description": "Mean execution time",
-          "format": "decimal",
-          "exclusiveMinimum": 0
-        },
-        "median": {
-          "type": "number",
-          "description": "Median execution time",
-          "format": "decimal",
-          "exclusiveMinimum": 0
-        },
-        "p95": {
-          "type": "number",
-          "description": "95th percentile latency",
-          "format": "decimal",
-          "exclusiveMinimum": 0
-        },
-        "p99": {
-          "type": "number",
-          "description": "99th percentile latency",
-          "format": "decimal",
-          "exclusiveMinimum": 0
-        },
-        "memory_peak": {
-          "type": "number",
-          "description": "Peak memory usage",
-          "format": "decimal",
-          "exclusiveMinimum": 0
-        },
-        "throughput": {
-          "type": "number",
-          "description": "Operations per second",
-          "format": "decimal",
-          "exclusiveMinimum": 0
+        "date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When benchmark was run",
+          "title": "Date"
         },
         "environment": {
-          "type": "string",
-          "description": "Hardware/software environment"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hardware/software environment",
+          "title": "Environment"
         },
-        "date": {
-          "type": "string",
-          "description": "When benchmark was run",
-          "format": "date"
+        "input_size": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Input size/parameters",
+          "title": "Input Size"
+        },
+        "mean": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Mean execution time",
+          "title": "Mean"
+        },
+        "median": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Median execution time",
+          "title": "Median"
+        },
+        "memory_peak": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Peak memory usage",
+          "title": "Memory Peak"
+        },
+        "operation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What was benchmarked",
+          "title": "Operation"
+        },
+        "p95": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "95th percentile latency",
+          "title": "P95"
+        },
+        "p99": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "99th percentile latency",
+          "title": "P99"
+        },
+        "throughput": {
+          "anyOf": [
+            {
+              "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Operations per second",
+          "title": "Throughput"
         }
-      }
+      },
+      "title": "BenchmarkSpec",
+      "type": "object"
+    },
+    "ComplexitySpec": {
+      "properties": {
+        "amortized": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Amortized time complexity",
+          "title": "Amortized"
+        },
+        "best_case": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Best-case time complexity",
+          "title": "Best Case"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Additional notes about complexity",
+          "title": "Notes"
+        },
+        "space": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Space complexity (e.g., 'O(n)')",
+          "title": "Space"
+        },
+        "time": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Time complexity (e.g., 'O(n log n)')",
+          "title": "Time"
+        },
+        "worst_case": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Worst-case time complexity",
+          "title": "Worst Case"
+        }
+      },
+      "title": "ComplexitySpec",
+      "type": "object"
     },
     "MemoryLayoutSpec": {
-      "type": "object",
-      "description": "Memory layout characteristics",
       "properties": {
-        "size_bytes": {
-          "type": "integer",
-          "description": "Instance size in bytes",
-          "minimum": 0
-        },
         "alignment": {
-          "type": "integer",
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Memory alignment requirement",
-          "minimum": 1
+          "title": "Alignment"
         },
         "cache_friendly": {
-          "type": "boolean",
-          "description": "Whether layout is cache-optimized"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether layout is cache-optimized",
+          "title": "Cache Friendly"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Instance size in bytes",
+          "title": "Size Bytes"
         },
         "slots": {
-          "type": "boolean",
-          "description": "Whether __slots__ is used"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether __slots__ is used",
+          "title": "Slots"
         }
-      }
+      },
+      "title": "MemoryLayoutSpec",
+      "type": "object"
+    },
+    "PerfFunctionFields": {
+      "properties": {
+        "benchmarks": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/BenchmarkSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Benchmarks"
+        },
+        "complexity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComplexitySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "optimization_hints": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tips for optimal usage",
+          "title": "Optimization Hints"
+        }
+      },
+      "title": "PerfFunctionFields",
+      "type": "object"
+    },
+    "PerfMethodFields": {
+      "properties": {
+        "benchmarks": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/BenchmarkSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Benchmarks"
+        },
+        "complexity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComplexitySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "optimization_hints": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tips for optimal usage",
+          "title": "Optimization Hints"
+        }
+      },
+      "title": "PerfMethodFields",
+      "type": "object"
+    },
+    "PerfTypeFields": {
+      "properties": {
+        "memory_layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MemoryLayoutSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "scaling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScalingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "PerfTypeFields",
+      "type": "object"
     },
     "ScalingSpec": {
-      "type": "object",
-      "description": "Scaling characteristics",
       "properties": {
-        "horizontal": {
-          "type": "boolean",
-          "description": "Supports horizontal scaling"
-        },
-        "vertical": {
-          "type": "boolean",
-          "description": "Supports vertical scaling"
-        },
         "bottleneck": {
-          "type": "string",
-          "description": "Primary scaling bottleneck"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Primary scaling bottleneck",
+          "title": "Bottleneck"
+        },
+        "horizontal": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supports horizontal scaling",
+          "title": "Horizontal"
         },
         "max_concurrent": {
-          "type": "integer",
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Maximum concurrent operations",
-          "minimum": 1
+          "title": "Max Concurrent"
         },
         "sharding_supported": {
-          "type": "boolean",
-          "description": "Whether sharding is supported"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether sharding is supported",
+          "title": "Sharding Supported"
+        },
+        "vertical": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supports vertical scaling",
+          "title": "Vertical"
         }
-      }
+      },
+      "title": "ScalingSpec",
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/perf.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for performance characteristics and constraints.",
+  "title": "Performance Extension"
 }

@@ -1,286 +1,612 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/observability.schema.json",
-  "title": "Observability Extension",
-  "description": "Extension for debugging and monitoring: logging, metrics, tracing, health checks.",
   "$defs": {
-    "ObservabilityLibraryFields": {
-      "description": "Fields added to Library when observability extension is active",
-      "type": "object",
-      "properties": {
-        "logging": {
-          "$ref": "#/$defs/LoggingSpec"
-        },
-        "metrics": {
-          "type": "array",
-          "description": "Metrics exposed by the library",
-          "items": {
-            "$ref": "#/$defs/MetricSpec"
-          }
-        },
-        "tracing": {
-          "$ref": "#/$defs/TracingSpec"
-        },
-        "health_checks": {
-          "type": "array",
-          "description": "Health check endpoints",
-          "items": {
-            "$ref": "#/$defs/HealthCheckSpec"
-          }
-        },
-        "debug_tools": {
-          "$ref": "#/$defs/DebugToolsSpec"
-        }
-      }
-    },
-    "LoggingSpec": {
-      "type": "object",
-      "description": "Logging configuration",
-      "properties": {
-        "logger_name": {
-          "type": "string",
-          "description": "Logger name (e.g., 'mylib')"
-        },
-        "levels_used": {
-          "type": "array",
-          "description": "Log levels used",
-          "items": {
-            "type": "string",
-            "enum": [
-              "DEBUG",
-              "INFO",
-              "WARNING",
-              "ERROR",
-              "CRITICAL"
-            ]
-          }
-        },
-        "structured": {
-          "type": "boolean",
-          "description": "Whether structured logging is used"
-        },
-        "context_fields": {
-          "type": "array",
-          "description": "Context fields included in log entries",
-          "items": {
-            "type": "string"
-          }
-        },
-        "sensitive_fields": {
-          "type": "array",
-          "description": "Fields that are masked in logs",
-          "items": {
-            "type": "string"
-          }
-        },
-        "rate_limiting": {
-          "type": "boolean",
-          "description": "Whether log rate limiting is supported"
-        },
-        "sampling": {
-          "type": "boolean",
-          "description": "Whether log sampling is supported"
-        }
-      }
-    },
-    "MetricSpec": {
-      "type": "object",
-      "description": "A metric exposed by the library",
-      "required": [
-        "name",
-        "type"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Metric name (e.g., 'mylib_requests_total')"
-        },
-        "type": {
-          "type": "string",
-          "description": "Metric type",
-          "enum": [
-            "counter",
-            "gauge",
-            "histogram",
-            "summary",
-            "info"
-          ]
-        },
-        "description": {
-          "type": "string",
-          "description": "What this metric measures"
-        },
-        "labels": {
-          "type": "array",
-          "description": "Label names for this metric",
-          "items": {
-            "type": "string"
-          }
-        },
-        "unit": {
-          "type": "string",
-          "description": "Unit of measurement (e.g., 'seconds', 'bytes')"
-        },
-        "buckets": {
-          "type": "array",
-          "description": "Histogram buckets (for histogram type)",
-          "items": {
-            "type": "number",
-            "minimum": 0
-          }
-        }
-      }
-    },
-    "TracingSpec": {
-      "type": "object",
-      "description": "Distributed tracing configuration",
-      "properties": {
-        "span_names": {
-          "type": "array",
-          "description": "Span names used",
-          "items": {
-            "type": "string"
-          }
-        },
-        "propagation": {
-          "type": "string",
-          "description": "Context propagation format",
-          "enum": [
-            "w3c",
-            "b3",
-            "jaeger",
-            "xray",
-            "datadog",
-            "custom"
-          ]
-        },
-        "sampling": {
-          "type": "string",
-          "description": "Sampling strategy",
-          "enum": [
-            "always",
-            "never",
-            "probabilistic",
-            "rate_limited",
-            "parent_based"
-          ]
-        },
-        "sampling_rate": {
-          "type": "number",
-          "description": "Sampling rate (0.0-1.0)",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "attributes": {
-          "type": "array",
-          "description": "Standard span attributes",
-          "items": {
-            "type": "string"
-          }
-        },
-        "events": {
-          "type": "array",
-          "description": "Span events emitted",
-          "items": {
-            "type": "string"
-          }
-        },
-        "baggage": {
-          "type": "array",
-          "description": "Baggage items propagated",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "HealthCheckSpec": {
-      "type": "object",
-      "description": "A health check endpoint",
-      "required": [
-        "name",
-        "type"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Health check name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Health check type",
-          "enum": [
-            "liveness",
-            "readiness",
-            "startup"
-          ]
-        },
-        "endpoint": {
-          "type": "string",
-          "description": "HTTP endpoint path"
-        },
-        "method": {
-          "type": "string",
-          "description": "Method to call for health check"
-        },
-        "timeout": {
-          "type": "number",
-          "description": "Timeout in seconds",
-          "exclusiveMinimum": 0
-        },
-        "interval": {
-          "type": "number",
-          "description": "Check interval in seconds",
-          "exclusiveMinimum": 0
-        },
-        "dependencies": {
-          "type": "array",
-          "description": "Dependencies checked",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "DebugToolsSpec": {
-      "type": "object",
-      "description": "Debugging tool configuration",
       "properties": {
-        "repr_depth": {
-          "type": "integer",
-          "description": "Default __repr__ recursion depth",
-          "minimum": 1
-        },
-        "sensitive_fields": {
-          "type": "array",
-          "description": "Fields redacted in debug output",
-          "items": {
-            "type": "string"
-          }
-        },
-        "trace_format": {
-          "type": "string",
-          "description": "Trace output format",
-          "enum": [
-            "json",
-            "text",
-            "compact",
-            "pretty"
-          ]
-        },
-        "profiling_supported": {
-          "type": "boolean",
-          "description": "Whether profiling hooks are available"
+        "async_debug": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether async debugging tools are available",
+          "title": "Async Debug"
         },
         "memory_tracking": {
-          "type": "boolean",
-          "description": "Whether memory tracking is available"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether memory tracking is available",
+          "title": "Memory Tracking"
         },
-        "async_debug": {
-          "type": "boolean",
-          "description": "Whether async debugging tools are available"
+        "profiling_supported": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether profiling hooks are available",
+          "title": "Profiling Supported"
+        },
+        "repr_depth": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default __repr__ recursion depth",
+          "title": "Repr Depth"
+        },
+        "sensitive_fields": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fields redacted in debug output",
+          "title": "Sensitive Fields"
+        },
+        "trace_format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TraceFormat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Trace output format"
         }
-      }
+      },
+      "title": "DebugToolsSpec",
+      "type": "object"
+    },
+    "HealthCheckSpec": {
+      "properties": {
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dependencies checked",
+          "title": "Dependencies"
+        },
+        "endpoint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "HTTP endpoint path",
+          "title": "Endpoint"
+        },
+        "interval": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Check interval in seconds",
+          "title": "Interval"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method to call for health check",
+          "title": "Method"
+        },
+        "name": {
+          "description": "Health check name",
+          "title": "Name",
+          "type": "string"
+        },
+        "timeout": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Timeout in seconds",
+          "title": "Timeout"
+        },
+        "type": {
+          "$ref": "#/$defs/Type1",
+          "description": "Health check type"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "HealthCheckSpec",
+      "type": "object"
+    },
+    "LevelsUsedEnum": {
+      "enum": [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL"
+      ],
+      "title": "LevelsUsedEnum",
+      "type": "string"
+    },
+    "LoggingSpec": {
+      "properties": {
+        "context_fields": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Context fields included in log entries",
+          "title": "Context Fields"
+        },
+        "levels_used": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/LevelsUsedEnum"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Log levels used",
+          "title": "Levels Used"
+        },
+        "logger_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Logger name (e.g., 'mylib')",
+          "title": "Logger Name"
+        },
+        "rate_limiting": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether log rate limiting is supported",
+          "title": "Rate Limiting"
+        },
+        "sampling": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether log sampling is supported",
+          "title": "Sampling"
+        },
+        "sensitive_fields": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Fields that are masked in logs",
+          "title": "Sensitive Fields"
+        },
+        "structured": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether structured logging is used",
+          "title": "Structured"
+        }
+      },
+      "title": "LoggingSpec",
+      "type": "object"
+    },
+    "MetricSpec": {
+      "properties": {
+        "buckets": {
+          "anyOf": [
+            {
+              "items": {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Histogram buckets (for histogram type)",
+          "title": "Buckets"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this metric measures",
+          "title": "Description"
+        },
+        "labels": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Label names for this metric",
+          "title": "Labels"
+        },
+        "name": {
+          "description": "Metric name (e.g., 'mylib_requests_total')",
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/Type",
+          "description": "Metric type"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unit of measurement (e.g., 'seconds', 'bytes')",
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "MetricSpec",
+      "type": "object"
+    },
+    "ObservabilityLibraryFields": {
+      "properties": {
+        "debug_tools": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DebugToolsSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "health_checks": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/HealthCheckSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Health check endpoints",
+          "title": "Health Checks"
+        },
+        "logging": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LoggingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/MetricSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Metrics exposed by the library",
+          "title": "Metrics"
+        },
+        "tracing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TracingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ObservabilityLibraryFields",
+      "type": "object"
+    },
+    "Propagation": {
+      "enum": [
+        "w3c",
+        "b3",
+        "jaeger",
+        "xray",
+        "datadog",
+        "custom"
+      ],
+      "title": "Propagation",
+      "type": "string"
+    },
+    "Sampling": {
+      "enum": [
+        "always",
+        "never",
+        "probabilistic",
+        "rate_limited",
+        "parent_based"
+      ],
+      "title": "Sampling",
+      "type": "string"
+    },
+    "TraceFormat": {
+      "enum": [
+        "json",
+        "text",
+        "compact",
+        "pretty"
+      ],
+      "title": "TraceFormat",
+      "type": "string"
+    },
+    "TracingSpec": {
+      "properties": {
+        "attributes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Standard span attributes",
+          "title": "Attributes"
+        },
+        "baggage": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Baggage items propagated",
+          "title": "Baggage"
+        },
+        "events": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Span events emitted",
+          "title": "Events"
+        },
+        "propagation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Propagation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Context propagation format"
+        },
+        "sampling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sampling"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sampling strategy"
+        },
+        "sampling_rate": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sampling rate (0.0-1.0)",
+          "title": "Sampling Rate"
+        },
+        "span_names": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Span names used",
+          "title": "Span Names"
+        }
+      },
+      "title": "TracingSpec",
+      "type": "object"
+    },
+    "Type": {
+      "enum": [
+        "counter",
+        "gauge",
+        "histogram",
+        "summary",
+        "info"
+      ],
+      "title": "Type",
+      "type": "string"
+    },
+    "Type1": {
+      "enum": [
+        "liveness",
+        "readiness",
+        "startup"
+      ],
+      "title": "Type1",
+      "type": "string"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/observability.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for logging, metrics, and tracing specifications.",
+  "title": "Observability Extension"
 }

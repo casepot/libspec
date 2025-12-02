@@ -1,588 +1,1352 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/data.schema.json",
-  "title": "Data Extension",
-  "description": "Extension for data processing libraries: transforms, pipelines, dtype behavior, evaluation strategies.",
   "$defs": {
-    "DataLibraryFields": {
-      "description": "Fields added to Library when data extension is active",
-      "type": "object",
-      "properties": {
-        "dtypes": {
-          "type": "array",
-          "description": "Data types supported by the library",
-          "items": {
-            "$ref": "#/$defs/DTypeSpec"
-          }
-        },
-        "transforms": {
-          "type": "array",
-          "description": "Data transformation operations",
-          "items": {
-            "$ref": "#/$defs/TransformSpec"
-          }
-        },
-        "pipelines": {
-          "type": "array",
-          "description": "Pipeline/workflow definitions",
-          "items": {
-            "$ref": "#/$defs/PipelineSpec"
-          }
-        },
-        "io_formats": {
-          "type": "array",
-          "description": "Supported I/O formats",
-          "items": {
-            "$ref": "#/$defs/IOFormatSpec"
-          }
-        },
-        "evaluation_strategy": {
-          "$ref": "#/$defs/EvaluationStrategySpec"
-        }
-      }
+    "Backend": {
+      "enum": [
+        "threads",
+        "processes",
+        "dask",
+        "ray",
+        "spark",
+        "none"
+      ],
+      "title": "Backend",
+      "type": "string"
     },
-    "DataTypeFields": {
-      "description": "Fields added to TypeDef when data extension is active",
-      "type": "object",
-      "properties": {
-        "dtype_behavior": {
-          "$ref": "#/$defs/DTypeBehaviorSpec"
-        },
-        "method_chaining": {
-          "$ref": "#/$defs/MethodChainingSpec"
-        },
-        "memory_layout": {
-          "$ref": "#/$defs/MemoryLayoutSpec"
-        },
-        "parallelism": {
-          "$ref": "#/$defs/ParallelismSpec"
-        }
-      }
+    "Behavior": {
+      "enum": [
+        "implicit",
+        "explicit",
+        "error",
+        "warning"
+      ],
+      "title": "Behavior",
+      "type": "string"
     },
-    "DataMethodFields": {
-      "description": "Fields added to Method when data extension is active",
-      "type": "object",
+    "BroadcastingSpec": {
       "properties": {
-        "lazy": {
-          "type": "boolean",
-          "description": "Whether this method is lazily evaluated"
+        "rules": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Broadcasting rules (e.g., 'numpy', 'strict')",
+          "title": "Rules"
         },
-        "in_place": {
-          "type": "boolean",
-          "description": "Whether this method modifies data in place"
+        "scalar_expansion": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether scalars are expanded",
+          "title": "Scalar Expansion"
         },
-        "copy_semantics": {
-          "type": "string",
-          "description": "Copy behavior",
-          "enum": [
-            "copy",
-            "view",
-            "copy_on_write",
-            "configurable"
-          ]
-        },
-        "broadcasting": {
-          "$ref": "#/$defs/BroadcastingSpec"
-        },
-        "dtype_promotion": {
-          "$ref": "#/$defs/DTypePromotionSpec"
-        },
-        "parallelizable": {
-          "type": "boolean",
-          "description": "Whether this operation can be parallelized"
-        },
-        "chunked": {
-          "type": "boolean",
-          "description": "Whether this operation supports chunked processing"
+        "supported": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether broadcasting is supported",
+          "title": "Supported"
         }
-      }
+      },
+      "title": "BroadcastingSpec",
+      "type": "object"
+    },
+    "Category": {
+      "enum": [
+        "numeric",
+        "string",
+        "temporal",
+        "boolean",
+        "categorical",
+        "nested",
+        "binary",
+        "null",
+        "custom"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "Category1": {
+      "enum": [
+        "select",
+        "filter",
+        "aggregate",
+        "join",
+        "reshape",
+        "sort",
+        "window",
+        "fill",
+        "cast",
+        "custom"
+      ],
+      "title": "Category1",
+      "type": "string"
+    },
+    "CoercionRule": {
+      "properties": {
+        "behavior": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Behavior"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What happens during coercion"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source type",
+          "title": "From"
+        },
+        "lossy": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether conversion may lose information",
+          "title": "Lossy"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Target type",
+          "title": "To"
+        }
+      },
+      "title": "CoercionRule",
+      "type": "object"
+    },
+    "CopySemantics": {
+      "enum": [
+        "copy",
+        "view",
+        "copy_on_write",
+        "configurable"
+      ],
+      "title": "CopySemantics",
+      "type": "string"
+    },
+    "DTypeBehaviorSpec": {
+      "properties": {
+        "coercion_rules": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CoercionRule"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type coercion rules",
+          "title": "Coercion Rules"
+        },
+        "default_dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default dtype when not specified",
+          "title": "Default Dtype"
+        },
+        "dtype_inference": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether dtype is inferred automatically",
+          "title": "Dtype Inference"
+        },
+        "strict_typing": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether type mismatches raise errors",
+          "title": "Strict Typing"
+        },
+        "supported_dtypes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supported data types",
+          "title": "Supported Dtypes"
+        }
+      },
+      "title": "DTypeBehaviorSpec",
+      "type": "object"
+    },
+    "DTypePromotionSpec": {
+      "properties": {
+        "overflow_behavior": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OverflowBehavior"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Behavior on overflow"
+        },
+        "result_dtype": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Result dtype for this operation",
+          "title": "Result Dtype"
+        },
+        "rules": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Rules"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Promotion rule set"
+        }
+      },
+      "title": "DTypePromotionSpec",
+      "type": "object"
     },
     "DTypeSpec": {
-      "type": "object",
-      "description": "A data type definition",
+      "properties": {
+        "bit_width": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Bit width (for numeric types)",
+          "title": "Bit Width"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Category"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type category"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "description": "Data type name",
+          "title": "Name",
+          "type": "string"
+        },
+        "nullable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether null values are supported",
+          "title": "Nullable"
+        },
+        "numpy_equivalent": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Equivalent NumPy dtype",
+          "title": "Numpy Equivalent"
+        },
+        "precision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Precision (for temporal/decimal types)",
+          "title": "Precision"
+        },
+        "python_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python type for scalar values",
+          "title": "Python Type"
+        },
+        "signed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether signed (for integer types)",
+          "title": "Signed"
+        }
+      },
       "required": [
         "name"
       ],
+      "title": "DTypeSpec",
+      "type": "object"
+    },
+    "DataLibraryFields": {
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Data type name"
+        "dtypes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/DTypeSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Data types supported by the library",
+          "title": "Dtypes"
         },
-        "category": {
-          "type": "string",
-          "description": "Type category",
-          "enum": [
-            "numeric",
-            "string",
-            "temporal",
-            "boolean",
-            "categorical",
-            "nested",
-            "binary",
-            "null",
-            "custom"
-          ]
+        "evaluation_strategy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvaluationStrategySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
-        "numpy_equivalent": {
-          "type": "string",
-          "description": "Equivalent NumPy dtype"
+        "io_formats": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/IOFormatSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supported I/O formats",
+          "title": "Io Formats"
         },
-        "python_type": {
-          "type": "string",
-          "description": "Python type for scalar values"
+        "pipelines": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PipelineSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pipeline/workflow definitions",
+          "title": "Pipelines"
         },
-        "nullable": {
-          "type": "boolean",
-          "description": "Whether null values are supported"
+        "transforms": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TransformSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Data transformation operations",
+          "title": "Transforms"
+        }
+      },
+      "title": "DataLibraryFields",
+      "type": "object"
+    },
+    "DataMethodFields": {
+      "properties": {
+        "broadcasting": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BroadcastingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
-        "bit_width": {
-          "type": "integer",
-          "description": "Bit width (for numeric types)",
-          "minimum": 1
+        "chunked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this operation supports chunked processing",
+          "title": "Chunked"
         },
-        "signed": {
-          "type": "boolean",
-          "description": "Whether signed (for integer types)"
+        "copy_semantics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CopySemantics"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Copy behavior"
         },
-        "precision": {
-          "type": "string",
-          "description": "Precision (for temporal/decimal types)"
+        "dtype_promotion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DTypePromotionSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "in_place": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this method modifies data in place",
+          "title": "In Place"
+        },
+        "lazy": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this method is lazily evaluated",
+          "title": "Lazy"
+        },
+        "parallelizable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this operation can be parallelized",
+          "title": "Parallelizable"
+        }
+      },
+      "title": "DataMethodFields",
+      "type": "object"
+    },
+    "DataTypeFields": {
+      "properties": {
+        "dtype_behavior": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DTypeBehaviorSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "memory_layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MemoryLayoutSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "method_chaining": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodChainingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "parallelism": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParallelismSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "DataTypeFields",
+      "type": "object"
+    },
+    "Default": {
+      "enum": [
+        "eager",
+        "lazy",
+        "configurable"
+      ],
+      "title": "Default",
+      "type": "string"
+    },
+    "ErrorHandling": {
+      "enum": [
+        "fail_fast",
+        "collect",
+        "skip",
+        "retry"
+      ],
+      "title": "ErrorHandling",
+      "type": "string"
+    },
+    "EvaluationStrategySpec": {
+      "properties": {
+        "collect_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method to trigger full evaluation",
+          "title": "Collect Method"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Default"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default evaluation strategy"
+        },
+        "eager_triggers": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Operations that trigger evaluation",
+          "title": "Eager Triggers"
+        },
+        "explain_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method to explain query plan",
+          "title": "Explain Method"
+        },
+        "lazy_operations": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Operations that are always lazy",
+          "title": "Lazy Operations"
+        },
+        "query_optimization": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether query optimization is performed",
+          "title": "Query Optimization"
+        },
+        "streaming_collect": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether streaming evaluation is supported",
+          "title": "Streaming Collect"
+        }
+      },
+      "title": "EvaluationStrategySpec",
+      "type": "object"
+    },
+    "IOFormatSpec": {
+      "properties": {
+        "compression": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supported compression codecs",
+          "title": "Compression"
+        },
+        "format": {
+          "description": "Format name (e.g., 'csv', 'parquet', 'json')",
+          "title": "Format",
+          "type": "string"
+        },
+        "partitioning": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether partitioned read/write is supported",
+          "title": "Partitioning"
+        },
+        "read_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method for reading this format",
+          "title": "Read Method"
+        },
+        "schema_support": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether format supports schema",
+          "title": "Schema Support"
+        },
+        "streaming": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether streaming read/write is supported",
+          "title": "Streaming"
+        },
+        "write_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method for writing this format",
+          "title": "Write Method"
+        }
+      },
+      "required": [
+        "format"
+      ],
+      "title": "IOFormatSpec",
+      "type": "object"
+    },
+    "Layout": {
+      "enum": [
+        "row_major",
+        "column_major",
+        "chunked",
+        "arrow",
+        "custom"
+      ],
+      "title": "Layout",
+      "type": "string"
+    },
+    "MemoryLayoutSpec": {
+      "properties": {
+        "contiguous": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether data is stored contiguously",
+          "title": "Contiguous"
+        },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Layout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Memory layout"
+        },
+        "memory_mapped": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether memory mapping is supported",
+          "title": "Memory Mapped"
+        },
+        "string_storage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StringStorage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "String storage strategy"
+        },
+        "zero_copy": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether zero-copy operations are supported",
+          "title": "Zero Copy"
+        }
+      },
+      "title": "MemoryLayoutSpec",
+      "type": "object"
+    },
+    "MethodChainingSpec": {
+      "properties": {
+        "chainable_methods": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Methods that support chaining",
+          "title": "Chainable Methods"
+        },
+        "fluent_api": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether methods return self for chaining",
+          "title": "Fluent Api"
+        },
+        "immutable_chain": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether each chain step creates new instance",
+          "title": "Immutable Chain"
+        },
+        "terminal_methods": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Methods that break the chain (return different type)",
+          "title": "Terminal Methods"
+        }
+      },
+      "title": "MethodChainingSpec",
+      "type": "object"
+    },
+    "OverflowBehavior": {
+      "enum": [
+        "wrap",
+        "saturate",
+        "error",
+        "promote"
+      ],
+      "title": "OverflowBehavior",
+      "type": "string"
+    },
+    "ParallelismSpec": {
+      "properties": {
+        "auto_parallel": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether operations auto-parallelize",
+          "title": "Auto Parallel"
+        },
+        "backend": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Backend"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parallelism backend"
+        },
+        "default_threads": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default thread count",
+          "title": "Default Threads"
+        },
+        "min_size_for_parallel": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimum data size for parallel execution",
+          "title": "Min Size For Parallel"
+        },
+        "parallel_operations": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Operations that support parallelism",
+          "title": "Parallel Operations"
+        }
+      },
+      "title": "ParallelismSpec",
+      "type": "object"
+    },
+    "PipelineSpec": {
+      "properties": {
+        "checkpointing": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether checkpointing is supported",
+          "title": "Checkpointing"
         },
         "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "error_handling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorHandling"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How errors are handled"
+        },
+        "name": {
+          "description": "Pipeline name",
+          "title": "Name",
           "type": "string"
+        },
+        "stages": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PipelineStage"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pipeline stages",
+          "title": "Stages"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pipeline type"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "PipelineSpec",
+      "type": "object"
     },
-    "DTypeBehaviorSpec": {
-      "type": "object",
-      "description": "Data type handling behavior for a type",
+    "PipelineStage": {
       "properties": {
-        "supported_dtypes": {
-          "type": "array",
-          "description": "Supported data types",
-          "items": {
-            "type": "string"
-          }
+        "inputs": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Input names (for DAG)",
+          "title": "Inputs"
         },
-        "default_dtype": {
-          "type": "string",
-          "description": "Default dtype when not specified"
+        "name": {
+          "description": "Stage name",
+          "title": "Name",
+          "type": "string"
         },
-        "dtype_inference": {
-          "type": "boolean",
-          "description": "Whether dtype is inferred automatically"
+        "optional": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether stage can be skipped",
+          "title": "Optional"
         },
-        "strict_typing": {
-          "type": "boolean",
-          "description": "Whether type mismatches raise errors"
+        "output": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Output name",
+          "title": "Output"
         },
-        "coercion_rules": {
-          "type": "array",
-          "description": "Type coercion rules",
-          "items": {
-            "$ref": "#/$defs/CoercionRule"
-          }
+        "transform": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Transform to apply",
+          "title": "Transform"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "PipelineStage",
+      "type": "object"
     },
-    "CoercionRule": {
-      "type": "object",
-      "description": "A type coercion rule",
-      "properties": {
-        "from": {
-          "type": "string",
-          "description": "Source type"
-        },
-        "to": {
-          "type": "string",
-          "description": "Target type"
-        },
-        "behavior": {
-          "type": "string",
-          "description": "What happens during coercion",
-          "enum": [
-            "implicit",
-            "explicit",
-            "error",
-            "warning"
-          ]
-        },
-        "lossy": {
-          "type": "boolean",
-          "description": "Whether conversion may lose information"
-        }
-      }
+    "Rules": {
+      "enum": [
+        "numpy",
+        "pandas",
+        "strict",
+        "custom"
+      ],
+      "title": "Rules",
+      "type": "string"
+    },
+    "StringStorage": {
+      "enum": [
+        "utf8",
+        "large_utf8",
+        "dictionary",
+        "fixed_size"
+      ],
+      "title": "StringStorage",
+      "type": "string"
     },
     "TransformSpec": {
-      "type": "object",
-      "description": "A data transformation operation",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/Category1",
+          "description": "Transform category"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "input_shape": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expected input shape (e.g., '1D', '2D', 'any')",
+          "title": "Input Shape"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method reference",
+          "title": "Method"
+        },
+        "name": {
+          "description": "Transform name",
+          "title": "Name",
+          "type": "string"
+        },
+        "output_shape": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Resulting output shape",
+          "title": "Output Shape"
+        },
+        "preserves_index": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether index is preserved",
+          "title": "Preserves Index"
+        },
+        "preserves_order": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether row order is preserved",
+          "title": "Preserves Order"
+        }
+      },
       "required": [
         "name",
         "category"
       ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Transform name"
-        },
-        "category": {
-          "type": "string",
-          "description": "Transform category",
-          "enum": [
-            "select",
-            "filter",
-            "aggregate",
-            "join",
-            "reshape",
-            "sort",
-            "window",
-            "fill",
-            "cast",
-            "custom"
-          ]
-        },
-        "method": {
-          "type": "string",
-          "description": "Method reference"
-        },
-        "input_shape": {
-          "type": "string",
-          "description": "Expected input shape (e.g., '1D', '2D', 'any')"
-        },
-        "output_shape": {
-          "type": "string",
-          "description": "Resulting output shape"
-        },
-        "preserves_order": {
-          "type": "boolean",
-          "description": "Whether row order is preserved"
-        },
-        "preserves_index": {
-          "type": "boolean",
-          "description": "Whether index is preserved"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
+      "title": "TransformSpec",
+      "type": "object"
     },
-    "MethodChainingSpec": {
-      "type": "object",
-      "description": "Method chaining behavior",
-      "properties": {
-        "fluent_api": {
-          "type": "boolean",
-          "description": "Whether methods return self for chaining"
-        },
-        "immutable_chain": {
-          "type": "boolean",
-          "description": "Whether each chain step creates new instance"
-        },
-        "chainable_methods": {
-          "type": "array",
-          "description": "Methods that support chaining",
-          "items": {
-            "type": "string"
-          }
-        },
-        "terminal_methods": {
-          "type": "array",
-          "description": "Methods that break the chain (return different type)",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PipelineSpec": {
-      "type": "object",
-      "description": "A data pipeline definition",
-      "required": [
-        "name"
+    "Type": {
+      "enum": [
+        "sequential",
+        "dag",
+        "streaming",
+        "batch"
       ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Pipeline name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Pipeline type",
-          "enum": [
-            "sequential",
-            "dag",
-            "streaming",
-            "batch"
-          ]
-        },
-        "stages": {
-          "type": "array",
-          "description": "Pipeline stages",
-          "items": {
-            "$ref": "#/$defs/PipelineStage"
-          }
-        },
-        "error_handling": {
-          "type": "string",
-          "description": "How errors are handled",
-          "enum": [
-            "fail_fast",
-            "collect",
-            "skip",
-            "retry"
-          ]
-        },
-        "checkpointing": {
-          "type": "boolean",
-          "description": "Whether checkpointing is supported"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "PipelineStage": {
-      "type": "object",
-      "description": "A pipeline stage",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Stage name"
-        },
-        "transform": {
-          "type": "string",
-          "description": "Transform to apply"
-        },
-        "inputs": {
-          "type": "array",
-          "description": "Input names (for DAG)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "output": {
-          "type": "string",
-          "description": "Output name"
-        },
-        "optional": {
-          "type": "boolean",
-          "description": "Whether stage can be skipped"
-        }
-      }
-    },
-    "IOFormatSpec": {
-      "type": "object",
-      "description": "A supported I/O format",
-      "required": [
-        "format"
-      ],
-      "properties": {
-        "format": {
-          "type": "string",
-          "description": "Format name (e.g., 'csv', 'parquet', 'json')"
-        },
-        "read_method": {
-          "type": "string",
-          "description": "Method for reading this format"
-        },
-        "write_method": {
-          "type": "string",
-          "description": "Method for writing this format"
-        },
-        "streaming": {
-          "type": "boolean",
-          "description": "Whether streaming read/write is supported"
-        },
-        "compression": {
-          "type": "array",
-          "description": "Supported compression codecs",
-          "items": {
-            "type": "string"
-          }
-        },
-        "schema_support": {
-          "type": "boolean",
-          "description": "Whether format supports schema"
-        },
-        "partitioning": {
-          "type": "boolean",
-          "description": "Whether partitioned read/write is supported"
-        }
-      }
-    },
-    "EvaluationStrategySpec": {
-      "type": "object",
-      "description": "Evaluation strategy configuration",
-      "properties": {
-        "default": {
-          "type": "string",
-          "description": "Default evaluation strategy",
-          "enum": [
-            "eager",
-            "lazy",
-            "configurable"
-          ]
-        },
-        "lazy_operations": {
-          "type": "array",
-          "description": "Operations that are always lazy",
-          "items": {
-            "type": "string"
-          }
-        },
-        "eager_triggers": {
-          "type": "array",
-          "description": "Operations that trigger evaluation",
-          "items": {
-            "type": "string"
-          }
-        },
-        "collect_method": {
-          "type": "string",
-          "description": "Method to trigger full evaluation"
-        },
-        "streaming_collect": {
-          "type": "boolean",
-          "description": "Whether streaming evaluation is supported"
-        },
-        "query_optimization": {
-          "type": "boolean",
-          "description": "Whether query optimization is performed"
-        },
-        "explain_method": {
-          "type": "string",
-          "description": "Method to explain query plan"
-        }
-      }
-    },
-    "MemoryLayoutSpec": {
-      "type": "object",
-      "description": "Memory layout configuration",
-      "properties": {
-        "layout": {
-          "type": "string",
-          "description": "Memory layout",
-          "enum": [
-            "row_major",
-            "column_major",
-            "chunked",
-            "arrow",
-            "custom"
-          ]
-        },
-        "contiguous": {
-          "type": "boolean",
-          "description": "Whether data is stored contiguously"
-        },
-        "zero_copy": {
-          "type": "boolean",
-          "description": "Whether zero-copy operations are supported"
-        },
-        "memory_mapped": {
-          "type": "boolean",
-          "description": "Whether memory mapping is supported"
-        },
-        "string_storage": {
-          "type": "string",
-          "description": "String storage strategy",
-          "enum": [
-            "utf8",
-            "large_utf8",
-            "dictionary",
-            "fixed_size"
-          ]
-        }
-      }
-    },
-    "ParallelismSpec": {
-      "type": "object",
-      "description": "Parallelism configuration",
-      "properties": {
-        "backend": {
-          "type": "string",
-          "description": "Parallelism backend",
-          "enum": [
-            "threads",
-            "processes",
-            "dask",
-            "ray",
-            "spark",
-            "none"
-          ]
-        },
-        "default_threads": {
-          "type": "integer",
-          "description": "Default thread count",
-          "minimum": 1
-        },
-        "auto_parallel": {
-          "type": "boolean",
-          "description": "Whether operations auto-parallelize"
-        },
-        "min_size_for_parallel": {
-          "type": "integer",
-          "description": "Minimum data size for parallel execution",
-          "minimum": 0
-        },
-        "parallel_operations": {
-          "type": "array",
-          "description": "Operations that support parallelism",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "BroadcastingSpec": {
-      "type": "object",
-      "description": "Broadcasting behavior for operations",
-      "properties": {
-        "supported": {
-          "type": "boolean",
-          "description": "Whether broadcasting is supported"
-        },
-        "rules": {
-          "type": "string",
-          "description": "Broadcasting rules (e.g., 'numpy', 'strict')"
-        },
-        "scalar_expansion": {
-          "type": "boolean",
-          "description": "Whether scalars are expanded"
-        }
-      }
-    },
-    "DTypePromotionSpec": {
-      "type": "object",
-      "description": "Data type promotion behavior",
-      "properties": {
-        "rules": {
-          "type": "string",
-          "description": "Promotion rule set",
-          "enum": [
-            "numpy",
-            "pandas",
-            "strict",
-            "custom"
-          ]
-        },
-        "result_dtype": {
-          "type": "string",
-          "description": "Result dtype for this operation"
-        },
-        "overflow_behavior": {
-          "type": "string",
-          "description": "Behavior on overflow",
-          "enum": [
-            "wrap",
-            "saturate",
-            "error",
-            "promote"
-          ]
-        }
-      }
+      "title": "Type",
+      "type": "string"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/data.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for data processing and transformation specifications.",
+  "title": "Data Extension"
 }

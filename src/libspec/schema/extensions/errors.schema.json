@@ -1,159 +1,364 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/errors.schema.json",
-  "title": "Errors Extension",
-  "description": "Extension for error taxonomy: exception hierarchy, error codes, recovery strategies.",
-
   "$defs": {
-    "ErrorsLibraryFields": {
-      "description": "Fields added to Library when errors extension is active",
-      "type": "object",
-      "properties": {
-        "error_hierarchy": {
-          "type": "array",
-          "description": "Exception class hierarchy",
-          "items": { "$ref": "#/$defs/ErrorHierarchyNode" }
-        },
-        "exceptions": {
-          "type": "array",
-          "description": "Detailed exception specifications",
-          "items": { "$ref": "#/$defs/ExceptionSpec" }
-        },
-        "error_codes": {
-          "type": "array",
-          "description": "Enumerated error codes",
-          "items": { "$ref": "#/$defs/ErrorCode" }
-        }
-      }
-    },
-
-    "ErrorHierarchyNode": {
-      "type": "object",
-      "description": "A node in the exception hierarchy tree",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Exception class name"
-        },
-        "base": {
-          "type": "string",
-          "description": "Base class (e.g., 'Exception', 'RuntimeError')"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this exception category represents"
-        },
-        "children": {
-          "type": "array",
-          "description": "Child exception types",
-          "items": { "type": "string" }
-        }
-      }
-    },
-
-    "ExceptionSpec": {
-      "type": "object",
-      "description": "Detailed specification of an exception type",
-      "required": ["type", "module"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Exception class name"
-        },
-        "module": {
-          "type": "string",
-          "description": "Module where exception is defined"
-        },
-        "base": {
-          "type": "string",
-          "description": "Base exception class"
-        },
-        "description": {
-          "type": "string",
-          "description": "When this exception is raised"
-        },
-        "fields": {
-          "type": "array",
-          "description": "Exception attributes",
-          "items": { "$ref": "#/$defs/ExceptionField" }
-        },
-        "raised_by": {
-          "type": "array",
-          "description": "Functions/methods that raise this exception",
-          "items": { "type": "string" }
-        },
-        "recovery": {
-          "type": "string",
-          "description": "Recommended recovery strategy"
-        },
-        "retryable": {
-          "type": "boolean",
-          "description": "Whether the operation can be retried"
-        },
-        "user_facing": {
-          "type": "boolean",
-          "description": "Whether this error should be shown to end users"
-        },
-        "error_code": {
-          "type": "string",
-          "description": "Associated error code (if any)"
-        }
-      }
-    },
-
-    "ExceptionField": {
-      "type": "object",
-      "description": "An attribute on an exception class",
-      "required": ["name", "type"],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Field name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Field type"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this field contains"
-        }
-      }
-    },
-
     "ErrorCode": {
-      "type": "object",
-      "description": "A structured error code",
-      "required": ["code", "description"],
       "properties": {
-        "code": {
-          "type": "string",
-          "description": "Error code (e.g., 'E001', 'AUTH_FAILED')"
-        },
-        "type": {
-          "type": "string",
-          "description": "Associated exception type"
-        },
         "category": {
-          "type": "string",
-          "description": "Error category for grouping"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error category for grouping",
+          "title": "Category"
+        },
+        "code": {
+          "description": "Error code (e.g., 'E001', 'AUTH_FAILED')",
+          "title": "Code",
+          "type": "string"
         },
         "description": {
-          "type": "string",
-          "description": "Human-readable description"
+          "description": "Human-readable description",
+          "title": "Description",
+          "type": "string"
         },
         "docs_url": {
-          "type": "string",
+          "anyOf": [
+            {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "URL to detailed documentation",
-          "format": "uri"
+          "title": "Docs Url"
         },
         "severity": {
-          "type": "string",
-          "description": "Error severity level",
-          "enum": ["info", "warning", "error", "critical"]
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Severity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error severity level"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Associated exception type",
+          "title": "Type"
         }
-      }
+      },
+      "required": [
+        "code",
+        "description"
+      ],
+      "title": "ErrorCode",
+      "type": "object"
+    },
+    "ErrorHierarchyNode": {
+      "properties": {
+        "base": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Base class (e.g., 'Exception', 'RuntimeError')",
+          "title": "Base"
+        },
+        "children": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Child exception types",
+          "title": "Children"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this exception category represents",
+          "title": "Description"
+        },
+        "type": {
+          "description": "Exception class name",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ErrorHierarchyNode",
+      "type": "object"
+    },
+    "ErrorsLibraryFields": {
+      "properties": {
+        "error_codes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ErrorCode"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Enumerated error codes",
+          "title": "Error Codes"
+        },
+        "error_hierarchy": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ErrorHierarchyNode"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exception class hierarchy",
+          "title": "Error Hierarchy"
+        },
+        "exceptions": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ExceptionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Detailed exception specifications",
+          "title": "Exceptions"
+        }
+      },
+      "title": "ErrorsLibraryFields",
+      "type": "object"
+    },
+    "ExceptionField": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this field contains",
+          "title": "Description"
+        },
+        "name": {
+          "description": "Field name",
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "description": "Field type",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "ExceptionField",
+      "type": "object"
+    },
+    "ExceptionSpec": {
+      "properties": {
+        "base": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Base exception class",
+          "title": "Base"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When this exception is raised",
+          "title": "Description"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Associated error code (if any)",
+          "title": "Error Code"
+        },
+        "fields": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ExceptionField"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exception attributes",
+          "title": "Fields"
+        },
+        "module": {
+          "description": "Module where exception is defined",
+          "title": "Module",
+          "type": "string"
+        },
+        "raised_by": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Functions/methods that raise this exception",
+          "title": "Raised By"
+        },
+        "recovery": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Recommended recovery strategy",
+          "title": "Recovery"
+        },
+        "retryable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the operation can be retried",
+          "title": "Retryable"
+        },
+        "type": {
+          "description": "Exception class name",
+          "title": "Type",
+          "type": "string"
+        },
+        "user_facing": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this error should be shown to end users",
+          "title": "User Facing"
+        }
+      },
+      "required": [
+        "type",
+        "module"
+      ],
+      "title": "ExceptionSpec",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "critical"
+      ],
+      "title": "Severity",
+      "type": "string"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/errors.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for error handling and exception specifications.",
+  "title": "Errors Extension"
 }

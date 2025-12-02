@@ -1,195 +1,468 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/versioning.schema.json",
-  "title": "Versioning Extension",
-  "description": "Extension for API evolution: deprecations, breaking changes, migrations.",
-
   "$defs": {
-    "VersioningLibraryFields": {
-      "description": "Fields added to Library when versioning extension is active",
-      "type": "object",
-      "properties": {
-        "api_version": {
-          "type": "string",
-          "description": "API version (may differ from package version)"
-        },
-        "stability": {
-          "type": "string",
-          "description": "API stability level",
-          "enum": ["stable", "beta", "alpha", "experimental", "deprecated"]
-        },
-        "deprecations": {
-          "type": "array",
-          "description": "Deprecated APIs",
-          "items": { "$ref": "#/$defs/DeprecationSpec" }
-        },
-        "breaking_changes": {
-          "type": "array",
-          "description": "Breaking changes by version",
-          "items": { "$ref": "#/$defs/BreakingChangeSpec" }
-        },
-        "compatibility": {
-          "$ref": "#/$defs/CompatibilitySpec"
-        },
-        "changelog_url": {
-          "type": "string",
-          "description": "URL to changelog",
-          "format": "uri"
-        }
-      }
-    },
-
-    "VersioningTypeFields": {
-      "description": "Fields added to TypeDef when versioning extension is active",
-      "type": "object",
-      "properties": {
-        "since": {
-          "type": "string",
-          "description": "Version when this type was introduced"
-        },
-        "deprecated_since": {
-          "type": "string",
-          "description": "Version when this type was deprecated"
-        },
-        "removed_in": {
-          "type": "string",
-          "description": "Version when this type will be/was removed"
-        },
-        "stability": {
-          "type": "string",
-          "enum": ["stable", "beta", "alpha", "experimental", "deprecated"]
-        }
-      }
-    },
-
-    "VersioningMethodFields": {
-      "description": "Fields added to Method when versioning extension is active",
-      "type": "object",
-      "properties": {
-        "since": {
-          "type": "string",
-          "description": "Version when this method was introduced"
-        },
-        "deprecated_since": {
-          "type": "string",
-          "description": "Version when this method was deprecated"
-        },
-        "removed_in": {
-          "type": "string",
-          "description": "Version when this method will be/was removed"
-        },
-        "stability": {
-          "type": "string",
-          "enum": ["stable", "beta", "alpha", "experimental", "deprecated"]
-        }
-      }
-    },
-
-    "DeprecationSpec": {
-      "type": "object",
-      "description": "A deprecated API element",
-      "required": ["target", "since"],
-      "properties": {
-        "target": {
-          "type": "string",
-          "description": "What is deprecated (cross-reference)"
-        },
-        "since": {
-          "type": "string",
-          "description": "Version when deprecated"
-        },
-        "removed_in": {
-          "type": "string",
-          "description": "Version when removed (or planned removal)"
-        },
-        "replacement": {
-          "type": "string",
-          "description": "What to use instead (cross-reference)"
-        },
-        "migration": {
-          "type": "string",
-          "description": "Migration instructions"
-        },
-        "reason": {
-          "type": "string",
-          "description": "Why this was deprecated"
-        }
-      }
-    },
-
     "BreakingChangeSpec": {
-      "type": "object",
-      "description": "A breaking change in a version",
-      "required": ["version", "change"],
       "properties": {
-        "version": {
-          "type": "string",
-          "description": "Version containing the breaking change"
-        },
-        "change": {
-          "type": "string",
-          "description": "Description of what changed"
-        },
         "affected": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Affected APIs (cross-references)",
-          "items": { "type": "string" }
-        },
-        "migration": {
-          "type": "string",
-          "description": "Migration instructions"
+          "title": "Affected"
         },
         "automated_fix": {
-          "type": "boolean",
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
           "description": "Whether an automated fix is available",
-          "default": false
+          "title": "Automated Fix"
+        },
+        "change": {
+          "description": "Description of what changed",
+          "title": "Change",
+          "type": "string"
         },
         "codemod": {
-          "type": "string",
-          "description": "Codemod command to apply fix"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Codemod command to apply fix",
+          "title": "Codemod"
+        },
+        "migration": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Migration instructions",
+          "title": "Migration"
+        },
+        "version": {
+          "description": "Version containing the breaking change",
+          "title": "Version",
+          "type": "string"
         }
-      }
+      },
+      "required": [
+        "version",
+        "change"
+      ],
+      "title": "BreakingChangeSpec",
+      "type": "object"
     },
-
     "CompatibilitySpec": {
-      "type": "object",
-      "description": "Compatibility guarantees",
       "properties": {
         "backward": {
-          "type": "string",
-          "description": "Backward compatibility scope (e.g., '2.x series')"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Backward compatibility scope (e.g., '2.x series')",
+          "title": "Backward"
         },
         "forward": {
-          "type": "boolean",
-          "description": "Whether forward compatibility is maintained"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether forward compatibility is maintained",
+          "title": "Forward"
         },
         "policy": {
-          "type": "string",
-          "description": "Compatibility policy description"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Compatibility policy description",
+          "title": "Policy"
         },
         "semantic_versioning": {
-          "$ref": "#/$defs/SemVerPolicySpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SemVerPolicySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
-      }
+      },
+      "title": "CompatibilitySpec",
+      "type": "object"
     },
-
+    "DeprecationSpec": {
+      "properties": {
+        "migration": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Migration instructions",
+          "title": "Migration"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why this was deprecated",
+          "title": "Reason"
+        },
+        "removed_in": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when removed (or planned removal)",
+          "title": "Removed In"
+        },
+        "replacement": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What to use instead (cross-reference)",
+          "title": "Replacement"
+        },
+        "since": {
+          "description": "Version when deprecated",
+          "title": "Since",
+          "type": "string"
+        },
+        "target": {
+          "description": "What is deprecated (cross-reference)",
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "since"
+      ],
+      "title": "DeprecationSpec",
+      "type": "object"
+    },
     "SemVerPolicySpec": {
-      "type": "object",
-      "description": "Semantic versioning policy",
       "properties": {
         "major": {
-          "type": "string",
-          "description": "What constitutes a major version bump"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What constitutes a major version bump",
+          "title": "Major"
         },
         "minor": {
-          "type": "string",
-          "description": "What constitutes a minor version bump"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What constitutes a minor version bump",
+          "title": "Minor"
         },
         "patch": {
-          "type": "string",
-          "description": "What constitutes a patch version bump"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What constitutes a patch version bump",
+          "title": "Patch"
         }
-      }
+      },
+      "title": "SemVerPolicySpec",
+      "type": "object"
+    },
+    "Stability": {
+      "enum": [
+        "stable",
+        "beta",
+        "alpha",
+        "experimental",
+        "deprecated"
+      ],
+      "title": "Stability",
+      "type": "string"
+    },
+    "VersioningLibraryFields": {
+      "properties": {
+        "api_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "API version (may differ from package version)",
+          "title": "Api Version"
+        },
+        "breaking_changes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/BreakingChangeSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Breaking changes by version",
+          "title": "Breaking Changes"
+        },
+        "changelog_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "URL to changelog",
+          "title": "Changelog Url"
+        },
+        "compatibility": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompatibilitySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "deprecations": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/DeprecationSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deprecated APIs",
+          "title": "Deprecations"
+        },
+        "stability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stability"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "API stability level"
+        }
+      },
+      "title": "VersioningLibraryFields",
+      "type": "object"
+    },
+    "VersioningMethodFields": {
+      "properties": {
+        "deprecated_since": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this method was deprecated",
+          "title": "Deprecated Since"
+        },
+        "removed_in": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this method will be/was removed",
+          "title": "Removed In"
+        },
+        "since": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this method was introduced",
+          "title": "Since"
+        },
+        "stability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stability"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "VersioningMethodFields",
+      "type": "object"
+    },
+    "VersioningTypeFields": {
+      "properties": {
+        "deprecated_since": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this type was deprecated",
+          "title": "Deprecated Since"
+        },
+        "removed_in": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this type will be/was removed",
+          "title": "Removed In"
+        },
+        "since": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this type was introduced",
+          "title": "Since"
+        },
+        "stability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Stability"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "VersioningTypeFields",
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/versioning.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for API versioning and deprecation specifications.",
+  "title": "Versioning Extension"
 }

@@ -1,414 +1,1021 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/cli.schema.json",
-  "title": "CLI Extension",
-  "description": "Extension for command-line interfaces: commands, arguments, options, subcommands.",
   "$defs": {
-    "CLILibraryFields": {
-      "description": "Fields added to Library when CLI extension is active",
-      "type": "object",
+    "ArgumentSpec": {
       "properties": {
-        "cli_name": {
-          "type": "string",
-          "description": "CLI executable name"
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value",
+          "title": "Default"
         },
-        "commands": {
-          "type": "array",
-          "description": "CLI commands",
-          "items": {
-            "$ref": "#/$defs/CommandSpec"
-          }
-        },
-        "global_options": {
-          "type": "array",
-          "description": "Options available to all commands",
-          "items": {
-            "$ref": "#/$defs/OptionSpec"
-          }
-        },
-        "shell_completion": {
-          "$ref": "#/$defs/ShellCompletionSpec"
-        },
-        "help_formatting": {
-          "$ref": "#/$defs/HelpFormattingSpec"
-        },
-        "exit_codes": {
-          "type": "array",
-          "description": "Exit code definitions",
-          "items": {
-            "$ref": "#/$defs/ExitCodeSpec"
-          }
-        }
-      }
-    },
-    "CommandSpec": {
-      "type": "object",
-      "description": "A CLI command definition",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Command name"
-        },
-        "aliases": {
-          "type": "array",
-          "description": "Command aliases",
-          "items": {
-            "type": "string"
-          }
-        },
-        "handler": {
-          "type": "string",
-          "description": "Handler function reference"
-        },
-        "arguments": {
-          "type": "array",
-          "description": "Positional arguments",
-          "items": {
-            "$ref": "#/$defs/ArgumentSpec"
-          }
-        },
-        "options": {
-          "type": "array",
-          "description": "Command options/flags",
-          "items": {
-            "$ref": "#/$defs/OptionSpec"
-          }
-        },
-        "subcommands": {
-          "type": "array",
-          "description": "Subcommands",
-          "items": {
-            "$ref": "#/$defs/CommandSpec"
-          }
+        "envvar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Environment variable fallback",
+          "title": "Envvar"
         },
         "help": {
-          "type": "string",
-          "description": "Help text"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Help text",
+          "title": "Help"
         },
-        "short_help": {
-          "type": "string",
-          "description": "Short help shown in command listings"
+        "metavar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Display name in help",
+          "title": "Metavar"
         },
-        "epilog": {
-          "type": "string",
-          "description": "Text shown after help"
-        },
-        "hidden": {
-          "type": "boolean",
-          "description": "Whether command is hidden from help"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "Whether command is deprecated"
-        },
-        "deprecated_message": {
-          "type": "string",
-          "description": "Deprecation message"
-        },
-        "examples": {
-          "type": "array",
-          "description": "Usage examples",
-          "items": {
-            "$ref": "#/$defs/ExampleSpec"
-          }
-        },
-        "context_settings": {
-          "$ref": "#/$defs/ContextSettingsSpec"
-        }
-      }
-    },
-    "ArgumentSpec": {
-      "type": "object",
-      "description": "A positional argument",
-      "required": [
-        "name"
-      ],
-      "properties": {
         "name": {
-          "type": "string",
-          "description": "Argument name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Argument type"
-        },
-        "required": {
-          "type": "boolean",
-          "description": "Whether argument is required",
-          "default": true
-        },
-        "default": {
-          "description": "Default value"
+          "description": "Argument name",
+          "title": "Name",
+          "type": "string"
         },
         "nargs": {
-          "type": [
-            "integer",
-            "string"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
           ],
-          "description": "Number of arguments (int, '?', '*', '+')"
+          "default": null,
+          "description": "Number of arguments (int, '?', '*', '+')",
+          "title": "Nargs"
         },
-        "metavar": {
-          "type": "string",
-          "description": "Display name in help"
-        },
-        "help": {
-          "type": "string",
-          "description": "Help text"
-        },
-        "envvar": {
-          "type": "string",
-          "description": "Environment variable fallback"
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "description": "Whether argument is required",
+          "title": "Required"
         },
         "shell_complete": {
-          "$ref": "#/$defs/CompletionSpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompletionSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Argument type",
+          "title": "Type"
         }
-      }
-    },
-    "OptionSpec": {
-      "type": "object",
-      "description": "A command option/flag",
+      },
       "required": [
         "name"
       ],
+      "title": "ArgumentSpec",
+      "type": "object"
+    },
+    "CLILibraryFields": {
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Long option name (e.g., '--verbose')"
+        "cli_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CLI executable name",
+          "title": "Cli Name"
         },
-        "short": {
-          "type": "string",
-          "description": "Short option name (e.g., '-v')"
+        "commands": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CommandSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CLI commands",
+          "title": "Commands"
         },
-        "type": {
-          "type": "string",
-          "description": "Option type"
+        "exit_codes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ExitCodeSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exit code definitions",
+          "title": "Exit Codes"
         },
-        "required": {
-          "type": "boolean",
-          "description": "Whether option is required",
-          "default": false
+        "global_options": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/OptionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Options available to all commands",
+          "title": "Global Options"
         },
-        "default": {
-          "description": "Default value"
+        "help_formatting": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HelpFormattingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
-        "is_flag": {
-          "type": "boolean",
-          "description": "Whether this is a boolean flag"
+        "shell_completion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShellCompletionSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "CLILibraryFields",
+      "type": "object"
+    },
+    "Color": {
+      "enum": [
+        "auto",
+        "always",
+        "never"
+      ],
+      "title": "Color",
+      "type": "string"
+    },
+    "CommandSpec": {
+      "properties": {
+        "aliases": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Command aliases",
+          "title": "Aliases"
         },
-        "flag_value": {
-          "description": "Value when flag is set"
+        "arguments": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ArgumentSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Positional arguments",
+          "title": "Arguments"
         },
-        "count": {
-          "type": "boolean",
-          "description": "Whether to count occurrences (e.g., -vvv)"
+        "context_settings": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContextSettingsSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
-        "multiple": {
-          "type": "boolean",
-          "description": "Whether option can be repeated"
+        "deprecated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether command is deprecated",
+          "title": "Deprecated"
         },
-        "choices": {
-          "type": "array",
-          "description": "Valid choices",
-          "items": {}
+        "deprecated_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deprecation message",
+          "title": "Deprecated Message"
         },
-        "metavar": {
-          "type": "string",
-          "description": "Display name in help"
+        "epilog": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Text shown after help",
+          "title": "Epilog"
+        },
+        "examples": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ExampleSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Usage examples",
+          "title": "Examples"
+        },
+        "handler": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Handler function reference",
+          "title": "Handler"
         },
         "help": {
-          "type": "string",
-          "description": "Help text"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Help text",
+          "title": "Help"
         },
         "hidden": {
-          "type": "boolean",
-          "description": "Whether option is hidden from help"
-        },
-        "envvar": {
-          "type": "string",
-          "description": "Environment variable name"
-        },
-        "prompt": {
-          "type": [
-            "boolean",
-            "string"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
           ],
-          "description": "Whether to prompt if not provided"
+          "default": null,
+          "description": "Whether command is hidden from help",
+          "title": "Hidden"
         },
-        "confirmation_prompt": {
-          "type": "boolean",
-          "description": "Whether to confirm input"
+        "name": {
+          "description": "Command name",
+          "title": "Name",
+          "type": "string"
         },
-        "hide_input": {
-          "type": "boolean",
-          "description": "Whether to hide input (for passwords)"
+        "options": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/OptionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Command options/flags",
+          "title": "Options"
         },
-        "show_default": {
-          "type": "boolean",
-          "description": "Whether to show default in help"
+        "short_help": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Short help shown in command listings",
+          "title": "Short Help"
         },
-        "show_envvar": {
-          "type": "boolean",
-          "description": "Whether to show envvar in help"
-        },
-        "shell_complete": {
-          "$ref": "#/$defs/CompletionSpec"
+        "subcommands": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CommandSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Subcommands",
+          "title": "Subcommands"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "CommandSpec",
+      "type": "object"
+    },
+    "CompletionSpec": {
+      "properties": {
+        "file_pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "File pattern for path completion",
+          "title": "File Pattern"
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom completion function reference",
+          "title": "Function"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Completion type"
+        }
+      },
+      "title": "CompletionSpec",
+      "type": "object"
+    },
+    "ContextSettingsSpec": {
+      "properties": {
+        "allow_extra_args": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether extra arguments are allowed",
+          "title": "Allow Extra Args"
+        },
+        "allow_interspersed_args": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether args can be mixed with options",
+          "title": "Allow Interspersed Args"
+        },
+        "auto_envvar_prefix": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Auto-generate envvar names with prefix",
+          "title": "Auto Envvar Prefix"
+        },
+        "ignore_unknown_options": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether unknown options are ignored",
+          "title": "Ignore Unknown Options"
+        },
+        "token_normalize_func": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Function to normalize tokens",
+          "title": "Token Normalize Func"
+        }
+      },
+      "title": "ContextSettingsSpec",
+      "type": "object"
     },
     "ExampleSpec": {
-      "type": "object",
-      "description": "A usage example",
       "properties": {
         "command": {
-          "type": "string",
-          "description": "Example command line"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Example command line",
+          "title": "Command"
         },
         "description": {
-          "type": "string",
-          "description": "What this example demonstrates"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this example demonstrates",
+          "title": "Description"
         },
         "output": {
-          "type": "string",
-          "description": "Expected output"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expected output",
+          "title": "Output"
         }
-      }
+      },
+      "title": "ExampleSpec",
+      "type": "object"
     },
     "ExitCodeSpec": {
-      "type": "object",
-      "description": "An exit code definition",
+      "properties": {
+        "code": {
+          "description": "Exit code value",
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Code",
+          "type": "integer"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When this code is returned",
+          "title": "Description"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exit code name",
+          "title": "Name"
+        }
+      },
       "required": [
         "code"
       ],
-      "properties": {
-        "code": {
-          "type": "integer",
-          "description": "Exit code value",
-          "minimum": 0,
-          "maximum": 255
-        },
-        "name": {
-          "type": "string",
-          "description": "Exit code name"
-        },
-        "description": {
-          "type": "string",
-          "description": "When this code is returned"
-        }
-      }
-    },
-    "ShellCompletionSpec": {
-      "type": "object",
-      "description": "Shell completion configuration",
-      "properties": {
-        "shells": {
-          "type": "array",
-          "description": "Supported shells",
-          "items": {
-            "type": "string",
-            "enum": [
-              "bash",
-              "zsh",
-              "fish",
-              "powershell"
-            ]
-          }
-        },
-        "install_command": {
-          "type": "string",
-          "description": "Command to install completions"
-        },
-        "env_var": {
-          "type": "string",
-          "description": "Environment variable for completion script"
-        }
-      }
-    },
-    "CompletionSpec": {
-      "type": "object",
-      "description": "Completion configuration for an argument/option",
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Completion type",
-          "enum": [
-            "path",
-            "file",
-            "directory",
-            "choice",
-            "dynamic",
-            "none"
-          ]
-        },
-        "function": {
-          "type": "string",
-          "description": "Custom completion function reference"
-        },
-        "file_pattern": {
-          "type": "string",
-          "description": "File pattern for path completion"
-        }
-      }
+      "title": "ExitCodeSpec",
+      "type": "object"
     },
     "HelpFormattingSpec": {
-      "type": "object",
-      "description": "Help formatting configuration",
       "properties": {
+        "color": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Color"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Color support"
+        },
         "max_width": {
-          "type": "integer",
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Maximum help text width",
-          "minimum": 1
-        },
-        "show_default": {
-          "type": "boolean",
-          "description": "Show defaults in help by default"
-        },
-        "show_envvar": {
-          "type": "boolean",
-          "description": "Show env vars in help by default"
+          "title": "Max Width"
         },
         "rich_markup": {
-          "type": "boolean",
-          "description": "Whether rich markup is supported"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether rich markup is supported",
+          "title": "Rich Markup"
         },
-        "color": {
-          "type": "string",
-          "description": "Color support",
-          "enum": [
-            "auto",
-            "always",
-            "never"
-          ]
+        "show_default": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Show defaults in help by default",
+          "title": "Show Default"
+        },
+        "show_envvar": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Show env vars in help by default",
+          "title": "Show Envvar"
         }
-      }
+      },
+      "title": "HelpFormattingSpec",
+      "type": "object"
     },
-    "ContextSettingsSpec": {
-      "type": "object",
-      "description": "Command context settings",
+    "OptionSpec": {
       "properties": {
-        "allow_extra_args": {
-          "type": "boolean",
-          "description": "Whether extra arguments are allowed"
+        "choices": {
+          "anyOf": [
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Valid choices",
+          "title": "Choices"
         },
-        "allow_interspersed_args": {
-          "type": "boolean",
-          "description": "Whether args can be mixed with options"
+        "confirmation_prompt": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to confirm input",
+          "title": "Confirmation Prompt"
         },
-        "ignore_unknown_options": {
-          "type": "boolean",
-          "description": "Whether unknown options are ignored"
+        "count": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to count occurrences (e.g., -vvv)",
+          "title": "Count"
         },
-        "auto_envvar_prefix": {
-          "type": "string",
-          "description": "Auto-generate envvar names with prefix"
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value",
+          "title": "Default"
         },
-        "token_normalize_func": {
-          "type": "string",
-          "description": "Function to normalize tokens"
+        "envvar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Environment variable name",
+          "title": "Envvar"
+        },
+        "flag_value": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Value when flag is set",
+          "title": "Flag Value"
+        },
+        "help": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Help text",
+          "title": "Help"
+        },
+        "hidden": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether option is hidden from help",
+          "title": "Hidden"
+        },
+        "hide_input": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to hide input (for passwords)",
+          "title": "Hide Input"
+        },
+        "is_flag": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this is a boolean flag",
+          "title": "Is Flag"
+        },
+        "metavar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Display name in help",
+          "title": "Metavar"
+        },
+        "multiple": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether option can be repeated",
+          "title": "Multiple"
+        },
+        "name": {
+          "description": "Long option name (e.g., '--verbose')",
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to prompt if not provided",
+          "title": "Prompt"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether option is required",
+          "title": "Required"
+        },
+        "shell_complete": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompletionSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "short": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Short option name (e.g., '-v')",
+          "title": "Short"
+        },
+        "show_default": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to show default in help",
+          "title": "Show Default"
+        },
+        "show_envvar": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether to show envvar in help",
+          "title": "Show Envvar"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Option type",
+          "title": "Type"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "OptionSpec",
+      "type": "object"
+    },
+    "Shell": {
+      "enum": [
+        "bash",
+        "zsh",
+        "fish",
+        "powershell"
+      ],
+      "title": "Shell",
+      "type": "string"
+    },
+    "ShellCompletionSpec": {
+      "properties": {
+        "env_var": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Environment variable for completion script",
+          "title": "Env Var"
+        },
+        "install_command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Command to install completions",
+          "title": "Install Command"
+        },
+        "shells": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Shell"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supported shells",
+          "title": "Shells"
+        }
+      },
+      "title": "ShellCompletionSpec",
+      "type": "object"
+    },
+    "Type": {
+      "enum": [
+        "path",
+        "file",
+        "directory",
+        "choice",
+        "dynamic",
+        "none"
+      ],
+      "title": "Type",
+      "type": "string"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/cli.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for command-line interface specifications.",
+  "title": "CLI Extension"
 }

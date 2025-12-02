@@ -1,190 +1,486 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/config.schema.json",
-  "title": "Configuration Extension",
-  "description": "Extension for configuration: settings, environment variables, profiles, secrets.",
-
   "$defs": {
     "ConfigLibraryFields": {
-      "description": "Fields added to Library when config extension is active",
-      "type": "object",
       "properties": {
-        "settings": {
-          "type": "array",
-          "description": "Configuration settings",
-          "items": { "$ref": "#/$defs/SettingSpec" }
-        },
         "config_sources": {
-          "$ref": "#/$defs/ConfigSourcesSpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConfigSourcesSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "profiles": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ProfileSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Configuration profiles",
-          "items": { "$ref": "#/$defs/ProfileSpec" }
+          "title": "Profiles"
         },
         "secrets": {
-          "$ref": "#/$defs/SecretsSpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecretsSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "settings": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SettingSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Configuration settings",
+          "title": "Settings"
         }
-      }
+      },
+      "title": "ConfigLibraryFields",
+      "type": "object"
     },
-
-    "SettingSpec": {
-      "type": "object",
-      "description": "A configuration setting",
-      "required": ["name", "type"],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Setting name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Setting type (str, int, float, bool, list, dict)"
-        },
-        "default": {
-          "description": "Default value"
-        },
-        "env_var": {
-          "type": "string",
-          "description": "Environment variable name"
-        },
-        "cli_flag": {
-          "type": "string",
-          "description": "CLI flag (e.g., '--timeout')"
-        },
-        "cli_short": {
-          "type": "string",
-          "description": "Short CLI flag (e.g., '-t')"
-        },
-        "validation": {
-          "type": "string",
-          "description": "Validation rule (e.g., 'gt(0)', 'regex(...)')"
-        },
-        "description": {
-          "type": "string",
-          "description": "What this setting controls"
-        },
-        "required": {
-          "type": "boolean",
-          "description": "Whether this setting must be provided",
-          "default": false
-        },
-        "secret": {
-          "type": "boolean",
-          "description": "Whether this is a secret value",
-          "default": false
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "Whether this setting is deprecated",
-          "default": false
-        },
-        "deprecated_message": {
-          "type": "string",
-          "description": "Deprecation message with migration guidance"
-        },
-        "choices": {
-          "type": "array",
-          "description": "Valid choices for enum-like settings",
-          "items": {}
-        }
-      }
-    },
-
     "ConfigSourcesSpec": {
-      "type": "object",
-      "description": "Configuration source priority and locations",
       "properties": {
-        "priority": {
-          "type": "array",
-          "description": "Source priority (first = highest)",
-          "items": {
-            "type": "string",
-            "enum": ["cli", "env", "file", "defaults", "remote", "secrets_manager"]
-          }
+        "env_prefix": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Environment variable prefix (e.g., 'MYLIB_')",
+          "title": "Env Prefix"
         },
         "file_formats": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/FileFormat"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Supported config file formats",
-          "items": {
-            "type": "string",
-            "enum": ["toml", "yaml", "json", "ini", "env"]
-          }
+          "title": "File Formats"
         },
         "file_locations": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Config file search paths",
-          "items": { "type": "string" }
+          "title": "File Locations"
         },
         "file_name_pattern": {
-          "type": "string",
-          "description": "Config file name pattern (e.g., '{name}.toml')"
-        },
-        "env_prefix": {
-          "type": "string",
-          "description": "Environment variable prefix (e.g., 'MYLIB_')"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Config file name pattern (e.g., '{name}.toml')",
+          "title": "File Name Pattern"
         },
         "nested_delimiter": {
-          "type": "string",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "__",
           "description": "Delimiter for nested settings in env vars",
-          "default": "__"
+          "title": "Nested Delimiter"
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PriorityEnum"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source priority (first = highest)",
+          "title": "Priority"
         }
-      }
+      },
+      "title": "ConfigSourcesSpec",
+      "type": "object"
     },
-
+    "FileFormat": {
+      "enum": [
+        "toml",
+        "yaml",
+        "json",
+        "ini",
+        "env"
+      ],
+      "title": "FileFormat",
+      "type": "string"
+    },
+    "PriorityEnum": {
+      "enum": [
+        "cli",
+        "env",
+        "file",
+        "defaults",
+        "remote",
+        "secrets_manager"
+      ],
+      "title": "PriorityEnum",
+      "type": "string"
+    },
     "ProfileSpec": {
-      "type": "object",
-      "description": "A configuration profile",
-      "required": ["name"],
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Profile name (e.g., 'development', 'production')"
-        },
         "description": {
-          "type": "string",
-          "description": "What this profile is for"
-        },
-        "inherits": {
-          "type": "string",
-          "description": "Base profile to inherit from"
-        },
-        "overrides": {
-          "type": "object",
-          "description": "Setting overrides for this profile",
-          "additionalProperties": true
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this profile is for",
+          "title": "Description"
         },
         "env_var_trigger": {
-          "type": "string",
-          "description": "Env var that activates this profile"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Env var that activates this profile",
+          "title": "Env Var Trigger"
+        },
+        "inherits": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Base profile to inherit from",
+          "title": "Inherits"
+        },
+        "name": {
+          "description": "Profile name (e.g., 'development', 'production')",
+          "title": "Name",
+          "type": "string"
+        },
+        "overrides": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Setting overrides for this profile",
+          "title": "Overrides"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ProfileSpec",
+      "type": "object"
     },
-
     "SecretsSpec": {
-      "type": "object",
-      "description": "Secrets handling configuration",
       "properties": {
         "fields": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Setting names that are secrets",
-          "items": { "type": "string" }
-        },
-        "storage": {
-          "type": "string",
-          "description": "Where secrets are stored",
-          "enum": ["env", "keyring", "vault", "aws_secrets", "gcp_secrets", "azure_keyvault", "file"]
+          "title": "Fields"
         },
         "masking": {
-          "type": "boolean",
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
           "description": "Whether secrets are masked in logs",
-          "default": true
+          "title": "Masking"
         },
         "rotation_supported": {
-          "type": "boolean",
-          "description": "Whether secret rotation is supported"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether secret rotation is supported",
+          "title": "Rotation Supported"
+        },
+        "storage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Storage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where secrets are stored"
         }
-      }
+      },
+      "title": "SecretsSpec",
+      "type": "object"
+    },
+    "SettingSpec": {
+      "properties": {
+        "choices": {
+          "anyOf": [
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Valid choices for enum-like settings",
+          "title": "Choices"
+        },
+        "cli_flag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CLI flag (e.g., '--timeout')",
+          "title": "Cli Flag"
+        },
+        "cli_short": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Short CLI flag (e.g., '-t')",
+          "title": "Cli Short"
+        },
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value",
+          "title": "Default"
+        },
+        "deprecated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether this setting is deprecated",
+          "title": "Deprecated"
+        },
+        "deprecated_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deprecation message with migration guidance",
+          "title": "Deprecated Message"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this setting controls",
+          "title": "Description"
+        },
+        "env_var": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Environment variable name",
+          "title": "Env Var"
+        },
+        "name": {
+          "description": "Setting name",
+          "title": "Name",
+          "type": "string"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether this setting must be provided",
+          "title": "Required"
+        },
+        "secret": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether this is a secret value",
+          "title": "Secret"
+        },
+        "type": {
+          "description": "Setting type (str, int, float, bool, list, dict)",
+          "title": "Type",
+          "type": "string"
+        },
+        "validation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Validation rule (e.g., 'gt(0)', 'regex(...)')",
+          "title": "Validation"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "SettingSpec",
+      "type": "object"
+    },
+    "Storage": {
+      "enum": [
+        "env",
+        "keyring",
+        "vault",
+        "aws_secrets",
+        "gcp_secrets",
+        "azure_keyvault",
+        "file"
+      ],
+      "title": "Storage",
+      "type": "string"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for configuration management specifications.",
+  "title": "Config Extension"
 }

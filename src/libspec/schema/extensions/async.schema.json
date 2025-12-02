@@ -1,302 +1,662 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/async.schema.json",
-  "title": "Async Extension",
-  "description": "Extension for async/concurrent system semantics: lifecycle, cancellation, synchronization, observables.",
   "$defs": {
-    "AsyncMethodFields": {
-      "description": "Fields added to Method when async extension is active",
-      "type": "object",
+    "AsyncFunctionFields": {
       "properties": {
         "async": {
-          "type": "boolean",
-          "description": "Whether this is an async method",
-          "default": false
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether this is an async function",
+          "title": "Async"
         },
         "awaitable": {
-          "type": "boolean",
-          "description": "Whether the return value is awaitable"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the return value is awaitable",
+          "title": "Awaitable"
         },
         "blocking": {
-          "type": "boolean",
-          "description": "Whether this method blocks the event loop"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this function blocks the event loop",
+          "title": "Blocking"
         },
         "cancellation": {
-          "$ref": "#/$defs/CancellationSpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CancellationSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
-      }
+      },
+      "title": "AsyncFunctionFields",
+      "type": "object"
+    },
+    "AsyncMethodFields": {
+      "properties": {
+        "async": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether this is an async method",
+          "title": "Async"
+        },
+        "awaitable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the return value is awaitable",
+          "title": "Awaitable"
+        },
+        "blocking": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this method blocks the event loop",
+          "title": "Blocking"
+        },
+        "cancellation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CancellationSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "AsyncMethodFields",
+      "type": "object"
     },
     "AsyncTypeFields": {
-      "description": "Fields added to TypeDef when async extension is active",
-      "type": "object",
       "properties": {
         "lifecycle": {
-          "$ref": "#/$defs/LifecycleSpec"
-        },
-        "synchronization": {
-          "$ref": "#/$defs/SyncSpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LifecycleSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "observable": {
-          "$ref": "#/$defs/ObservableSpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ObservableSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "scheduling": {
-          "$ref": "#/$defs/SchedulingSpec"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchedulingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "synchronization": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SyncSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
-      }
+      },
+      "title": "AsyncTypeFields",
+      "type": "object"
     },
-    "AsyncFunctionFields": {
-      "description": "Fields added to FunctionDef when async extension is active",
-      "type": "object",
-      "properties": {
-        "async": {
-          "type": "boolean",
-          "description": "Whether this is an async function",
-          "default": false
-        },
-        "awaitable": {
-          "type": "boolean",
-          "description": "Whether the return value is awaitable"
-        },
-        "blocking": {
-          "type": "boolean",
-          "description": "Whether this function blocks the event loop"
-        },
-        "cancellation": {
-          "$ref": "#/$defs/CancellationSpec"
-        }
-      }
+    "Backpressure": {
+      "enum": [
+        "block",
+        "drop",
+        "error"
+      ],
+      "title": "Backpressure",
+      "type": "string"
+    },
+    "Backpressure1": {
+      "enum": [
+        "buffer",
+        "drop",
+        "block",
+        "error",
+        "latest"
+      ],
+      "title": "Backpressure1",
+      "type": "string"
     },
     "CancellationSpec": {
-      "type": "object",
-      "description": "How this async operation handles cancellation",
       "properties": {
-        "mode": {
-          "type": "string",
-          "description": "Cancellation mode",
-          "enum": [
-            "cooperative",
-            "immediate",
-            "none"
-          ]
-        },
         "cleanup": {
-          "type": "string",
-          "description": "What cleanup happens on cancellation"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What cleanup happens on cancellation",
+          "title": "Cleanup"
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Mode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Cancellation mode"
         },
         "propagates": {
-          "type": "boolean",
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
           "description": "Whether cancellation propagates to children",
-          "default": true
+          "title": "Propagates"
         }
-      }
+      },
+      "title": "CancellationSpec",
+      "type": "object"
+    },
+    "Executor": {
+      "enum": [
+        "event_loop",
+        "thread_pool",
+        "process_pool",
+        "custom"
+      ],
+      "title": "Executor",
+      "type": "string"
+    },
+    "Kind": {
+      "enum": [
+        "hot",
+        "cold"
+      ],
+      "title": "Kind",
+      "type": "string"
     },
     "LifecycleSpec": {
-      "type": "object",
-      "description": "State machine lifecycle for async types",
       "properties": {
-        "states": {
-          "type": "array",
-          "description": "All possible states",
-          "items": {
-            "$ref": "#/$defs/StateSpec"
-          }
-        },
         "initial_state": {
-          "type": "string",
-          "description": "Initial state name"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Initial state name",
+          "title": "Initial State"
+        },
+        "states": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/StateSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "All possible states",
+          "title": "States"
         },
         "transitions": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TransitionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Valid state transitions",
-          "items": {
-            "$ref": "#/$defs/TransitionSpec"
-          }
+          "title": "Transitions"
         }
-      }
+      },
+      "title": "LifecycleSpec",
+      "type": "object"
+    },
+    "Mode": {
+      "enum": [
+        "cooperative",
+        "immediate",
+        "none"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "ObservableSpec": {
+      "properties": {
+        "backpressure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Backpressure1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Backpressure strategy"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Kind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Hot (live) or cold (replay) observable"
+        },
+        "multicasting": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether multiple subscribers share the same stream",
+          "title": "Multicasting"
+        },
+        "replay": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether late subscribers receive past events",
+          "title": "Replay"
+        },
+        "replay_buffer": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Number of past events to replay",
+          "title": "Replay Buffer"
+        }
+      },
+      "title": "ObservableSpec",
+      "type": "object"
+    },
+    "Primitive": {
+      "enum": [
+        "mailbox",
+        "channel",
+        "lock",
+        "semaphore",
+        "event",
+        "barrier",
+        "condition"
+      ],
+      "title": "Primitive",
+      "type": "string"
+    },
+    "Priority": {
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "realtime"
+      ],
+      "title": "Priority",
+      "type": "string"
+    },
+    "SchedulingSpec": {
+      "properties": {
+        "executor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Executor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where this runs"
+        },
+        "preemptible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether execution can be preempted",
+          "title": "Preemptible"
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Priority"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Scheduling priority"
+        },
+        "timeout_default": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default timeout in seconds",
+          "title": "Timeout Default"
+        }
+      },
+      "title": "SchedulingSpec",
+      "type": "object"
+    },
+    "Semantics": {
+      "enum": [
+        "fifo",
+        "priority",
+        "broadcast",
+        "lifo"
+      ],
+      "title": "Semantics",
+      "type": "string"
     },
     "StateSpec": {
-      "type": "object",
-      "description": "A lifecycle state",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this state represents",
+          "title": "Description"
+        },
+        "name": {
+          "description": "State name",
+          "title": "Name",
+          "type": "string"
+        },
+        "on_enter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action to run on entering this state",
+          "title": "On Enter"
+        },
+        "on_exit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action to run on exiting this state",
+          "title": "On Exit"
+        },
+        "terminal": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether this is a terminal state",
+          "title": "Terminal"
+        }
+      },
       "required": [
         "name"
       ],
+      "title": "StateSpec",
+      "type": "object"
+    },
+    "SyncSpec": {
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "State name"
+        "backpressure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Backpressure"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What happens when capacity is reached"
         },
-        "description": {
-          "type": "string",
-          "description": "What this state represents"
+        "bounded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether the primitive has a capacity limit",
+          "title": "Bounded"
         },
-        "terminal": {
-          "type": "boolean",
-          "description": "Whether this is a terminal state",
-          "default": false
+        "capacity": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maximum capacity (if bounded)",
+          "title": "Capacity"
         },
-        "on_enter": {
-          "type": "string",
-          "description": "Action to run on entering this state"
+        "primitive": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Primitive"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type of synchronization primitive"
         },
-        "on_exit": {
-          "type": "string",
-          "description": "Action to run on exiting this state"
+        "semantics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Semantics"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Ordering/delivery semantics"
         }
-      }
+      },
+      "title": "SyncSpec",
+      "type": "object"
     },
     "TransitionSpec": {
-      "type": "object",
-      "description": "A state transition",
+      "properties": {
+        "from": {
+          "description": "Source state name",
+          "title": "From",
+          "type": "string"
+        },
+        "guard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Condition that must be true for transition",
+          "title": "Guard"
+        },
+        "side_effects": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Side effects of this transition",
+          "title": "Side Effects"
+        },
+        "to": {
+          "description": "Target state name",
+          "title": "To",
+          "type": "string"
+        },
+        "trigger": {
+          "description": "What causes this transition (method call, event, etc.)",
+          "title": "Trigger",
+          "type": "string"
+        }
+      },
       "required": [
         "from",
         "to",
         "trigger"
       ],
-      "properties": {
-        "from": {
-          "type": "string",
-          "description": "Source state name"
-        },
-        "to": {
-          "type": "string",
-          "description": "Target state name"
-        },
-        "trigger": {
-          "type": "string",
-          "description": "What causes this transition (method call, event, etc.)"
-        },
-        "guard": {
-          "type": "string",
-          "description": "Condition that must be true for transition"
-        },
-        "side_effects": {
-          "type": "array",
-          "description": "Side effects of this transition",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "SyncSpec": {
-      "type": "object",
-      "description": "Synchronization primitive semantics",
-      "properties": {
-        "primitive": {
-          "type": "string",
-          "description": "Type of synchronization primitive",
-          "enum": [
-            "mailbox",
-            "channel",
-            "lock",
-            "semaphore",
-            "event",
-            "barrier",
-            "condition"
-          ]
-        },
-        "semantics": {
-          "type": "string",
-          "description": "Ordering/delivery semantics",
-          "enum": [
-            "fifo",
-            "priority",
-            "broadcast",
-            "lifo"
-          ]
-        },
-        "bounded": {
-          "type": "boolean",
-          "description": "Whether the primitive has a capacity limit"
-        },
-        "capacity": {
-          "type": "integer",
-          "description": "Maximum capacity (if bounded)",
-          "minimum": 0
-        },
-        "backpressure": {
-          "type": "string",
-          "description": "What happens when capacity is reached",
-          "enum": [
-            "block",
-            "drop",
-            "error"
-          ]
-        }
-      }
-    },
-    "ObservableSpec": {
-      "type": "object",
-      "description": "Observable/stream semantics",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "description": "Hot (live) or cold (replay) observable",
-          "enum": [
-            "hot",
-            "cold"
-          ]
-        },
-        "backpressure": {
-          "type": "string",
-          "description": "Backpressure strategy",
-          "enum": [
-            "buffer",
-            "drop",
-            "block",
-            "error",
-            "latest"
-          ]
-        },
-        "replay": {
-          "type": "boolean",
-          "description": "Whether late subscribers receive past events"
-        },
-        "replay_buffer": {
-          "type": "integer",
-          "description": "Number of past events to replay",
-          "minimum": 0
-        },
-        "multicasting": {
-          "type": "boolean",
-          "description": "Whether multiple subscribers share the same stream"
-        }
-      }
-    },
-    "SchedulingSpec": {
-      "type": "object",
-      "description": "Execution scheduling semantics",
-      "properties": {
-        "executor": {
-          "type": "string",
-          "description": "Where this runs",
-          "enum": [
-            "event_loop",
-            "thread_pool",
-            "process_pool",
-            "custom"
-          ]
-        },
-        "priority": {
-          "type": "string",
-          "description": "Scheduling priority",
-          "enum": [
-            "low",
-            "normal",
-            "high",
-            "realtime"
-          ]
-        },
-        "preemptible": {
-          "type": "boolean",
-          "description": "Whether execution can be preempted"
-        },
-        "timeout_default": {
-          "type": "number",
-          "description": "Default timeout in seconds",
-          "minimum": 0
-        }
-      }
+      "title": "TransitionSpec",
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/async.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for async/concurrent system semantics: lifecycle, cancellation, synchronization, observables.",
+  "title": "Async Extension"
 }

@@ -1,548 +1,1198 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/web.schema.json",
-  "title": "Web Extension",
-  "description": "Extension for web frameworks: routes, middleware, request/response, dependencies.",
   "$defs": {
-    "WebLibraryFields": {
-      "description": "Fields added to Library when web extension is active",
-      "type": "object",
-      "properties": {
-        "routes": {
-          "type": "array",
-          "description": "HTTP route definitions",
-          "items": {
-            "$ref": "#/$defs/RouteSpec"
-          }
-        },
-        "middleware": {
-          "type": "array",
-          "description": "Middleware stack",
-          "items": {
-            "$ref": "#/$defs/MiddlewareSpec"
-          }
-        },
-        "dependencies": {
-          "type": "array",
-          "description": "Dependency injection definitions",
-          "items": {
-            "$ref": "#/$defs/DependencySpec"
-          }
-        },
-        "websockets": {
-          "type": "array",
-          "description": "WebSocket endpoint definitions",
-          "items": {
-            "$ref": "#/$defs/WebSocketSpec"
-          }
-        },
-        "error_handlers": {
-          "type": "array",
-          "description": "Exception to HTTP response mappings",
-          "items": {
-            "$ref": "#/$defs/ErrorHandlerSpec"
-          }
-        }
-      }
-    },
-    "RouteSpec": {
-      "type": "object",
-      "description": "An HTTP route definition",
-      "required": [
-        "path",
-        "method"
+    "AppliesTo": {
+      "enum": [
+        "all",
+        "tagged",
+        "specific"
       ],
-      "properties": {
-        "path": {
-          "type": "string",
-          "description": "URL path pattern (e.g., '/users/{user_id}')"
-        },
-        "method": {
-          "type": "string",
-          "description": "HTTP method",
-          "enum": [
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "PATCH",
-            "HEAD",
-            "OPTIONS",
-            "*"
-          ]
-        },
-        "handler": {
-          "type": "string",
-          "description": "Handler function reference"
-        },
-        "name": {
-          "type": "string",
-          "description": "Route name for URL generation"
-        },
-        "path_params": {
-          "type": "array",
-          "description": "Path parameter definitions",
-          "items": {
-            "$ref": "#/$defs/PathParamSpec"
-          }
-        },
-        "query_params": {
-          "type": "array",
-          "description": "Query parameter definitions",
-          "items": {
-            "$ref": "#/$defs/QueryParamSpec"
-          }
-        },
-        "headers": {
-          "type": "array",
-          "description": "Required/optional header definitions",
-          "items": {
-            "$ref": "#/$defs/HeaderSpec"
-          }
-        },
-        "request_body": {
-          "$ref": "#/$defs/RequestBodySpec"
-        },
-        "response": {
-          "$ref": "#/$defs/ResponseSpec"
-        },
-        "errors": {
-          "type": "array",
-          "description": "Error responses",
-          "items": {
-            "$ref": "#/$defs/ErrorResponseSpec"
-          }
-        },
-        "auth": {
-          "type": "string",
-          "description": "Authentication requirement",
-          "enum": [
-            "required",
-            "optional",
-            "none"
-          ]
-        },
-        "permissions": {
-          "type": "array",
-          "description": "Required permissions",
-          "items": {
-            "type": "string"
-          }
-        },
-        "rate_limit": {
-          "$ref": "#/$defs/RateLimitSpec"
-        },
-        "tags": {
-          "type": "array",
-          "description": "OpenAPI tags",
-          "items": {
-            "type": "string"
-          }
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "Whether this route is deprecated"
-        },
-        "summary": {
-          "type": "string",
-          "description": "Short summary for OpenAPI"
-        },
-        "description": {
-          "type": "string",
-          "description": "Detailed description"
-        }
-      }
+      "title": "AppliesTo",
+      "type": "string"
     },
-    "PathParamSpec": {
-      "type": "object",
-      "required": [
-        "name",
-        "type"
+    "Auth": {
+      "enum": [
+        "required",
+        "optional",
+        "none"
       ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Parameter name in path"
-        },
-        "type": {
-          "type": "string",
-          "description": "Parameter type"
-        },
-        "description": {
-          "type": "string"
-        },
-        "pattern": {
-          "type": "string",
-          "description": "Regex pattern for validation"
-        }
-      }
-    },
-    "QueryParamSpec": {
-      "type": "object",
-      "required": [
-        "name",
-        "type"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Query parameter name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Parameter type"
-        },
-        "required": {
-          "type": "boolean",
-          "default": false
-        },
-        "default": {
-          "type": "string",
-          "description": "Default value"
-        },
-        "description": {
-          "type": "string"
-        },
-        "multiple": {
-          "type": "boolean",
-          "description": "Whether multiple values allowed",
-          "default": false
-        }
-      }
-    },
-    "HeaderSpec": {
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Header name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Value type"
-        },
-        "required": {
-          "type": "boolean",
-          "default": false
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "RequestBodySpec": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Request body model type"
-        },
-        "content_type": {
-          "type": "string",
-          "description": "Expected content type",
-          "default": "application/json"
-        },
-        "required": {
-          "type": "boolean",
-          "default": true
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "ResponseSpec": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string",
-          "description": "Response model type"
-        },
-        "status": {
-          "type": "integer",
-          "description": "HTTP status code",
-          "default": 200,
-          "minimum": 100,
-          "maximum": 599
-        },
-        "content_type": {
-          "type": "string",
-          "description": "Response content type",
-          "default": "application/json"
-        },
-        "headers": {
-          "type": "array",
-          "description": "Response headers",
-          "items": {
-            "$ref": "#/$defs/HeaderSpec"
-          }
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "ErrorResponseSpec": {
-      "type": "object",
-      "required": [
-        "status"
-      ],
-      "properties": {
-        "status": {
-          "type": "integer",
-          "description": "HTTP status code",
-          "minimum": 100,
-          "maximum": 599
-        },
-        "type": {
-          "type": "string",
-          "description": "Error response model type"
-        },
-        "exception": {
-          "type": "string",
-          "description": "Exception type that triggers this response"
-        },
-        "when": {
-          "type": "string",
-          "description": "When this error occurs"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "MiddlewareSpec": {
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Middleware name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Middleware class/function reference"
-        },
-        "order": {
-          "type": "integer",
-          "description": "Execution order (lower = earlier)",
-          "minimum": 0
-        },
-        "applies_to": {
-          "type": "string",
-          "description": "Which routes this applies to",
-          "enum": [
-            "all",
-            "tagged",
-            "specific"
-          ]
-        },
-        "tags": {
-          "type": "array",
-          "description": "Tags to match (if applies_to='tagged')",
-          "items": {
-            "type": "string"
-          }
-        },
-        "routes": {
-          "type": "array",
-          "description": "Route paths (if applies_to='specific')",
-          "items": {
-            "type": "string"
-          }
-        },
-        "position": {
-          "type": "string",
-          "description": "When middleware runs",
-          "enum": [
-            "before",
-            "after",
-            "wrap"
-          ]
-        },
-        "config": {
-          "type": "object",
-          "description": "Middleware configuration",
-          "additionalProperties": true
-        },
-        "description": {
-          "type": "string"
-        }
-      }
+      "title": "Auth",
+      "type": "string"
     },
     "DependencySpec": {
-      "type": "object",
+      "properties": {
+        "async": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether factory is async",
+          "title": "Async"
+        },
+        "cacheable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "description": "Whether result can be cached",
+          "title": "Cacheable"
+        },
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Other dependencies this requires",
+          "title": "Dependencies"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "factory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Factory function reference",
+          "title": "Factory"
+        },
+        "name": {
+          "description": "Dependency name",
+          "title": "Name",
+          "type": "string"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Scope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dependency lifetime"
+        },
+        "type": {
+          "description": "Dependency type",
+          "title": "Type",
+          "type": "string"
+        }
+      },
       "required": [
         "name",
         "type"
       ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Dependency name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Dependency type"
-        },
-        "factory": {
-          "type": "string",
-          "description": "Factory function reference"
-        },
-        "scope": {
-          "type": "string",
-          "description": "Dependency lifetime",
-          "enum": [
-            "request",
-            "session",
-            "app",
-            "singleton"
-          ]
-        },
-        "cacheable": {
-          "type": "boolean",
-          "description": "Whether result can be cached",
-          "default": true
-        },
-        "async": {
-          "type": "boolean",
-          "description": "Whether factory is async"
-        },
-        "dependencies": {
-          "type": "array",
-          "description": "Other dependencies this requires",
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": {
-          "type": "string"
-        }
-      }
+      "title": "DependencySpec",
+      "type": "object"
     },
-    "WebSocketSpec": {
-      "type": "object",
-      "required": [
-        "path"
+    "Direction": {
+      "enum": [
+        "client_to_server",
+        "server_to_client",
+        "bidirectional"
       ],
-      "properties": {
-        "path": {
-          "type": "string",
-          "description": "WebSocket endpoint path"
-        },
-        "handler": {
-          "type": "string",
-          "description": "Handler function reference"
-        },
-        "subprotocols": {
-          "type": "array",
-          "description": "Supported subprotocols",
-          "items": {
-            "type": "string"
-          }
-        },
-        "auth": {
-          "type": "string",
-          "enum": [
-            "required",
-            "optional",
-            "none"
-          ]
-        },
-        "message_types": {
-          "type": "array",
-          "description": "Message type definitions",
-          "items": {
-            "$ref": "#/$defs/WSMessageSpec"
-          }
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "WSMessageSpec": {
-      "type": "object",
-      "required": [
-        "name",
-        "direction"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Message type name"
-        },
-        "direction": {
-          "type": "string",
-          "enum": [
-            "client_to_server",
-            "server_to_client",
-            "bidirectional"
-          ]
-        },
-        "type": {
-          "type": "string",
-          "description": "Message payload type"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
+      "title": "Direction",
+      "type": "string"
     },
     "ErrorHandlerSpec": {
-      "type": "object",
+      "properties": {
+        "exception": {
+          "description": "Exception type to handle",
+          "title": "Exception",
+          "type": "string"
+        },
+        "handler": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Custom handler function",
+          "title": "Handler"
+        },
+        "response_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Response model type",
+          "title": "Response Type"
+        },
+        "status": {
+          "description": "HTTP status code",
+          "maximum": 599,
+          "minimum": 100,
+          "title": "Status",
+          "type": "integer"
+        }
+      },
       "required": [
         "exception",
         "status"
       ],
+      "title": "ErrorHandlerSpec",
+      "type": "object"
+    },
+    "ErrorResponseSpec": {
       "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
         "exception": {
-          "type": "string",
-          "description": "Exception type to handle"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exception type that triggers this response",
+          "title": "Exception"
         },
         "status": {
-          "type": "integer",
           "description": "HTTP status code",
+          "maximum": 599,
           "minimum": 100,
-          "maximum": 599
+          "title": "Status",
+          "type": "integer"
         },
-        "response_type": {
-          "type": "string",
-          "description": "Response model type"
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error response model type",
+          "title": "Type"
         },
-        "handler": {
-          "type": "string",
-          "description": "Custom handler function"
+        "when": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When this error occurs",
+          "title": "When"
         }
-      }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "ErrorResponseSpec",
+      "type": "object"
+    },
+    "HeaderSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "description": "Header name",
+          "title": "Name",
+          "type": "string"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "title": "Required"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Value type",
+          "title": "Type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "HeaderSpec",
+      "type": "object"
+    },
+    "Method": {
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS",
+        "*"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "MiddlewareSpec": {
+      "properties": {
+        "applies_to": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AppliesTo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Which routes this applies to"
+        },
+        "config": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Middleware configuration",
+          "title": "Config"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "description": "Middleware name",
+          "title": "Name",
+          "type": "string"
+        },
+        "order": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Execution order (lower = earlier)",
+          "title": "Order"
+        },
+        "position": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When middleware runs"
+        },
+        "routes": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Route paths (if applies_to='specific')",
+          "title": "Routes"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tags to match (if applies_to='tagged')",
+          "title": "Tags"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Middleware class/function reference",
+          "title": "Type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "MiddlewareSpec",
+      "type": "object"
+    },
+    "PathParamSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "description": "Parameter name in path",
+          "title": "Name",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Regex pattern for validation",
+          "title": "Pattern"
+        },
+        "type": {
+          "description": "Parameter type",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "PathParamSpec",
+      "type": "object"
+    },
+    "Position": {
+      "enum": [
+        "before",
+        "after",
+        "wrap"
+      ],
+      "title": "Position",
+      "type": "string"
+    },
+    "QueryParamSpec": {
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value",
+          "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "multiple": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether multiple values allowed",
+          "title": "Multiple"
+        },
+        "name": {
+          "description": "Query parameter name",
+          "title": "Name",
+          "type": "string"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "title": "Required"
+        },
+        "type": {
+          "description": "Parameter type",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "QueryParamSpec",
+      "type": "object"
     },
     "RateLimitSpec": {
-      "type": "object",
       "properties": {
-        "requests": {
-          "type": "integer",
-          "description": "Number of requests allowed",
-          "minimum": 1
-        },
-        "window": {
-          "type": "string",
-          "description": "Time window (e.g., '1m', '1h')"
+        "burst": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Burst allowance",
+          "title": "Burst"
         },
         "key": {
-          "type": "string",
-          "description": "Rate limit key (e.g., 'ip', 'user')"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rate limit key (e.g., 'ip', 'user')",
+          "title": "Key"
         },
-        "burst": {
-          "type": "integer",
-          "description": "Burst allowance",
-          "minimum": 1
+        "requests": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Number of requests allowed",
+          "title": "Requests"
+        },
+        "window": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Time window (e.g., '1m', '1h')",
+          "title": "Window"
         }
-      }
+      },
+      "title": "RateLimitSpec",
+      "type": "object"
+    },
+    "RequestBodySpec": {
+      "properties": {
+        "content_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "application/json",
+          "description": "Expected content type",
+          "title": "Content Type"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "title": "Required"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Request body model type",
+          "title": "Type"
+        }
+      },
+      "title": "RequestBodySpec",
+      "type": "object"
+    },
+    "ResponseSpec": {
+      "properties": {
+        "content_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "application/json",
+          "description": "Response content type",
+          "title": "Content Type"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "headers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/HeaderSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Response headers",
+          "title": "Headers"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "maximum": 599,
+              "minimum": 100,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": 200,
+          "description": "HTTP status code",
+          "title": "Status"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Response model type",
+          "title": "Type"
+        }
+      },
+      "title": "ResponseSpec",
+      "type": "object"
+    },
+    "RouteSpec": {
+      "properties": {
+        "auth": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Auth"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Authentication requirement"
+        },
+        "deprecated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this route is deprecated",
+          "title": "Deprecated"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Detailed description",
+          "title": "Description"
+        },
+        "errors": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ErrorResponseSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Error responses",
+          "title": "Errors"
+        },
+        "handler": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Handler function reference",
+          "title": "Handler"
+        },
+        "headers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/HeaderSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Required/optional header definitions",
+          "title": "Headers"
+        },
+        "method": {
+          "$ref": "#/$defs/Method",
+          "description": "HTTP method"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Route name for URL generation",
+          "title": "Name"
+        },
+        "path": {
+          "description": "URL path pattern (e.g., '/users/{user_id}')",
+          "title": "Path",
+          "type": "string"
+        },
+        "path_params": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/PathParamSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path parameter definitions",
+          "title": "Path Params"
+        },
+        "permissions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Required permissions",
+          "title": "Permissions"
+        },
+        "query_params": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/QueryParamSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Query parameter definitions",
+          "title": "Query Params"
+        },
+        "rate_limit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RateLimitSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "request_body": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RequestBodySpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "response": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResponseSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Short summary for OpenAPI",
+          "title": "Summary"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "OpenAPI tags",
+          "title": "Tags"
+        }
+      },
+      "required": [
+        "path",
+        "method"
+      ],
+      "title": "RouteSpec",
+      "type": "object"
+    },
+    "Scope": {
+      "enum": [
+        "request",
+        "session",
+        "app",
+        "singleton"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "WSMessageSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "name": {
+          "description": "Message type name",
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Message payload type",
+          "title": "Type"
+        }
+      },
+      "required": [
+        "name",
+        "direction"
+      ],
+      "title": "WSMessageSpec",
+      "type": "object"
+    },
+    "WebLibraryFields": {
+      "properties": {
+        "dependencies": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/DependencySpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Dependency injection definitions",
+          "title": "Dependencies"
+        },
+        "error_handlers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ErrorHandlerSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exception to HTTP response mappings",
+          "title": "Error Handlers"
+        },
+        "middleware": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/MiddlewareSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Middleware stack",
+          "title": "Middleware"
+        },
+        "routes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/RouteSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "HTTP route definitions",
+          "title": "Routes"
+        },
+        "websockets": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/WebSocketSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "WebSocket endpoint definitions",
+          "title": "Websockets"
+        }
+      },
+      "title": "WebLibraryFields",
+      "type": "object"
+    },
+    "WebSocketSpec": {
+      "properties": {
+        "auth": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Auth"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "handler": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Handler function reference",
+          "title": "Handler"
+        },
+        "message_types": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/WSMessageSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Message type definitions",
+          "title": "Message Types"
+        },
+        "path": {
+          "description": "WebSocket endpoint path",
+          "title": "Path",
+          "type": "string"
+        },
+        "subprotocols": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supported subprotocols",
+          "title": "Subprotocols"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "WebSocketSpec",
+      "type": "object"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/web.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for web framework specifications.",
+  "title": "Web Extension"
 }

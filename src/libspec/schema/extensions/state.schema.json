@@ -1,675 +1,1487 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/state.schema.json",
-  "title": "State Extension",
-  "description": "Extension for state management: state machines, reducers, selectors, stores.",
   "$defs": {
-    "StateLibraryFields": {
-      "description": "Fields added to Library when state extension is active",
-      "type": "object",
+    "ActionSpec": {
       "properties": {
-        "stores": {
-          "type": "array",
-          "description": "State store definitions",
-          "items": {
-            "$ref": "#/$defs/StoreSpec"
-          }
+        "async": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this is an async action/thunk",
+          "title": "Async"
         },
-        "state_machines": {
-          "type": "array",
-          "description": "State machine definitions",
-          "items": {
-            "$ref": "#/$defs/StateMachineSpec"
-          }
+        "creator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action creator function reference",
+          "title": "Creator"
         },
-        "actions": {
-          "type": "array",
-          "description": "Action definitions",
-          "items": {
-            "$ref": "#/$defs/ActionSpec"
-          }
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
         },
-        "selectors": {
-          "type": "array",
-          "description": "Selector definitions",
-          "items": {
-            "$ref": "#/$defs/SelectorSpec"
-          }
-        },
-        "middleware": {
-          "type": "array",
-          "description": "State middleware",
-          "items": {
-            "$ref": "#/$defs/StateMiddlewareSpec"
-          }
-        }
-      }
-    },
-    "StateTypeFields": {
-      "description": "Fields added to TypeDef when state extension is active",
-      "type": "object",
-      "properties": {
-        "state_shape": {
-          "$ref": "#/$defs/StateShapeSpec"
-        },
-        "immutable": {
-          "type": "boolean",
-          "description": "Whether state is immutable"
-        },
-        "serializable": {
-          "type": "boolean",
-          "description": "Whether state is serializable"
-        }
-      }
-    },
-    "StoreSpec": {
-      "type": "object",
-      "description": "A state store definition",
-      "required": [
-        "name"
-      ],
-      "properties": {
         "name": {
-          "type": "string",
-          "description": "Store name"
+          "description": "Action type name",
+          "title": "Name",
+          "type": "string"
+        },
+        "payload_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Payload type",
+          "title": "Payload Type"
         },
         "type": {
-          "type": "string",
-          "description": "Store implementation type",
-          "enum": [
-            "redux",
-            "mobx",
-            "zustand",
-            "recoil",
-            "pinia",
-            "custom"
-          ]
-        },
-        "state_type": {
-          "type": "string",
-          "description": "State type reference"
-        },
-        "initial_state": {
-          "type": "string",
-          "description": "Initial state factory reference"
-        },
-        "reducers": {
-          "type": "array",
-          "description": "Reducer functions",
-          "items": {
-            "$ref": "#/$defs/ReducerSpec"
-          }
-        },
-        "slices": {
-          "type": "array",
-          "description": "State slices",
-          "items": {
-            "$ref": "#/$defs/SliceSpec"
-          }
-        },
-        "persistence": {
-          "$ref": "#/$defs/PersistenceSpec"
-        },
-        "devtools": {
-          "type": "boolean",
-          "description": "Whether devtools integration is supported"
-        },
-        "description": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action creator type reference",
+          "title": "Type"
         }
-      }
-    },
-    "ReducerSpec": {
-      "type": "object",
-      "description": "A reducer function",
+      },
       "required": [
         "name"
       ],
+      "title": "ActionSpec",
+      "type": "object"
+    },
+    "GuardSpec": {
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Reducer name"
+        "condition": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Condition description",
+          "title": "Condition"
         },
         "function": {
-          "type": "string",
-          "description": "Reducer function reference"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guard function reference",
+          "title": "Function"
         },
-        "handles": {
-          "type": "array",
-          "description": "Action types this reducer handles",
-          "items": {
-            "type": "string"
-          }
-        },
-        "pure": {
-          "type": "boolean",
-          "description": "Whether reducer is pure"
-        },
-        "description": {
+        "name": {
+          "description": "Guard name",
+          "title": "Name",
           "type": "string"
         }
-      }
-    },
-    "SliceSpec": {
-      "type": "object",
-      "description": "A state slice",
+      },
       "required": [
         "name"
       ],
+      "title": "GuardSpec",
+      "type": "object"
+    },
+    "Intercept": {
+      "enum": [
+        "actions",
+        "state",
+        "dispatch",
+        "subscribe"
+      ],
+      "title": "Intercept",
+      "type": "string"
+    },
+    "MachineActionSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action function reference",
+          "title": "Function"
+        },
+        "name": {
+          "description": "Action name",
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "MachineActionSpec",
+      "type": "object"
+    },
+    "MachineEventSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "description": "Event name",
+          "title": "Name",
+          "type": "string"
+        },
+        "payload_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Event payload type",
+          "title": "Payload Type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "MachineEventSpec",
+      "type": "object"
+    },
+    "MachineStateSpec": {
+      "properties": {
+        "children": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/MachineStateSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Child states (for compound/parallel)",
+          "title": "Children"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "entry": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Entry actions",
+          "title": "Entry"
+        },
+        "exit": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Exit actions",
+          "title": "Exit"
+        },
+        "initial": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Initial child state",
+          "title": "Initial"
+        },
+        "invoke": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Invoked services in this state",
+          "title": "Invoke"
+        },
+        "name": {
+          "description": "State name",
+          "title": "Name",
+          "type": "string"
+        },
+        "on": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Event handlers (event -> transition)",
+          "title": "On"
+        },
+        "tags": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State tags for querying",
+          "title": "Tags"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "MachineStateSpec",
+      "type": "object"
+    },
+    "PersistenceSpec": {
+      "properties": {
+        "blacklist": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Paths to exclude",
+          "title": "Blacklist"
+        },
+        "key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Storage key",
+          "title": "Key"
+        },
+        "migrate": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Migration function reference",
+          "title": "Migrate"
+        },
+        "storage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Storage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Storage type"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Persistence version",
+          "title": "Version"
+        },
+        "whitelist": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Paths to persist",
+          "title": "Whitelist"
+        }
+      },
+      "title": "PersistenceSpec",
+      "type": "object"
+    },
+    "ReducerSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reducer function reference",
+          "title": "Function"
+        },
+        "handles": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action types this reducer handles",
+          "title": "Handles"
+        },
+        "name": {
+          "description": "Reducer name",
+          "title": "Name",
+          "type": "string"
+        },
+        "pure": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether reducer is pure",
+          "title": "Pure"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ReducerSpec",
+      "type": "object"
+    },
+    "SelectorSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "function": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Selector function reference",
+          "title": "Function"
+        },
+        "input_selectors": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Input selectors (for memoization)",
+          "title": "Input Selectors"
+        },
+        "memoized": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether selector is memoized",
+          "title": "Memoized"
+        },
+        "name": {
+          "description": "Selector name",
+          "title": "Name",
+          "type": "string"
+        },
+        "return_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Return type",
+          "title": "Return Type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "SelectorSpec",
+      "type": "object"
+    },
+    "ServiceSpec": {
       "properties": {
         "name": {
-          "type": "string",
-          "description": "Slice name"
+          "description": "Service name",
+          "title": "Name",
+          "type": "string"
         },
-        "path": {
-          "type": "string",
-          "description": "Path in state tree"
+        "on_done": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Transition on success",
+          "title": "On Done"
         },
-        "state_type": {
-          "type": "string",
-          "description": "Slice state type"
+        "on_error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Transition on error",
+          "title": "On Error"
         },
-        "reducers": {
-          "type": "array",
-          "description": "Slice reducers",
-          "items": {
-            "$ref": "#/$defs/ReducerSpec"
-          }
+        "src": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Service source/function reference",
+          "title": "Src"
         },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type3"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Service type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ServiceSpec",
+      "type": "object"
+    },
+    "SliceSpec": {
+      "properties": {
         "actions": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Auto-generated action names",
-          "items": {
-            "type": "string"
-          }
-        },
-        "selectors": {
-          "type": "array",
-          "description": "Slice selectors",
-          "items": {
-            "type": "string"
-          }
+          "title": "Actions"
         },
         "extra_reducers": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "External action handlers",
-          "items": {
-            "type": "string"
-          }
+          "title": "Extra Reducers"
+        },
+        "name": {
+          "description": "Slice name",
+          "title": "Name",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Path in state tree",
+          "title": "Path"
+        },
+        "reducers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ReducerSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Slice reducers",
+          "title": "Reducers"
+        },
+        "selectors": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Slice selectors",
+          "title": "Selectors"
+        },
+        "state_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Slice state type",
+          "title": "State Type"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "SliceSpec",
+      "type": "object"
+    },
+    "StateLibraryFields": {
+      "properties": {
+        "actions": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ActionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action definitions",
+          "title": "Actions"
+        },
+        "middleware": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/StateMiddlewareSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State middleware",
+          "title": "Middleware"
+        },
+        "selectors": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SelectorSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Selector definitions",
+          "title": "Selectors"
+        },
+        "state_machines": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/StateMachineSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State machine definitions",
+          "title": "State Machines"
+        },
+        "stores": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/StoreSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State store definitions",
+          "title": "Stores"
+        }
+      },
+      "title": "StateLibraryFields",
+      "type": "object"
     },
     "StateMachineSpec": {
-      "type": "object",
-      "description": "A finite state machine definition",
+      "properties": {
+        "actions": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/MachineActionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Side effect actions",
+          "title": "Actions"
+        },
+        "context_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Context/extended state type",
+          "title": "Context Type"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "events": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/MachineEventSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Event definitions",
+          "title": "Events"
+        },
+        "guards": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/GuardSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guard conditions",
+          "title": "Guards"
+        },
+        "hierarchical": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether machine has nested states",
+          "title": "Hierarchical"
+        },
+        "initial": {
+          "description": "Initial state name",
+          "title": "Initial",
+          "type": "string"
+        },
+        "name": {
+          "description": "State machine name",
+          "title": "Name",
+          "type": "string"
+        },
+        "parallel": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether machine has parallel states",
+          "title": "Parallel"
+        },
+        "services": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ServiceSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Invoked services",
+          "title": "Services"
+        },
+        "states": {
+          "description": "State definitions",
+          "items": {
+            "$ref": "#/$defs/MachineStateSpec"
+          },
+          "title": "States",
+          "type": "array"
+        },
+        "transitions": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TransitionSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Transition definitions",
+          "title": "Transitions"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State machine class reference",
+          "title": "Type"
+        }
+      },
       "required": [
         "name",
         "states",
         "initial"
       ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "State machine name"
-        },
-        "type": {
-          "type": "string",
-          "description": "State machine class reference"
-        },
-        "states": {
-          "type": "array",
-          "description": "State definitions",
-          "items": {
-            "$ref": "#/$defs/MachineStateSpec"
-          }
-        },
-        "initial": {
-          "type": "string",
-          "description": "Initial state name"
-        },
-        "context_type": {
-          "type": "string",
-          "description": "Context/extended state type"
-        },
-        "events": {
-          "type": "array",
-          "description": "Event definitions",
-          "items": {
-            "$ref": "#/$defs/MachineEventSpec"
-          }
-        },
-        "transitions": {
-          "type": "array",
-          "description": "Transition definitions",
-          "items": {
-            "$ref": "#/$defs/TransitionSpec"
-          }
-        },
-        "guards": {
-          "type": "array",
-          "description": "Guard conditions",
-          "items": {
-            "$ref": "#/$defs/GuardSpec"
-          }
-        },
-        "actions": {
-          "type": "array",
-          "description": "Side effect actions",
-          "items": {
-            "$ref": "#/$defs/MachineActionSpec"
-          }
-        },
-        "services": {
-          "type": "array",
-          "description": "Invoked services",
-          "items": {
-            "$ref": "#/$defs/ServiceSpec"
-          }
-        },
-        "hierarchical": {
-          "type": "boolean",
-          "description": "Whether machine has nested states"
-        },
-        "parallel": {
-          "type": "boolean",
-          "description": "Whether machine has parallel states"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "MachineStateSpec": {
-      "type": "object",
-      "description": "A state in a state machine",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "State name"
-        },
-        "type": {
-          "type": "string",
-          "description": "State type",
-          "enum": [
-            "atomic",
-            "compound",
-            "parallel",
-            "final",
-            "history"
-          ]
-        },
-        "entry": {
-          "type": "array",
-          "description": "Entry actions",
-          "items": {
-            "type": "string"
-          }
-        },
-        "exit": {
-          "type": "array",
-          "description": "Exit actions",
-          "items": {
-            "type": "string"
-          }
-        },
-        "on": {
-          "type": "object",
-          "description": "Event handlers (event -> transition)",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "invoke": {
-          "type": "array",
-          "description": "Invoked services in this state",
-          "items": {
-            "type": "string"
-          }
-        },
-        "children": {
-          "type": "array",
-          "description": "Child states (for compound/parallel)",
-          "items": {
-            "$ref": "#/$defs/MachineStateSpec"
-          }
-        },
-        "initial": {
-          "type": "string",
-          "description": "Initial child state"
-        },
-        "tags": {
-          "type": "array",
-          "description": "State tags for querying",
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "MachineEventSpec": {
-      "type": "object",
-      "description": "An event in a state machine",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Event name"
-        },
-        "payload_type": {
-          "type": "string",
-          "description": "Event payload type"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "TransitionSpec": {
-      "type": "object",
-      "description": "A state transition",
-      "properties": {
-        "from": {
-          "type": "string",
-          "description": "Source state"
-        },
-        "to": {
-          "type": "string",
-          "description": "Target state"
-        },
-        "event": {
-          "type": "string",
-          "description": "Triggering event"
-        },
-        "guard": {
-          "type": "string",
-          "description": "Guard condition"
-        },
-        "actions": {
-          "type": "array",
-          "description": "Transition actions",
-          "items": {
-            "type": "string"
-          }
-        },
-        "internal": {
-          "type": "boolean",
-          "description": "Whether transition is internal (no exit/entry)"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "GuardSpec": {
-      "type": "object",
-      "description": "A guard condition",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Guard name"
-        },
-        "function": {
-          "type": "string",
-          "description": "Guard function reference"
-        },
-        "condition": {
-          "type": "string",
-          "description": "Condition description"
-        }
-      }
-    },
-    "MachineActionSpec": {
-      "type": "object",
-      "description": "A state machine action",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Action name"
-        },
-        "function": {
-          "type": "string",
-          "description": "Action function reference"
-        },
-        "type": {
-          "type": "string",
-          "description": "Action type",
-          "enum": [
-            "assign",
-            "raise",
-            "send",
-            "log",
-            "custom"
-          ]
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "ServiceSpec": {
-      "type": "object",
-      "description": "An invoked service",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Service name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Service type",
-          "enum": [
-            "promise",
-            "callback",
-            "observable",
-            "machine"
-          ]
-        },
-        "src": {
-          "type": "string",
-          "description": "Service source/function reference"
-        },
-        "on_done": {
-          "type": "string",
-          "description": "Transition on success"
-        },
-        "on_error": {
-          "type": "string",
-          "description": "Transition on error"
-        }
-      }
-    },
-    "ActionSpec": {
-      "type": "object",
-      "description": "A state action definition",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Action type name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Action creator type reference"
-        },
-        "payload_type": {
-          "type": "string",
-          "description": "Payload type"
-        },
-        "creator": {
-          "type": "string",
-          "description": "Action creator function reference"
-        },
-        "async": {
-          "type": "boolean",
-          "description": "Whether this is an async action/thunk"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-    "SelectorSpec": {
-      "type": "object",
-      "description": "A state selector",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Selector name"
-        },
-        "function": {
-          "type": "string",
-          "description": "Selector function reference"
-        },
-        "input_selectors": {
-          "type": "array",
-          "description": "Input selectors (for memoization)",
-          "items": {
-            "type": "string"
-          }
-        },
-        "return_type": {
-          "type": "string",
-          "description": "Return type"
-        },
-        "memoized": {
-          "type": "boolean",
-          "description": "Whether selector is memoized"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
+      "title": "StateMachineSpec",
+      "type": "object"
     },
     "StateMiddlewareSpec": {
-      "type": "object",
-      "description": "State middleware",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "intercepts": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Intercept"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this middleware intercepts",
+          "title": "Intercepts"
+        },
+        "name": {
+          "description": "Middleware name",
+          "title": "Name",
+          "type": "string"
+        },
+        "order": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Execution order",
+          "title": "Order"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Middleware type reference",
+          "title": "Type"
+        }
+      },
       "required": [
         "name"
       ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Middleware name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Middleware type reference"
-        },
-        "order": {
-          "type": "integer",
-          "description": "Execution order",
-          "minimum": 0
-        },
-        "intercepts": {
-          "type": "array",
-          "description": "What this middleware intercepts",
-          "items": {
-            "type": "string",
-            "enum": [
-              "actions",
-              "state",
-              "dispatch",
-              "subscribe"
-            ]
-          }
-        },
-        "description": {
-          "type": "string"
-        }
-      }
+      "title": "StateMiddlewareSpec",
+      "type": "object"
     },
     "StateShapeSpec": {
-      "type": "object",
-      "description": "State shape definition",
       "properties": {
-        "normalized": {
-          "type": "boolean",
-          "description": "Whether state is normalized"
-        },
         "entities": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Entity types in state",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ids_key": {
-          "type": "string",
-          "description": "Key for ID arrays",
-          "default": "ids"
+          "title": "Entities"
         },
         "entities_key": {
-          "type": "string",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "entities",
           "description": "Key for entity maps",
-          "default": "entities"
+          "title": "Entities Key"
+        },
+        "ids_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": "ids",
+          "description": "Key for ID arrays",
+          "title": "Ids Key"
+        },
+        "normalized": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether state is normalized",
+          "title": "Normalized"
         }
-      }
+      },
+      "title": "StateShapeSpec",
+      "type": "object"
     },
-    "PersistenceSpec": {
-      "type": "object",
-      "description": "State persistence configuration",
+    "StateTypeFields": {
       "properties": {
-        "storage": {
-          "type": "string",
-          "description": "Storage type",
-          "enum": [
-            "localStorage",
-            "sessionStorage",
-            "indexedDB",
-            "asyncStorage",
-            "custom"
-          ]
+        "immutable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether state is immutable",
+          "title": "Immutable"
         },
-        "key": {
-          "type": "string",
-          "description": "Storage key"
+        "serializable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether state is serializable",
+          "title": "Serializable"
         },
-        "whitelist": {
-          "type": "array",
-          "description": "Paths to persist",
-          "items": {
-            "type": "string"
-          }
-        },
-        "blacklist": {
-          "type": "array",
-          "description": "Paths to exclude",
-          "items": {
-            "type": "string"
-          }
-        },
-        "version": {
-          "type": "integer",
-          "description": "Persistence version",
-          "minimum": 0
-        },
-        "migrate": {
-          "type": "string",
-          "description": "Migration function reference"
+        "state_shape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StateShapeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
-      }
+      },
+      "title": "StateTypeFields",
+      "type": "object"
+    },
+    "Storage": {
+      "enum": [
+        "localStorage",
+        "sessionStorage",
+        "indexedDB",
+        "asyncStorage",
+        "custom"
+      ],
+      "title": "Storage",
+      "type": "string"
+    },
+    "StoreSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "devtools": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether devtools integration is supported",
+          "title": "Devtools"
+        },
+        "initial_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Initial state factory reference",
+          "title": "Initial State"
+        },
+        "name": {
+          "description": "Store name",
+          "title": "Name",
+          "type": "string"
+        },
+        "persistence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PersistenceSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reducers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ReducerSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Reducer functions",
+          "title": "Reducers"
+        },
+        "slices": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SliceSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State slices",
+          "title": "Slices"
+        },
+        "state_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "State type reference",
+          "title": "State Type"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Store implementation type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "StoreSpec",
+      "type": "object"
+    },
+    "TransitionSpec": {
+      "properties": {
+        "actions": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Transition actions",
+          "title": "Actions"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "event": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Triggering event",
+          "title": "Event"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Source state",
+          "title": "From"
+        },
+        "guard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Guard condition",
+          "title": "Guard"
+        },
+        "internal": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether transition is internal (no exit/entry)",
+          "title": "Internal"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Target state",
+          "title": "To"
+        }
+      },
+      "title": "TransitionSpec",
+      "type": "object"
+    },
+    "Type": {
+      "enum": [
+        "redux",
+        "mobx",
+        "zustand",
+        "recoil",
+        "pinia",
+        "custom"
+      ],
+      "title": "Type",
+      "type": "string"
+    },
+    "Type1": {
+      "enum": [
+        "atomic",
+        "compound",
+        "parallel",
+        "final",
+        "history"
+      ],
+      "title": "Type1",
+      "type": "string"
+    },
+    "Type2": {
+      "enum": [
+        "assign",
+        "raise",
+        "send",
+        "log",
+        "custom"
+      ],
+      "title": "Type2",
+      "type": "string"
+    },
+    "Type3": {
+      "enum": [
+        "promise",
+        "callback",
+        "observable",
+        "machine"
+      ],
+      "title": "Type3",
+      "type": "string"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/state.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for state management specifications.",
+  "title": "State Extension"
 }

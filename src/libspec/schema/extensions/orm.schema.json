@@ -1,454 +1,1244 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://libspec.dev/schema/1.0/extensions/orm.schema.json",
-  "title": "ORM Extension",
-  "description": "Extension for object-relational mapping: models, relationships, queries, migrations.",
-
   "$defs": {
-    "ORMLibraryFields": {
-      "description": "Fields added to Library when ORM extension is active",
-      "type": "object",
-      "properties": {
-        "models": {
-          "type": "array",
-          "description": "ORM model definitions",
-          "items": { "$ref": "#/$defs/ModelSpec" }
-        },
-        "session_management": {
-          "$ref": "#/$defs/SessionManagementSpec"
-        },
-        "query_patterns": {
-          "type": "array",
-          "description": "Common query patterns",
-          "items": { "$ref": "#/$defs/QueryPatternSpec" }
-        },
-        "migrations": {
-          "$ref": "#/$defs/MigrationSpec"
-        },
-        "database_support": {
-          "type": "array",
-          "description": "Supported databases",
-          "items": { "$ref": "#/$defs/DatabaseSupportSpec" }
-        }
-      }
-    },
-
-    "ModelSpec": {
-      "type": "object",
-      "description": "An ORM model definition",
-      "required": ["name"],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Model class name"
-        },
-        "table": {
-          "type": "string",
-          "description": "Database table name"
-        },
-        "schema": {
-          "type": "string",
-          "description": "Database schema (if applicable)"
-        },
-        "columns": {
-          "type": "array",
-          "description": "Column definitions",
-          "items": { "$ref": "#/$defs/ColumnSpec" }
-        },
-        "primary_key": {
-          "type": "array",
-          "description": "Primary key columns",
-          "items": { "type": "string" }
-        },
-        "relationships": {
-          "type": "array",
-          "description": "Relationships to other models",
-          "items": { "$ref": "#/$defs/RelationshipSpec" }
-        },
-        "indexes": {
-          "type": "array",
-          "description": "Index definitions",
-          "items": { "$ref": "#/$defs/IndexSpec" }
-        },
-        "constraints": {
-          "type": "array",
-          "description": "Table constraints",
-          "items": { "$ref": "#/$defs/ConstraintSpec" }
-        },
-        "mixins": {
-          "type": "array",
-          "description": "Mixin classes applied",
-          "items": { "type": "string" }
-        },
-        "polymorphic": {
-          "$ref": "#/$defs/PolymorphicSpec"
-        },
-        "soft_delete": {
-          "type": "boolean",
-          "description": "Whether soft delete is enabled"
-        },
-        "timestamps": {
-          "$ref": "#/$defs/TimestampSpec"
-        },
-        "description": {
-          "type": "string"
-        }
-      }
-    },
-
     "ColumnSpec": {
-      "type": "object",
-      "description": "A database column definition",
-      "required": ["name", "type"],
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Column name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Column type (e.g., 'Integer', 'String(255)', 'JSON')"
-        },
-        "nullable": {
-          "type": "boolean",
-          "description": "Whether column allows NULL",
-          "default": true
-        },
-        "primary_key": {
-          "type": "boolean",
-          "description": "Whether this is a primary key"
-        },
         "auto_increment": {
-          "type": "boolean",
-          "description": "Whether value auto-increments"
-        },
-        "default": {
-          "description": "Default value or callable"
-        },
-        "server_default": {
-          "type": "string",
-          "description": "Server-side default expression"
-        },
-        "unique": {
-          "type": "boolean",
-          "description": "Whether value must be unique"
-        },
-        "index": {
-          "type": "boolean",
-          "description": "Whether column is indexed"
-        },
-        "foreign_key": {
-          "type": "string",
-          "description": "Foreign key reference (e.g., 'users.id')"
-        },
-        "on_update": {
-          "type": "string",
-          "description": "ON UPDATE action",
-          "enum": ["CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT", "NO ACTION"]
-        },
-        "on_delete": {
-          "type": "string",
-          "description": "ON DELETE action",
-          "enum": ["CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT", "NO ACTION"]
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether value auto-increments",
+          "title": "Auto Increment"
         },
         "check": {
-          "type": "string",
-          "description": "CHECK constraint expression"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CHECK constraint expression",
+          "title": "Check"
         },
         "comment": {
-          "type": "string",
-          "description": "Column comment"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Column comment",
+          "title": "Comment"
+        },
+        "default": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default value or callable",
+          "title": "Default"
+        },
+        "foreign_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Foreign key reference (e.g., 'users.id')",
+          "title": "Foreign Key"
+        },
+        "index": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether column is indexed",
+          "title": "Index"
+        },
+        "name": {
+          "description": "Column name",
+          "title": "Name",
+          "type": "string"
+        },
+        "nullable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true,
+          "description": "Whether column allows NULL",
+          "title": "Nullable"
+        },
+        "on_delete": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OnDelete"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ON DELETE action"
+        },
+        "on_update": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OnUpdate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ON UPDATE action"
+        },
+        "primary_key": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether this is a primary key",
+          "title": "Primary Key"
         },
         "python_type": {
-          "type": "string",
-          "description": "Python type for this column"
-        }
-      }
-    },
-
-    "RelationshipSpec": {
-      "type": "object",
-      "description": "A model relationship",
-      "required": ["name", "type", "target"],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Relationship attribute name"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python type for this column",
+          "title": "Python Type"
+        },
+        "server_default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Server-side default expression",
+          "title": "Server Default"
         },
         "type": {
-          "type": "string",
-          "description": "Relationship type",
-          "enum": ["one_to_one", "one_to_many", "many_to_one", "many_to_many"]
-        },
-        "target": {
-          "type": "string",
-          "description": "Target model name"
-        },
-        "back_populates": {
-          "type": "string",
-          "description": "Back-reference attribute on target"
-        },
-        "secondary": {
-          "type": "string",
-          "description": "Association table (for many-to-many)"
-        },
-        "foreign_keys": {
-          "type": "array",
-          "description": "Explicit foreign keys",
-          "items": { "type": "string" }
-        },
-        "lazy": {
-          "type": "string",
-          "description": "Loading strategy",
-          "enum": ["select", "joined", "subquery", "selectin", "raise", "dynamic", "write_only"]
-        },
-        "cascade": {
-          "type": "string",
-          "description": "Cascade options (e.g., 'all, delete-orphan')"
-        },
-        "uselist": {
-          "type": "boolean",
-          "description": "Whether relationship returns list"
-        },
-        "viewonly": {
-          "type": "boolean",
-          "description": "Whether relationship is read-only"
-        },
-        "order_by": {
-          "type": "string",
-          "description": "Default ordering"
-        }
-      }
-    },
-
-    "IndexSpec": {
-      "type": "object",
-      "description": "An index definition",
-      "required": ["columns"],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Index name"
-        },
-        "columns": {
-          "type": "array",
-          "description": "Columns in the index",
-          "items": { "type": "string" }
+          "description": "Column type (e.g., 'Integer', 'String(255)', 'JSON')",
+          "title": "Type",
+          "type": "string"
         },
         "unique": {
-          "type": "boolean",
-          "description": "Whether index is unique"
-        },
-        "type": {
-          "type": "string",
-          "description": "Index type (e.g., 'btree', 'hash', 'gin', 'gist')"
-        },
-        "where": {
-          "type": "string",
-          "description": "Partial index condition"
-        },
-        "include": {
-          "type": "array",
-          "description": "Included columns (covering index)",
-          "items": { "type": "string" }
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether value must be unique",
+          "title": "Unique"
         }
-      }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "title": "ColumnSpec",
+      "type": "object"
     },
-
     "ConstraintSpec": {
-      "type": "object",
-      "description": "A table constraint",
-      "required": ["type"],
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Constraint name"
-        },
-        "type": {
-          "type": "string",
-          "description": "Constraint type",
-          "enum": ["check", "unique", "foreign_key", "primary_key", "exclude"]
-        },
         "columns": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Columns involved",
-          "items": { "type": "string" }
-        },
-        "expression": {
-          "type": "string",
-          "description": "Constraint expression"
+          "title": "Columns"
         },
         "deferrable": {
-          "type": "boolean",
-          "description": "Whether constraint is deferrable"
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether constraint is deferrable",
+          "title": "Deferrable"
+        },
+        "expression": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Constraint expression",
+          "title": "Expression"
         },
         "initially": {
-          "type": "string",
-          "description": "Initial constraint mode",
-          "enum": ["IMMEDIATE", "DEFERRED"]
-        }
-      }
-    },
-
-    "PolymorphicSpec": {
-      "type": "object",
-      "description": "Polymorphic inheritance configuration",
-      "properties": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Initially"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Initial constraint mode"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Constraint name",
+          "title": "Name"
+        },
         "type": {
-          "type": "string",
-          "description": "Inheritance type",
-          "enum": ["single_table", "joined", "concrete"]
-        },
-        "discriminator": {
-          "type": "string",
-          "description": "Discriminator column"
-        },
-        "identity": {
-          "type": "string",
-          "description": "Polymorphic identity value"
+          "$ref": "#/$defs/Type1",
+          "description": "Constraint type"
         }
-      }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ConstraintSpec",
+      "type": "object"
     },
-
-    "TimestampSpec": {
-      "type": "object",
-      "description": "Automatic timestamp configuration",
-      "properties": {
-        "created_at": {
-          "type": "string",
-          "description": "Created timestamp column name"
-        },
-        "updated_at": {
-          "type": "string",
-          "description": "Updated timestamp column name"
-        },
-        "deleted_at": {
-          "type": "string",
-          "description": "Soft delete timestamp column name"
-        },
-        "timezone": {
-          "type": "boolean",
-          "description": "Whether timestamps include timezone"
-        }
-      }
-    },
-
-    "SessionManagementSpec": {
-      "type": "object",
-      "description": "Session/unit of work configuration",
-      "properties": {
-        "scoped_session": {
-          "type": "boolean",
-          "description": "Whether scoped sessions are used"
-        },
-        "autoflush": {
-          "type": "boolean",
-          "description": "Default autoflush setting"
-        },
-        "autocommit": {
-          "type": "boolean",
-          "description": "Default autocommit setting"
-        },
-        "expire_on_commit": {
-          "type": "boolean",
-          "description": "Whether objects expire on commit"
-        },
-        "context_manager": {
-          "type": "boolean",
-          "description": "Whether session supports context manager"
-        },
-        "async_support": {
-          "type": "boolean",
-          "description": "Whether async sessions are supported"
-        }
-      }
-    },
-
-    "QueryPatternSpec": {
-      "type": "object",
-      "description": "A common query pattern",
-      "required": ["name"],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Pattern name"
-        },
-        "pattern": {
-          "type": "string",
-          "description": "Query pattern type",
-          "enum": ["repository", "active_record", "data_mapper", "query_builder", "raw_sql"]
-        },
-        "method": {
-          "type": "string",
-          "description": "Method reference"
-        },
-        "description": {
-          "type": "string",
-          "description": "Pattern description"
-        },
-        "example": {
-          "type": "string",
-          "description": "Usage example"
-        }
-      }
-    },
-
-    "MigrationSpec": {
-      "type": "object",
-      "description": "Database migration configuration",
-      "properties": {
-        "tool": {
-          "type": "string",
-          "description": "Migration tool",
-          "enum": ["alembic", "flyway", "django", "custom"]
-        },
-        "directory": {
-          "type": "string",
-          "description": "Migration directory"
-        },
-        "auto_generate": {
-          "type": "boolean",
-          "description": "Whether auto-generation is supported"
-        },
-        "revision_format": {
-          "type": "string",
-          "description": "Revision ID format"
-        },
-        "branching": {
-          "type": "boolean",
-          "description": "Whether migration branching is supported"
-        }
-      }
-    },
-
     "DatabaseSupportSpec": {
-      "type": "object",
-      "description": "Database support information",
-      "required": ["name"],
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "Database name",
-          "enum": ["postgresql", "mysql", "sqlite", "oracle", "mssql", "mariadb", "cockroachdb"]
+        "async_driver": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Async driver package",
+          "title": "Async Driver"
         },
         "dialect": {
-          "type": "string",
-          "description": "SQLAlchemy dialect"
-        },
-        "min_version": {
-          "type": "string",
-          "description": "Minimum supported version"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SQLAlchemy dialect",
+          "title": "Dialect"
         },
         "features": {
-          "type": "array",
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
           "description": "Database-specific features supported",
-          "items": { "type": "string" }
+          "title": "Features"
         },
-        "async_driver": {
-          "type": "string",
-          "description": "Async driver package"
+        "min_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimum supported version",
+          "title": "Min Version"
+        },
+        "name": {
+          "$ref": "#/$defs/Name",
+          "description": "Database name"
         }
-      }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "DatabaseSupportSpec",
+      "type": "object"
+    },
+    "IndexSpec": {
+      "properties": {
+        "columns": {
+          "description": "Columns in the index",
+          "items": {
+            "type": "string"
+          },
+          "title": "Columns",
+          "type": "array"
+        },
+        "include": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Included columns (covering index)",
+          "title": "Include"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Index name",
+          "title": "Name"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Index type (e.g., 'btree', 'hash', 'gin', 'gist')",
+          "title": "Type"
+        },
+        "unique": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether index is unique",
+          "title": "Unique"
+        },
+        "where": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Partial index condition",
+          "title": "Where"
+        }
+      },
+      "required": [
+        "columns"
+      ],
+      "title": "IndexSpec",
+      "type": "object"
+    },
+    "Initially": {
+      "enum": [
+        "IMMEDIATE",
+        "DEFERRED"
+      ],
+      "title": "Initially",
+      "type": "string"
+    },
+    "Lazy": {
+      "enum": [
+        "select",
+        "joined",
+        "subquery",
+        "selectin",
+        "raise",
+        "dynamic",
+        "write_only"
+      ],
+      "title": "Lazy",
+      "type": "string"
+    },
+    "MigrationSpec": {
+      "properties": {
+        "auto_generate": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether auto-generation is supported",
+          "title": "Auto Generate"
+        },
+        "branching": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether migration branching is supported",
+          "title": "Branching"
+        },
+        "directory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Migration directory",
+          "title": "Directory"
+        },
+        "revision_format": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Revision ID format",
+          "title": "Revision Format"
+        },
+        "tool": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tool"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Migration tool"
+        }
+      },
+      "title": "MigrationSpec",
+      "type": "object"
+    },
+    "ModelSpec": {
+      "properties": {
+        "columns": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ColumnSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Column definitions",
+          "title": "Columns"
+        },
+        "constraints": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ConstraintSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Table constraints",
+          "title": "Constraints"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "indexes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/IndexSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Index definitions",
+          "title": "Indexes"
+        },
+        "mixins": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Mixin classes applied",
+          "title": "Mixins"
+        },
+        "name": {
+          "description": "Model class name",
+          "title": "Name",
+          "type": "string"
+        },
+        "polymorphic": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PolymorphicSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "primary_key": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Primary key columns",
+          "title": "Primary Key"
+        },
+        "relationships": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/RelationshipSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Relationships to other models",
+          "title": "Relationships"
+        },
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Database schema (if applicable)",
+          "title": "Schema"
+        },
+        "soft_delete": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether soft delete is enabled",
+          "title": "Soft Delete"
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Database table name",
+          "title": "Table"
+        },
+        "timestamps": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimestampSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ModelSpec",
+      "type": "object"
+    },
+    "Name": {
+      "enum": [
+        "postgresql",
+        "mysql",
+        "sqlite",
+        "oracle",
+        "mssql",
+        "mariadb",
+        "cockroachdb"
+      ],
+      "title": "Name",
+      "type": "string"
+    },
+    "ORMLibraryFields": {
+      "properties": {
+        "database_support": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/DatabaseSupportSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Supported databases",
+          "title": "Database Support"
+        },
+        "migrations": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MigrationSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "models": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/ModelSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ORM model definitions",
+          "title": "Models"
+        },
+        "query_patterns": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/QueryPatternSpec"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Common query patterns",
+          "title": "Query Patterns"
+        },
+        "session_management": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionManagementSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ORMLibraryFields",
+      "type": "object"
+    },
+    "OnDelete": {
+      "enum": [
+        "CASCADE",
+        "SET NULL",
+        "SET DEFAULT",
+        "RESTRICT",
+        "NO ACTION"
+      ],
+      "title": "OnDelete",
+      "type": "string"
+    },
+    "OnUpdate": {
+      "enum": [
+        "CASCADE",
+        "SET NULL",
+        "SET DEFAULT",
+        "RESTRICT",
+        "NO ACTION"
+      ],
+      "title": "OnUpdate",
+      "type": "string"
+    },
+    "Pattern": {
+      "enum": [
+        "repository",
+        "active_record",
+        "data_mapper",
+        "query_builder",
+        "raw_sql"
+      ],
+      "title": "Pattern",
+      "type": "string"
+    },
+    "PolymorphicSpec": {
+      "properties": {
+        "discriminator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Discriminator column",
+          "title": "Discriminator"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Polymorphic identity value",
+          "title": "Identity"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Inheritance type"
+        }
+      },
+      "title": "PolymorphicSpec",
+      "type": "object"
+    },
+    "QueryPatternSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Pattern description",
+          "title": "Description"
+        },
+        "example": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Usage example",
+          "title": "Example"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Method reference",
+          "title": "Method"
+        },
+        "name": {
+          "description": "Pattern name",
+          "title": "Name",
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Pattern"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Query pattern type"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "QueryPatternSpec",
+      "type": "object"
+    },
+    "RelationshipSpec": {
+      "properties": {
+        "back_populates": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Back-reference attribute on target",
+          "title": "Back Populates"
+        },
+        "cascade": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Cascade options (e.g., 'all, delete-orphan')",
+          "title": "Cascade"
+        },
+        "foreign_keys": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Explicit foreign keys",
+          "title": "Foreign Keys"
+        },
+        "lazy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Lazy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Loading strategy"
+        },
+        "name": {
+          "description": "Relationship attribute name",
+          "title": "Name",
+          "type": "string"
+        },
+        "order_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default ordering",
+          "title": "Order By"
+        },
+        "secondary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Association table (for many-to-many)",
+          "title": "Secondary"
+        },
+        "target": {
+          "description": "Target model name",
+          "title": "Target",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/Type",
+          "description": "Relationship type"
+        },
+        "uselist": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether relationship returns list",
+          "title": "Uselist"
+        },
+        "viewonly": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether relationship is read-only",
+          "title": "Viewonly"
+        }
+      },
+      "required": [
+        "name",
+        "type",
+        "target"
+      ],
+      "title": "RelationshipSpec",
+      "type": "object"
+    },
+    "SessionManagementSpec": {
+      "properties": {
+        "async_support": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether async sessions are supported",
+          "title": "Async Support"
+        },
+        "autocommit": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default autocommit setting",
+          "title": "Autocommit"
+        },
+        "autoflush": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Default autoflush setting",
+          "title": "Autoflush"
+        },
+        "context_manager": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether session supports context manager",
+          "title": "Context Manager"
+        },
+        "expire_on_commit": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether objects expire on commit",
+          "title": "Expire On Commit"
+        },
+        "scoped_session": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether scoped sessions are used",
+          "title": "Scoped Session"
+        }
+      },
+      "title": "SessionManagementSpec",
+      "type": "object"
+    },
+    "TimestampSpec": {
+      "properties": {
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Created timestamp column name",
+          "title": "Created At"
+        },
+        "deleted_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Soft delete timestamp column name",
+          "title": "Deleted At"
+        },
+        "timezone": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether timestamps include timezone",
+          "title": "Timezone"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Updated timestamp column name",
+          "title": "Updated At"
+        }
+      },
+      "title": "TimestampSpec",
+      "type": "object"
+    },
+    "Tool": {
+      "enum": [
+        "alembic",
+        "flyway",
+        "django",
+        "custom"
+      ],
+      "title": "Tool",
+      "type": "string"
+    },
+    "Type": {
+      "enum": [
+        "one_to_one",
+        "one_to_many",
+        "many_to_one",
+        "many_to_many"
+      ],
+      "title": "Type",
+      "type": "string"
+    },
+    "Type1": {
+      "enum": [
+        "check",
+        "unique",
+        "foreign_key",
+        "primary_key",
+        "exclude"
+      ],
+      "title": "Type1",
+      "type": "string"
+    },
+    "Type2": {
+      "enum": [
+        "single_table",
+        "joined",
+        "concrete"
+      ],
+      "title": "Type2",
+      "type": "string"
     }
-  }
+  },
+  "$id": "https://libspec.dev/schema/1.0/extensions/orm.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Extension for object-relational mapping specifications.",
+  "title": "ORM Extension"
 }
