@@ -11,9 +11,9 @@ This module defines all the core entity types:
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import AnyUrl, Field, ValidationInfo, conlist, field_validator, model_validator
+from pydantic import AnyUrl, Field, ValidationInfo, field_validator, model_validator
 from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
@@ -60,6 +60,10 @@ class Parameter(LibspecModel):
     kind: ParameterKind = Field(
         default=ParameterKind.POSITIONAL_OR_KEYWORD, description="Parameter kind"
     )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this parameter's type was introduced",
+    )
 
 
 class ReturnSpec(LibspecModel):
@@ -69,6 +73,27 @@ class ReturnSpec(LibspecModel):
     description: str | None = Field(
         default=None, description="What the return value represents"
     )
+    narrows_type: NonEmptyStr | None = Field(
+        default=None,
+        description="Type that input is narrowed to when True (for TypeGuard/TypeIs)",
+    )
+    narrowing_kind: Literal["type_guard", "type_is"] | None = Field(
+        default=None,
+        description="Kind of type narrowing: 'type_guard' (PEP 647) or 'type_is' (PEP 742)",
+    )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this return type construct was introduced",
+    )
+
+    @model_validator(mode="after")
+    def validate_narrowing_fields(self) -> Self:
+        """Validate type narrowing field consistency."""
+        if (self.narrows_type is None) != (self.narrowing_kind is None):
+            raise ValueError(
+                "narrows_type and narrowing_kind must be specified together"
+            )
+        return self
 
 
 class YieldSpec(LibspecModel):
@@ -86,6 +111,28 @@ class RaisesClause(LibspecModel):
     type: NonEmptyStr = Field(description="Exception type name")
     when: str | None = Field(
         default=None, description="Condition under which this exception is raised"
+    )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this exception type was introduced",
+    )
+
+
+class DeprecationInfo(LibspecModel):
+    """Deprecation information for a function, method, or parameter (PEP 702)."""
+
+    message: str | None = Field(
+        default=None,
+        description="Deprecation message (shown by type checkers and at runtime)",
+    )
+    since: str | None = Field(
+        default=None, description="Version when this was deprecated"
+    )
+    removal: str | None = Field(
+        default=None, description="Version when this will be/was removed"
+    )
+    replacement: str | None = Field(
+        default=None, description="Suggested replacement (cross-reference)"
     )
 
 
@@ -111,7 +158,7 @@ class GenericParam(LibspecModel):
     )
     default: NonEmptyStr | None = Field(
         default=None,
-        description="Default type if not specified (Python 3.12+ for TypeVar, 3.13+ for ParamSpec/TypeVarTuple)",
+        description="Default type if not specified (Python 3.13+, PEP 696)",
     )
     constraints: list[NonEmptyStr] = Field(
         default_factory=list,
@@ -205,6 +252,10 @@ class OverloadSpec(LibspecModel):
     description: str | None = Field(
         default=None, description="When this overload variant applies"
     )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this overload variant was introduced",
+    )
 
 
 class Method(ExtensibleModel):
@@ -256,6 +307,14 @@ class Method(ExtensibleModel):
         default=None,
         description="Python version when this method or its features were introduced",
     )
+    is_override: bool | None = Field(
+        default=None,
+        description="Whether this method uses @override decorator (PEP 698, Python 3.12+)",
+    )
+    deprecation: "DeprecationInfo | None" = Field(
+        default=None,
+        description="Deprecation information if this method is deprecated (PEP 702)",
+    )
 
 
 class Constructor(LibspecModel):
@@ -271,6 +330,10 @@ class Constructor(LibspecModel):
     raises: list[RaisesClause] = Field(
         default_factory=list,
         description="Exceptions that may be raised during construction",
+    )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this constructor pattern was introduced",
     )
 
 
@@ -436,6 +499,10 @@ class FunctionDef(ExtensibleModel):
         default=None,
         description="Python version when this function or its features were introduced",
     )
+    deprecation: DeprecationInfo | None = Field(
+        default=None,
+        description="Deprecation information if this function is deprecated (PEP 702)",
+    )
 
     @field_validator("name")
     @classmethod
@@ -485,8 +552,9 @@ class Feature(ExtensibleModel):
     description: str | None = Field(
         default=None, description="Detailed description (Markdown supported)"
     )
-    steps: conlist(NonEmptyStr, min_length=1) = Field(
-        default_factory=list, description="Verification/test steps (at least one)"
+    steps: list[NonEmptyStr] = Field(
+        default_factory=list,
+        description="Verification/test steps (at least one recommended; enforced by lint rule C001)",
     )
     references: list[str] = Field(
         default_factory=list, description="Related types, functions, or features"

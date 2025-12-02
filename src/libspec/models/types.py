@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Annotated
 
-from pydantic import Field, StringConstraints
+from pydantic import StringConstraints
 
 # -----------------------------------------------------------------------------
 # Constrained String Types
@@ -125,6 +125,7 @@ class ExtensionName(str, Enum):
     STATE = "state"
     PLUGINS = "plugins"
     ML = "ml"
+    SERIALIZATION = "serialization"
 
     # Concern extensions
     ERRORS = "errors"
