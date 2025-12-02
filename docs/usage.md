@@ -367,6 +367,12 @@ libspec lint
 libspec validate --strict && libspec lint --strict
 ```
 
+Strict mode tightens validation beyond the core schema:
+- Extension fields use strict booleans/ints/floats for risky flags (async/awaitable/blocking, retry/jitter, deterministic/idempotent/pure) instead of coercing truthy values.
+- Numeric fields gain bounds (timeouts, rate limits, status codes, retry limits, coverage thresholds, middleware order, concurrency/capacity).
+- Performance benchmarks use decimal types with `gt 0` to avoid float drift.
+- Path-like fields must exist when strict: lifecycle evidence, coverage targets, config file locations, plugin discovery directories, and ORM migration directories.
+
 ### Using the Python API
 
 ```python

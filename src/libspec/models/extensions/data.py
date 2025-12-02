@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
+from pydantic import Field, RootModel, conint
 
 
 class DataExtension(RootModel[Any]):
@@ -43,7 +43,9 @@ class DTypeSpec(ExtensionModel):
     numpy_equivalent: str | None = Field(None, description='Equivalent NumPy dtype')
     python_type: str | None = Field(None, description='Python type for scalar values')
     nullable: bool | None = Field(None, description='Whether null values are supported')
-    bit_width: int | None = Field(None, description='Bit width (for numeric types)')
+    bit_width: conint(ge=1) | None = Field(
+        None, description='Bit width (for numeric types)'
+    )
     signed: bool | None = Field(None, description='Whether signed (for integer types)')
     precision: str | None = Field(
         None, description='Precision (for temporal/decimal types)'
@@ -218,11 +220,13 @@ class Backend(Enum):
 
 class ParallelismSpec(ExtensionModel):
     backend: Backend | None = Field(None, description='Parallelism backend')
-    default_threads: int | None = Field(None, description='Default thread count')
+    default_threads: conint(ge=1) | None = Field(
+        None, description='Default thread count'
+    )
     auto_parallel: bool | None = Field(
         None, description='Whether operations auto-parallelize'
     )
-    min_size_for_parallel: int | None = Field(
+    min_size_for_parallel: conint(ge=0) | None = Field(
         None, description='Minimum data size for parallel execution'
     )
     parallel_operations: list[str] | None = Field(

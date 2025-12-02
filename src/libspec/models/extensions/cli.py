@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
+from pydantic import Field, RootModel, conint
 
 
 class CliExtension(RootModel[Any]):
@@ -25,7 +25,7 @@ class ExampleSpec(ExtensionModel):
 
 
 class ExitCodeSpec(ExtensionModel):
-    code: int = Field(..., description='Exit code value')
+    code: conint(ge=0, le=255) = Field(..., description='Exit code value')
     name: str | None = Field(None, description='Exit code name')
     description: str | None = Field(None, description='When this code is returned')
 
@@ -73,7 +73,7 @@ class Color(Enum):
 
 
 class HelpFormattingSpec(ExtensionModel):
-    max_width: int | None = Field(None, description='Maximum help text width')
+    max_width: conint(ge=1) | None = Field(None, description='Maximum help text width')
     show_default: bool | None = Field(
         None, description='Show defaults in help by default'
     )

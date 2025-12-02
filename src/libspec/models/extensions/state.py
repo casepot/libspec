@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
+from pydantic import Field, RootModel, conint
 
 
 class StateExtension(RootModel[Any]):
@@ -160,7 +160,7 @@ class Intercept(Enum):
 class StateMiddlewareSpec(ExtensionModel):
     name: str = Field(..., description='Middleware name')
     type: str | None = Field(None, description='Middleware type reference')
-    order: int | None = Field(None, description='Execution order')
+    order: conint(ge=0) | None = Field(None, description='Execution order')
     intercepts: list[Intercept] | None = Field(
         None, description='What this middleware intercepts'
     )
@@ -187,7 +187,7 @@ class PersistenceSpec(ExtensionModel):
     key: str | None = Field(None, description='Storage key')
     whitelist: list[str] | None = Field(None, description='Paths to persist')
     blacklist: list[str] | None = Field(None, description='Paths to exclude')
-    version: int | None = Field(None, description='Persistence version')
+    version: conint(ge=0) | None = Field(None, description='Persistence version')
     migrate: str | None = Field(None, description='Migration function reference')
 
 

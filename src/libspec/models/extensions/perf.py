@@ -7,7 +7,7 @@ from datetime import date as date_aliased
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, conint
+from pydantic import Field, RootModel, condecimal, conint
 
 
 class PerformanceExtension(RootModel[Any]):
@@ -30,19 +30,23 @@ class ComplexitySpec(ExtensionModel):
 class BenchmarkSpec(ExtensionModel):
     operation: str | None = Field(None, description='What was benchmarked')
     input_size: str | None = Field(None, description='Input size/parameters')
-    mean: str | None = Field(None, description='Mean execution time')
-    median: str | None = Field(None, description='Median execution time')
-    p95: str | None = Field(None, description='95th percentile latency')
-    p99: str | None = Field(None, description='99th percentile latency')
-    memory_peak: str | None = Field(None, description='Peak memory usage')
-    throughput: str | None = Field(None, description='Operations per second')
+    mean: condecimal(gt=0) | None = Field(None, description='Mean execution time')
+    median: condecimal(gt=0) | None = Field(None, description='Median execution time')
+    p95: condecimal(gt=0) | None = Field(None, description='95th percentile latency')
+    p99: condecimal(gt=0) | None = Field(None, description='99th percentile latency')
+    memory_peak: condecimal(gt=0) | None = Field(None, description='Peak memory usage')
+    throughput: condecimal(gt=0) | None = Field(
+        None, description='Operations per second'
+    )
     environment: str | None = Field(None, description='Hardware/software environment')
     date: date_aliased | None = Field(None, description='When benchmark was run')
 
 
 class MemoryLayoutSpec(ExtensionModel):
     size_bytes: conint(ge=0) | None = Field(None, description='Instance size in bytes')
-    alignment: int | None = Field(None, description='Memory alignment requirement')
+    alignment: conint(ge=1) | None = Field(
+        None, description='Memory alignment requirement'
+    )
     cache_friendly: bool | None = Field(
         None, description='Whether layout is cache-optimized'
     )
@@ -53,7 +57,7 @@ class ScalingSpec(ExtensionModel):
     horizontal: bool | None = Field(None, description='Supports horizontal scaling')
     vertical: bool | None = Field(None, description='Supports vertical scaling')
     bottleneck: str | None = Field(None, description='Primary scaling bottleneck')
-    max_concurrent: int | None = Field(
+    max_concurrent: conint(ge=1) | None = Field(
         None, description='Maximum concurrent operations'
     )
     sharding_supported: bool | None = Field(

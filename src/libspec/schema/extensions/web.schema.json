@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/web.schema.json",
   "title": "Web Extension",
   "description": "Extension for web frameworks: routes, middleware, request/response, dependencies.",
-
   "$defs": {
     "WebLibraryFields": {
       "description": "Fields added to Library when web extension is active",
@@ -12,35 +11,47 @@
         "routes": {
           "type": "array",
           "description": "HTTP route definitions",
-          "items": { "$ref": "#/$defs/RouteSpec" }
+          "items": {
+            "$ref": "#/$defs/RouteSpec"
+          }
         },
         "middleware": {
           "type": "array",
           "description": "Middleware stack",
-          "items": { "$ref": "#/$defs/MiddlewareSpec" }
+          "items": {
+            "$ref": "#/$defs/MiddlewareSpec"
+          }
         },
         "dependencies": {
           "type": "array",
           "description": "Dependency injection definitions",
-          "items": { "$ref": "#/$defs/DependencySpec" }
+          "items": {
+            "$ref": "#/$defs/DependencySpec"
+          }
         },
         "websockets": {
           "type": "array",
           "description": "WebSocket endpoint definitions",
-          "items": { "$ref": "#/$defs/WebSocketSpec" }
+          "items": {
+            "$ref": "#/$defs/WebSocketSpec"
+          }
         },
         "error_handlers": {
           "type": "array",
           "description": "Exception to HTTP response mappings",
-          "items": { "$ref": "#/$defs/ErrorHandlerSpec" }
+          "items": {
+            "$ref": "#/$defs/ErrorHandlerSpec"
+          }
         }
       }
     },
-
     "RouteSpec": {
       "type": "object",
       "description": "An HTTP route definition",
-      "required": ["path", "method"],
+      "required": [
+        "path",
+        "method"
+      ],
       "properties": {
         "path": {
           "type": "string",
@@ -49,7 +60,16 @@
         "method": {
           "type": "string",
           "description": "HTTP method",
-          "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "*"]
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "PATCH",
+            "HEAD",
+            "OPTIONS",
+            "*"
+          ]
         },
         "handler": {
           "type": "string",
@@ -62,17 +82,23 @@
         "path_params": {
           "type": "array",
           "description": "Path parameter definitions",
-          "items": { "$ref": "#/$defs/PathParamSpec" }
+          "items": {
+            "$ref": "#/$defs/PathParamSpec"
+          }
         },
         "query_params": {
           "type": "array",
           "description": "Query parameter definitions",
-          "items": { "$ref": "#/$defs/QueryParamSpec" }
+          "items": {
+            "$ref": "#/$defs/QueryParamSpec"
+          }
         },
         "headers": {
           "type": "array",
           "description": "Required/optional header definitions",
-          "items": { "$ref": "#/$defs/HeaderSpec" }
+          "items": {
+            "$ref": "#/$defs/HeaderSpec"
+          }
         },
         "request_body": {
           "$ref": "#/$defs/RequestBodySpec"
@@ -83,17 +109,25 @@
         "errors": {
           "type": "array",
           "description": "Error responses",
-          "items": { "$ref": "#/$defs/ErrorResponseSpec" }
+          "items": {
+            "$ref": "#/$defs/ErrorResponseSpec"
+          }
         },
         "auth": {
           "type": "string",
           "description": "Authentication requirement",
-          "enum": ["required", "optional", "none"]
+          "enum": [
+            "required",
+            "optional",
+            "none"
+          ]
         },
         "permissions": {
           "type": "array",
           "description": "Required permissions",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "rate_limit": {
           "$ref": "#/$defs/RateLimitSpec"
@@ -101,7 +135,9 @@
         "tags": {
           "type": "array",
           "description": "OpenAPI tags",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "deprecated": {
           "type": "boolean",
@@ -117,10 +153,12 @@
         }
       }
     },
-
     "PathParamSpec": {
       "type": "object",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -139,10 +177,12 @@
         }
       }
     },
-
     "QueryParamSpec": {
       "type": "object",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -170,10 +210,11 @@
         }
       }
     },
-
     "HeaderSpec": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -192,7 +233,6 @@
         }
       }
     },
-
     "RequestBodySpec": {
       "type": "object",
       "properties": {
@@ -214,7 +254,6 @@
         }
       }
     },
-
     "ResponseSpec": {
       "type": "object",
       "properties": {
@@ -225,7 +264,9 @@
         "status": {
           "type": "integer",
           "description": "HTTP status code",
-          "default": 200
+          "default": 200,
+          "minimum": 100,
+          "maximum": 599
         },
         "content_type": {
           "type": "string",
@@ -235,21 +276,26 @@
         "headers": {
           "type": "array",
           "description": "Response headers",
-          "items": { "$ref": "#/$defs/HeaderSpec" }
+          "items": {
+            "$ref": "#/$defs/HeaderSpec"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "ErrorResponseSpec": {
       "type": "object",
-      "required": ["status"],
+      "required": [
+        "status"
+      ],
       "properties": {
         "status": {
           "type": "integer",
-          "description": "HTTP status code"
+          "description": "HTTP status code",
+          "minimum": 100,
+          "maximum": 599
         },
         "type": {
           "type": "string",
@@ -268,10 +314,11 @@
         }
       }
     },
-
     "MiddlewareSpec": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -283,27 +330,40 @@
         },
         "order": {
           "type": "integer",
-          "description": "Execution order (lower = earlier)"
+          "description": "Execution order (lower = earlier)",
+          "minimum": 0
         },
         "applies_to": {
           "type": "string",
           "description": "Which routes this applies to",
-          "enum": ["all", "tagged", "specific"]
+          "enum": [
+            "all",
+            "tagged",
+            "specific"
+          ]
         },
         "tags": {
           "type": "array",
           "description": "Tags to match (if applies_to='tagged')",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "routes": {
           "type": "array",
           "description": "Route paths (if applies_to='specific')",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "position": {
           "type": "string",
           "description": "When middleware runs",
-          "enum": ["before", "after", "wrap"]
+          "enum": [
+            "before",
+            "after",
+            "wrap"
+          ]
         },
         "config": {
           "type": "object",
@@ -315,10 +375,12 @@
         }
       }
     },
-
     "DependencySpec": {
       "type": "object",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -335,7 +397,12 @@
         "scope": {
           "type": "string",
           "description": "Dependency lifetime",
-          "enum": ["request", "session", "app", "singleton"]
+          "enum": [
+            "request",
+            "session",
+            "app",
+            "singleton"
+          ]
         },
         "cacheable": {
           "type": "boolean",
@@ -349,17 +416,20 @@
         "dependencies": {
           "type": "array",
           "description": "Other dependencies this requires",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "WebSocketSpec": {
       "type": "object",
-      "required": ["path"],
+      "required": [
+        "path"
+      ],
       "properties": {
         "path": {
           "type": "string",
@@ -372,26 +442,36 @@
         "subprotocols": {
           "type": "array",
           "description": "Supported subprotocols",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "auth": {
           "type": "string",
-          "enum": ["required", "optional", "none"]
+          "enum": [
+            "required",
+            "optional",
+            "none"
+          ]
         },
         "message_types": {
           "type": "array",
           "description": "Message type definitions",
-          "items": { "$ref": "#/$defs/WSMessageSpec" }
+          "items": {
+            "$ref": "#/$defs/WSMessageSpec"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "WSMessageSpec": {
       "type": "object",
-      "required": ["name", "direction"],
+      "required": [
+        "name",
+        "direction"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -399,7 +479,11 @@
         },
         "direction": {
           "type": "string",
-          "enum": ["client_to_server", "server_to_client", "bidirectional"]
+          "enum": [
+            "client_to_server",
+            "server_to_client",
+            "bidirectional"
+          ]
         },
         "type": {
           "type": "string",
@@ -410,10 +494,12 @@
         }
       }
     },
-
     "ErrorHandlerSpec": {
       "type": "object",
-      "required": ["exception", "status"],
+      "required": [
+        "exception",
+        "status"
+      ],
       "properties": {
         "exception": {
           "type": "string",
@@ -421,7 +507,9 @@
         },
         "status": {
           "type": "integer",
-          "description": "HTTP status code"
+          "description": "HTTP status code",
+          "minimum": 100,
+          "maximum": 599
         },
         "response_type": {
           "type": "string",
@@ -433,13 +521,13 @@
         }
       }
     },
-
     "RateLimitSpec": {
       "type": "object",
       "properties": {
         "requests": {
           "type": "integer",
-          "description": "Number of requests allowed"
+          "description": "Number of requests allowed",
+          "minimum": 1
         },
         "window": {
           "type": "string",
@@ -451,7 +539,8 @@
         },
         "burst": {
           "type": "integer",
-          "description": "Burst allowance"
+          "description": "Burst allowance",
+          "minimum": 1
         }
       }
     }

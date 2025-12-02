@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, confloat
+from pydantic import Field, RootModel, confloat, conint
 
 
 class TestingExtension(RootModel[Any]):
@@ -88,7 +88,7 @@ class TraitSpec(ExtensionModel):
 class SequenceSpec(ExtensionModel):
     name: str = Field(..., description='Sequence name')
     pattern: str | None = Field(None, description='Pattern with {n} placeholder')
-    start: int | None = Field(1, description='Starting value')
+    start: conint(ge=1) | None = Field(1, description='Starting value')
 
 
 class AssertionSpec(ExtensionModel):

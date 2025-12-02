@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/testing.schema.json",
   "title": "Testing Extension",
   "description": "Extension for testing utilities: fixtures, mocks, test patterns, assertions.",
-
   "$defs": {
     "TestingLibraryFields": {
       "description": "Fields added to Library when testing extension is active",
@@ -12,34 +11,43 @@
         "fixtures": {
           "type": "array",
           "description": "Test fixture definitions",
-          "items": { "$ref": "#/$defs/FixtureSpec" }
+          "items": {
+            "$ref": "#/$defs/FixtureSpec"
+          }
         },
         "mocks": {
           "type": "array",
           "description": "Mock/stub utilities",
-          "items": { "$ref": "#/$defs/MockSpec" }
+          "items": {
+            "$ref": "#/$defs/MockSpec"
+          }
         },
         "factories": {
           "type": "array",
           "description": "Test data factories",
-          "items": { "$ref": "#/$defs/FactorySpec" }
+          "items": {
+            "$ref": "#/$defs/FactorySpec"
+          }
         },
         "assertions": {
           "type": "array",
           "description": "Custom assertions",
-          "items": { "$ref": "#/$defs/AssertionSpec" }
+          "items": {
+            "$ref": "#/$defs/AssertionSpec"
+          }
         },
         "test_patterns": {
           "type": "array",
           "description": "Recommended test patterns",
-          "items": { "$ref": "#/$defs/TestPatternSpec" }
+          "items": {
+            "$ref": "#/$defs/TestPatternSpec"
+          }
         },
         "coverage": {
           "$ref": "#/$defs/CoverageSpec"
         }
       }
     },
-
     "TestingTypeFields": {
       "description": "Fields added to TypeDef when testing extension is active",
       "type": "object",
@@ -54,15 +62,18 @@
         "golden_tests": {
           "type": "array",
           "description": "Golden test file references",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "FixtureSpec": {
       "type": "object",
       "description": "A test fixture definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -71,7 +82,13 @@
         "scope": {
           "type": "string",
           "description": "Fixture scope",
-          "enum": ["function", "class", "module", "package", "session"]
+          "enum": [
+            "function",
+            "class",
+            "module",
+            "package",
+            "session"
+          ]
         },
         "type": {
           "type": "string",
@@ -84,7 +101,9 @@
         "dependencies": {
           "type": "array",
           "description": "Other fixtures this depends on",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "autouse": {
           "type": "boolean",
@@ -112,11 +131,12 @@
         }
       }
     },
-
     "MockSpec": {
       "type": "object",
       "description": "A mock/stub utility",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -125,7 +145,13 @@
         "type": {
           "type": "string",
           "description": "Mock type",
-          "enum": ["mock", "stub", "spy", "fake", "dummy"]
+          "enum": [
+            "mock",
+            "stub",
+            "spy",
+            "fake",
+            "dummy"
+          ]
         },
         "target": {
           "type": "string",
@@ -138,7 +164,9 @@
         "configurable": {
           "type": "array",
           "description": "Configurable behaviors",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "auto_spec": {
           "type": "boolean",
@@ -149,11 +177,13 @@
         }
       }
     },
-
     "FactorySpec": {
       "type": "object",
       "description": "A test data factory",
-      "required": ["name", "model"],
+      "required": [
+        "name",
+        "model"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -166,38 +196,49 @@
         "fields": {
           "type": "array",
           "description": "Field definitions",
-          "items": { "$ref": "#/$defs/FactoryFieldSpec" }
+          "items": {
+            "$ref": "#/$defs/FactoryFieldSpec"
+          }
         },
         "traits": {
           "type": "array",
           "description": "Named trait variations",
-          "items": { "$ref": "#/$defs/TraitSpec" }
+          "items": {
+            "$ref": "#/$defs/TraitSpec"
+          }
         },
         "sequences": {
           "type": "array",
           "description": "Sequence generators",
-          "items": { "$ref": "#/$defs/SequenceSpec" }
+          "items": {
+            "$ref": "#/$defs/SequenceSpec"
+          }
         },
         "subfactories": {
           "type": "array",
           "description": "Related subfactories",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "lazy_attributes": {
           "type": "array",
           "description": "Lazily evaluated attributes",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "FactoryFieldSpec": {
       "type": "object",
       "description": "A factory field definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -224,11 +265,12 @@
         }
       }
     },
-
     "TraitSpec": {
       "type": "object",
       "description": "A factory trait",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -244,11 +286,12 @@
         }
       }
     },
-
     "SequenceSpec": {
       "type": "object",
       "description": "A sequence generator",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -261,15 +304,17 @@
         "start": {
           "type": "integer",
           "description": "Starting value",
-          "default": 1
+          "default": 1,
+          "minimum": 1
         }
       }
     },
-
     "AssertionSpec": {
       "type": "object",
       "description": "A custom assertion",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -296,11 +341,12 @@
         }
       }
     },
-
     "TestPatternSpec": {
       "type": "object",
       "description": "A recommended test pattern",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -309,12 +355,22 @@
         "category": {
           "type": "string",
           "description": "Pattern category",
-          "enum": ["unit", "integration", "e2e", "property", "snapshot", "contract", "performance"]
+          "enum": [
+            "unit",
+            "integration",
+            "e2e",
+            "property",
+            "snapshot",
+            "contract",
+            "performance"
+          ]
         },
         "applies_to": {
           "type": "array",
           "description": "Types/features this pattern applies to",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "setup": {
           "type": "string",
@@ -327,14 +383,15 @@
         "fixtures_used": {
           "type": "array",
           "description": "Fixtures typically used",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "TestDoubleSpec": {
       "type": "object",
       "description": "Test double configuration for a type",
@@ -354,11 +411,12 @@
         "configurable_behaviors": {
           "type": "array",
           "description": "Behaviors that can be configured",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "CoverageSpec": {
       "type": "object",
       "description": "Test coverage configuration",
@@ -366,17 +424,27 @@
         "tool": {
           "type": "string",
           "description": "Coverage tool",
-          "enum": ["coverage.py", "pytest-cov", "istanbul", "jacoco", "custom"]
+          "enum": [
+            "coverage.py",
+            "pytest-cov",
+            "istanbul",
+            "jacoco",
+            "custom"
+          ]
         },
         "targets": {
           "type": "array",
           "description": "Coverage targets",
-          "items": { "$ref": "#/$defs/CoverageTargetSpec" }
+          "items": {
+            "$ref": "#/$defs/CoverageTargetSpec"
+          }
         },
         "exclude_patterns": {
           "type": "array",
           "description": "Patterns to exclude from coverage",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "branch_coverage": {
           "type": "boolean",
@@ -384,7 +452,6 @@
         }
       }
     },
-
     "CoverageTargetSpec": {
       "type": "object",
       "description": "A coverage target",

@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/plugins.schema.json",
   "title": "Plugins Extension",
   "description": "Extension for plugin architectures: extension points, hooks, registries, discovery.",
-
   "$defs": {
     "PluginsLibraryFields": {
       "description": "Fields added to Library when plugins extension is active",
@@ -12,17 +11,23 @@
         "extension_points": {
           "type": "array",
           "description": "Extension point definitions",
-          "items": { "$ref": "#/$defs/ExtensionPointSpec" }
+          "items": {
+            "$ref": "#/$defs/ExtensionPointSpec"
+          }
         },
         "hooks": {
           "type": "array",
           "description": "Hook definitions",
-          "items": { "$ref": "#/$defs/HookSpec" }
+          "items": {
+            "$ref": "#/$defs/HookSpec"
+          }
         },
         "registries": {
           "type": "array",
           "description": "Plugin registries",
-          "items": { "$ref": "#/$defs/RegistrySpec" }
+          "items": {
+            "$ref": "#/$defs/RegistrySpec"
+          }
         },
         "discovery": {
           "$ref": "#/$defs/DiscoverySpec"
@@ -30,11 +35,12 @@
         "builtin_plugins": {
           "type": "array",
           "description": "Built-in plugins",
-          "items": { "$ref": "#/$defs/PluginSpec" }
+          "items": {
+            "$ref": "#/$defs/PluginSpec"
+          }
         }
       }
     },
-
     "PluginsTypeFields": {
       "description": "Fields added to TypeDef when plugins extension is active",
       "type": "object",
@@ -53,11 +59,12 @@
         }
       }
     },
-
     "ExtensionPointSpec": {
       "type": "object",
       "description": "An extension point definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -90,7 +97,11 @@
         "lifecycle": {
           "type": "string",
           "description": "Extension lifecycle",
-          "enum": ["singleton", "per_request", "transient"]
+          "enum": [
+            "singleton",
+            "per_request",
+            "transient"
+          ]
         },
         "version": {
           "type": "string",
@@ -109,11 +120,12 @@
         }
       }
     },
-
     "HookSpec": {
       "type": "object",
       "description": "A hook definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -122,7 +134,12 @@
         "type": {
           "type": "string",
           "description": "Hook type",
-          "enum": ["filter", "action", "event", "wrapper"]
+          "enum": [
+            "filter",
+            "action",
+            "event",
+            "wrapper"
+          ]
         },
         "signature": {
           "type": "string",
@@ -131,7 +148,9 @@
         "parameters": {
           "type": "array",
           "description": "Hook parameters",
-          "items": { "$ref": "#/$defs/HookParamSpec" }
+          "items": {
+            "$ref": "#/$defs/HookParamSpec"
+          }
         },
         "returns": {
           "type": "string",
@@ -144,7 +163,12 @@
         "execution_order": {
           "type": "string",
           "description": "How multiple handlers execute",
-          "enum": ["sequential", "parallel", "pipeline", "first_match"]
+          "enum": [
+            "sequential",
+            "parallel",
+            "pipeline",
+            "first_match"
+          ]
         },
         "priority_support": {
           "type": "boolean",
@@ -157,7 +181,13 @@
         "result_collection": {
           "type": "string",
           "description": "How results are collected",
-          "enum": ["none", "first", "last", "all", "merge"]
+          "enum": [
+            "none",
+            "first",
+            "last",
+            "all",
+            "merge"
+          ]
         },
         "when": {
           "type": "string",
@@ -168,11 +198,13 @@
         }
       }
     },
-
     "HookParamSpec": {
       "type": "object",
       "description": "A hook parameter",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -191,11 +223,12 @@
         }
       }
     },
-
     "RegistrySpec": {
       "type": "object",
       "description": "A plugin registry",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -228,12 +261,22 @@
         "validation": {
           "type": "string",
           "description": "Entry validation behavior",
-          "enum": ["none", "on_register", "on_access", "both"]
+          "enum": [
+            "none",
+            "on_register",
+            "on_access",
+            "both"
+          ]
         },
         "override_policy": {
           "type": "string",
           "description": "How duplicate registrations are handled",
-          "enum": ["error", "warn", "replace", "ignore"]
+          "enum": [
+            "error",
+            "warn",
+            "replace",
+            "ignore"
+          ]
         },
         "methods": {
           "$ref": "#/$defs/RegistryMethodsSpec"
@@ -243,7 +286,6 @@
         }
       }
     },
-
     "RegistryMethodsSpec": {
       "type": "object",
       "description": "Registry method names",
@@ -270,7 +312,6 @@
         }
       }
     },
-
     "DiscoverySpec": {
       "type": "object",
       "description": "Plugin discovery configuration",
@@ -278,7 +319,9 @@
         "mechanisms": {
           "type": "array",
           "description": "Discovery mechanisms",
-          "items": { "$ref": "#/$defs/DiscoveryMechanismSpec" }
+          "items": {
+            "$ref": "#/$defs/DiscoveryMechanismSpec"
+          }
         },
         "auto_discover": {
           "type": "boolean",
@@ -287,7 +330,9 @@
         "discovery_order": {
           "type": "array",
           "description": "Order of discovery mechanisms",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "namespace": {
           "type": "string",
@@ -295,16 +340,24 @@
         }
       }
     },
-
     "DiscoveryMechanismSpec": {
       "type": "object",
       "description": "A plugin discovery mechanism",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string",
           "description": "Discovery mechanism type",
-          "enum": ["entry_points", "namespace_packages", "directory_scan", "config_file", "explicit", "decorator"]
+          "enum": [
+            "entry_points",
+            "namespace_packages",
+            "directory_scan",
+            "config_file",
+            "explicit",
+            "decorator"
+          ]
         },
         "entry_point_group": {
           "type": "string",
@@ -317,7 +370,9 @@
         "directories": {
           "type": "array",
           "description": "Directories to scan (for directory_scan)",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "pattern": {
           "type": "string",
@@ -333,11 +388,12 @@
         }
       }
     },
-
     "PluginSpec": {
       "type": "object",
       "description": "A plugin definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -354,26 +410,35 @@
         "implements": {
           "type": "array",
           "description": "Extension points implemented",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "hooks": {
           "type": "array",
           "description": "Hooks this plugin registers",
-          "items": { "$ref": "#/$defs/PluginHookRegistration" }
+          "items": {
+            "$ref": "#/$defs/PluginHookRegistration"
+          }
         },
         "dependencies": {
           "type": "array",
           "description": "Plugin dependencies",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "conflicts": {
           "type": "array",
           "description": "Conflicting plugins",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "priority": {
           "type": "integer",
-          "description": "Plugin priority (lower = earlier)"
+          "description": "Plugin priority (lower = earlier)",
+          "minimum": 0
         },
         "enabled_by_default": {
           "type": "boolean",
@@ -391,11 +456,13 @@
         }
       }
     },
-
     "PluginHookRegistration": {
       "type": "object",
       "description": "A plugin's hook registration",
-      "required": ["hook", "handler"],
+      "required": [
+        "hook",
+        "handler"
+      ],
       "properties": {
         "hook": {
           "type": "string",
@@ -407,11 +474,11 @@
         },
         "priority": {
           "type": "integer",
-          "description": "Handler priority"
+          "description": "Handler priority",
+          "minimum": 0
         }
       }
     },
-
     "PluginLifecycleSpec": {
       "type": "object",
       "description": "Plugin lifecycle configuration",

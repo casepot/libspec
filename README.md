@@ -61,7 +61,7 @@ if errors:
 ## Development Notes
 
 - **Pydantic-first**: Models live in `src/libspec/models/`; JSON Schemas are generated artifacts. Regenerate the core schema from models with `uv run python tools/generate_schema.py` (use `--check` in CI). Regenerate extension models from extension schemas with `uv run python tools/generate_models.py` (auto-renames `async.py` → `async_.py`); drift check via `uv run python tools/check_generated.py`.
-- **Strict parsing**: `--strict-models` (or `[tool.libspec].strict_models = true`) enables strict validation: extension-field gating, duplicate detection, non-coercive booleans on risky flags, and local-path checks for lifecycle evidence.
+- **Strict parsing**: `--strict-models` (or `[tool.libspec].strict_models = true`) enables strict validation: extension-field gating, duplicate detection, non-coercive booleans on risky flags, bounded ints/decimals for timeouts/status codes/rate limits/benchmarks, and path checks (lifecycle evidence, coverage targets, config/discovery/migration locations).
 
 ## Schema Structure
 

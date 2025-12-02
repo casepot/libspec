@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/perf.schema.json",
   "title": "Performance Extension",
   "description": "Extension for performance characteristics: complexity, benchmarks, scaling.",
-
   "$defs": {
     "PerfMethodFields": {
       "description": "Fields added to Method when perf extension is active",
@@ -14,16 +13,19 @@
         },
         "benchmarks": {
           "type": "array",
-          "items": { "$ref": "#/$defs/BenchmarkSpec" }
+          "items": {
+            "$ref": "#/$defs/BenchmarkSpec"
+          }
         },
         "optimization_hints": {
           "type": "array",
           "description": "Tips for optimal usage",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "PerfFunctionFields": {
       "description": "Fields added to FunctionDef when perf extension is active",
       "type": "object",
@@ -33,16 +35,19 @@
         },
         "benchmarks": {
           "type": "array",
-          "items": { "$ref": "#/$defs/BenchmarkSpec" }
+          "items": {
+            "$ref": "#/$defs/BenchmarkSpec"
+          }
         },
         "optimization_hints": {
           "type": "array",
           "description": "Tips for optimal usage",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "PerfTypeFields": {
       "description": "Fields added to TypeDef when perf extension is active",
       "type": "object",
@@ -55,7 +60,6 @@
         }
       }
     },
-
     "ComplexitySpec": {
       "type": "object",
       "description": "Computational complexity specification",
@@ -86,7 +90,6 @@
         }
       }
     },
-
     "BenchmarkSpec": {
       "type": "object",
       "description": "Performance benchmark data",
@@ -100,28 +103,40 @@
           "description": "Input size/parameters"
         },
         "mean": {
-          "type": "string",
-          "description": "Mean execution time"
+          "type": "number",
+          "description": "Mean execution time",
+          "format": "decimal",
+          "exclusiveMinimum": 0
         },
         "median": {
-          "type": "string",
-          "description": "Median execution time"
+          "type": "number",
+          "description": "Median execution time",
+          "format": "decimal",
+          "exclusiveMinimum": 0
         },
         "p95": {
-          "type": "string",
-          "description": "95th percentile latency"
+          "type": "number",
+          "description": "95th percentile latency",
+          "format": "decimal",
+          "exclusiveMinimum": 0
         },
         "p99": {
-          "type": "string",
-          "description": "99th percentile latency"
+          "type": "number",
+          "description": "99th percentile latency",
+          "format": "decimal",
+          "exclusiveMinimum": 0
         },
         "memory_peak": {
-          "type": "string",
-          "description": "Peak memory usage"
+          "type": "number",
+          "description": "Peak memory usage",
+          "format": "decimal",
+          "exclusiveMinimum": 0
         },
         "throughput": {
-          "type": "string",
-          "description": "Operations per second"
+          "type": "number",
+          "description": "Operations per second",
+          "format": "decimal",
+          "exclusiveMinimum": 0
         },
         "environment": {
           "type": "string",
@@ -134,7 +149,6 @@
         }
       }
     },
-
     "MemoryLayoutSpec": {
       "type": "object",
       "description": "Memory layout characteristics",
@@ -146,7 +160,8 @@
         },
         "alignment": {
           "type": "integer",
-          "description": "Memory alignment requirement"
+          "description": "Memory alignment requirement",
+          "minimum": 1
         },
         "cache_friendly": {
           "type": "boolean",
@@ -158,7 +173,6 @@
         }
       }
     },
-
     "ScalingSpec": {
       "type": "object",
       "description": "Scaling characteristics",
@@ -177,7 +191,8 @@
         },
         "max_concurrent": {
           "type": "integer",
-          "description": "Maximum concurrent operations"
+          "description": "Maximum concurrent operations",
+          "minimum": 1
         },
         "sharding_supported": {
           "type": "boolean",

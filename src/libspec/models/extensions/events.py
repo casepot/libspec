@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
+from pydantic import Field, RootModel, confloat, conint
 
 
 class EventsExtension(RootModel[Any]):
@@ -63,10 +63,16 @@ class Backoff(Enum):
 
 
 class RetrySpec(ExtensionModel):
-    max_attempts: int | None = Field(None, description='Maximum retry attempts')
+    max_attempts: conint(ge=1) | None = Field(
+        None, description='Maximum retry attempts'
+    )
     backoff: Backoff | None = Field(None, description='Backoff strategy')
-    initial_delay: float | None = Field(None, description='Initial delay in seconds')
-    max_delay: float | None = Field(None, description='Maximum delay in seconds')
+    initial_delay: confloat(ge=0.0) | None = Field(
+        None, description='Initial delay in seconds'
+    )
+    max_delay: confloat(ge=0.0) | None = Field(
+        None, description='Maximum delay in seconds'
+    )
     jitter: bool | None = Field(None, description='Whether to add jitter')
     retryable_exceptions: list[str] | None = Field(
         None, description='Exceptions that trigger retry'
@@ -131,7 +137,7 @@ class EventBusSpec(ExtensionModel):
 class TopicSpec(ExtensionModel):
     name: str = Field(..., description='Topic name')
     pattern: str | None = Field(None, description='Topic pattern (for wildcards)')
-    partitions: int | None = Field(None, description='Number of partitions')
+    partitions: conint(ge=1) | None = Field(None, description='Number of partitions')
     retention: str | None = Field(None, description='Message retention period')
     events: list[str] | None = Field(
         None, description='Event types published to this topic'
@@ -157,7 +163,9 @@ class SagaStepSpec(ExtensionModel):
     name: str = Field(..., description='Step name')
     action: str | None = Field(None, description='Action to perform (command/event)')
     wait_for: list[str] | None = Field(None, description='Events to wait for')
-    timeout: float | None = Field(None, description='Step timeout in seconds')
+    timeout: confloat(ge=0.0) | None = Field(
+        None, description='Step timeout in seconds'
+    )
     on_failure: OnFailure | None = Field(None, description='Failure handling')
 
 
@@ -195,8 +203,12 @@ class HandlerSpec(ExtensionModel):
         None, alias='async', description='Whether handler is async'
     )
     retry: RetrySpec | None = None
-    timeout: float | None = Field(None, description='Handler timeout in seconds')
-    concurrency: int | None = Field(None, description='Max concurrent executions')
+    timeout: confloat(ge=0.0) | None = Field(
+        None, description='Handler timeout in seconds'
+    )
+    concurrency: conint(ge=1) | None = Field(
+        None, description='Max concurrent executions'
+    )
     ordering: Ordering | None = Field(None, description='Event ordering guarantee')
     idempotent: bool | None = Field(None, description='Whether handler is idempotent')
     dead_letter: str | None = Field(None, description='Dead letter topic on failure')
@@ -214,7 +226,9 @@ class SagaSpec(ExtensionModel):
     compensations: list[CompensationSpec] | None = Field(
         None, description='Compensation actions'
     )
-    timeout: float | None = Field(None, description='Saga timeout in seconds')
+    timeout: confloat(ge=0.0) | None = Field(
+        None, description='Saga timeout in seconds'
+    )
     persistence: Persistence | None = Field(
         None, description='State persistence strategy'
     )

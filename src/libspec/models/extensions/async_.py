@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, conint
+from pydantic import Field, RootModel, confloat, conint
 
 
 class AsyncExtension(RootModel[Any]):
@@ -148,7 +148,7 @@ class SchedulingSpec(ExtensionModel):
     preemptible: bool | None = Field(
         None, description='Whether execution can be preempted'
     )
-    timeout_default: float | None = Field(
+    timeout_default: confloat(ge=0.0) | None = Field(
         None, description='Default timeout in seconds'
     )
 

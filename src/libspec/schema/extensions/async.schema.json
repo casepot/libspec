@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/async.schema.json",
   "title": "Async Extension",
   "description": "Extension for async/concurrent system semantics: lifecycle, cancellation, synchronization, observables.",
-
   "$defs": {
     "AsyncMethodFields": {
       "description": "Fields added to Method when async extension is active",
@@ -27,7 +26,6 @@
         }
       }
     },
-
     "AsyncTypeFields": {
       "description": "Fields added to TypeDef when async extension is active",
       "type": "object",
@@ -46,7 +44,6 @@
         }
       }
     },
-
     "AsyncFunctionFields": {
       "description": "Fields added to FunctionDef when async extension is active",
       "type": "object",
@@ -69,7 +66,6 @@
         }
       }
     },
-
     "CancellationSpec": {
       "type": "object",
       "description": "How this async operation handles cancellation",
@@ -77,7 +73,11 @@
         "mode": {
           "type": "string",
           "description": "Cancellation mode",
-          "enum": ["cooperative", "immediate", "none"]
+          "enum": [
+            "cooperative",
+            "immediate",
+            "none"
+          ]
         },
         "cleanup": {
           "type": "string",
@@ -90,7 +90,6 @@
         }
       }
     },
-
     "LifecycleSpec": {
       "type": "object",
       "description": "State machine lifecycle for async types",
@@ -98,7 +97,9 @@
         "states": {
           "type": "array",
           "description": "All possible states",
-          "items": { "$ref": "#/$defs/StateSpec" }
+          "items": {
+            "$ref": "#/$defs/StateSpec"
+          }
         },
         "initial_state": {
           "type": "string",
@@ -107,15 +108,18 @@
         "transitions": {
           "type": "array",
           "description": "Valid state transitions",
-          "items": { "$ref": "#/$defs/TransitionSpec" }
+          "items": {
+            "$ref": "#/$defs/TransitionSpec"
+          }
         }
       }
     },
-
     "StateSpec": {
       "type": "object",
       "description": "A lifecycle state",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -140,11 +144,14 @@
         }
       }
     },
-
     "TransitionSpec": {
       "type": "object",
       "description": "A state transition",
-      "required": ["from", "to", "trigger"],
+      "required": [
+        "from",
+        "to",
+        "trigger"
+      ],
       "properties": {
         "from": {
           "type": "string",
@@ -165,11 +172,12 @@
         "side_effects": {
           "type": "array",
           "description": "Side effects of this transition",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "SyncSpec": {
       "type": "object",
       "description": "Synchronization primitive semantics",
@@ -177,12 +185,25 @@
         "primitive": {
           "type": "string",
           "description": "Type of synchronization primitive",
-          "enum": ["mailbox", "channel", "lock", "semaphore", "event", "barrier", "condition"]
+          "enum": [
+            "mailbox",
+            "channel",
+            "lock",
+            "semaphore",
+            "event",
+            "barrier",
+            "condition"
+          ]
         },
         "semantics": {
           "type": "string",
           "description": "Ordering/delivery semantics",
-          "enum": ["fifo", "priority", "broadcast", "lifo"]
+          "enum": [
+            "fifo",
+            "priority",
+            "broadcast",
+            "lifo"
+          ]
         },
         "bounded": {
           "type": "boolean",
@@ -196,11 +217,14 @@
         "backpressure": {
           "type": "string",
           "description": "What happens when capacity is reached",
-          "enum": ["block", "drop", "error"]
+          "enum": [
+            "block",
+            "drop",
+            "error"
+          ]
         }
       }
     },
-
     "ObservableSpec": {
       "type": "object",
       "description": "Observable/stream semantics",
@@ -208,12 +232,21 @@
         "kind": {
           "type": "string",
           "description": "Hot (live) or cold (replay) observable",
-          "enum": ["hot", "cold"]
+          "enum": [
+            "hot",
+            "cold"
+          ]
         },
         "backpressure": {
           "type": "string",
           "description": "Backpressure strategy",
-          "enum": ["buffer", "drop", "block", "error", "latest"]
+          "enum": [
+            "buffer",
+            "drop",
+            "block",
+            "error",
+            "latest"
+          ]
         },
         "replay": {
           "type": "boolean",
@@ -230,7 +263,6 @@
         }
       }
     },
-
     "SchedulingSpec": {
       "type": "object",
       "description": "Execution scheduling semantics",
@@ -238,12 +270,22 @@
         "executor": {
           "type": "string",
           "description": "Where this runs",
-          "enum": ["event_loop", "thread_pool", "process_pool", "custom"]
+          "enum": [
+            "event_loop",
+            "thread_pool",
+            "process_pool",
+            "custom"
+          ]
         },
         "priority": {
           "type": "string",
           "description": "Scheduling priority",
-          "enum": ["low", "normal", "high", "realtime"]
+          "enum": [
+            "low",
+            "normal",
+            "high",
+            "realtime"
+          ]
         },
         "preemptible": {
           "type": "boolean",
@@ -251,7 +293,8 @@
         },
         "timeout_default": {
           "type": "number",
-          "description": "Default timeout in seconds"
+          "description": "Default timeout in seconds",
+          "minimum": 0
         }
       }
     }

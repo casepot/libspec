@@ -23,3 +23,11 @@ def test_round_trip_validates_minimal_against_schema():
     dumped = model.model_dump(by_alias=True, exclude_none=True)
 
     jsonschema.validate(instance=dumped, schema=schema)
+
+
+def test_core_schema_matches_generated_model():
+    """Ensure the checked-in core schema matches the model output."""
+
+    on_disk = _load_schema()
+    generated = LibspecSpec.model_json_schema(by_alias=True)
+    assert generated == on_disk

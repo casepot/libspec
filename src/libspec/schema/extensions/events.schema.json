@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/events.schema.json",
   "title": "Events Extension",
   "description": "Extension for event-driven architectures: events, handlers, buses, pub/sub.",
-
   "$defs": {
     "EventsLibraryFields": {
       "description": "Fields added to Library when events extension is active",
@@ -12,12 +11,16 @@
         "events": {
           "type": "array",
           "description": "Event type definitions",
-          "items": { "$ref": "#/$defs/EventSpec" }
+          "items": {
+            "$ref": "#/$defs/EventSpec"
+          }
         },
         "handlers": {
           "type": "array",
           "description": "Event handler definitions",
-          "items": { "$ref": "#/$defs/HandlerSpec" }
+          "items": {
+            "$ref": "#/$defs/HandlerSpec"
+          }
         },
         "event_bus": {
           "$ref": "#/$defs/EventBusSpec"
@@ -25,16 +28,19 @@
         "topics": {
           "type": "array",
           "description": "Topic/channel definitions",
-          "items": { "$ref": "#/$defs/TopicSpec" }
+          "items": {
+            "$ref": "#/$defs/TopicSpec"
+          }
         },
         "sagas": {
           "type": "array",
           "description": "Saga/process manager definitions",
-          "items": { "$ref": "#/$defs/SagaSpec" }
+          "items": {
+            "$ref": "#/$defs/SagaSpec"
+          }
         }
       }
     },
-
     "EventsTypeFields": {
       "description": "Fields added to TypeDef when events extension is active",
       "type": "object",
@@ -42,12 +48,16 @@
         "emits": {
           "type": "array",
           "description": "Events this type emits",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "handles": {
           "type": "array",
           "description": "Events this type handles",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "domain_events": {
           "type": "boolean",
@@ -55,7 +65,6 @@
         }
       }
     },
-
     "EventsMethodFields": {
       "description": "Fields added to Method when events extension is active",
       "type": "object",
@@ -63,20 +72,25 @@
         "emits": {
           "type": "array",
           "description": "Events this method emits",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "triggers_on": {
           "type": "array",
           "description": "Events that trigger this method",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "EventSpec": {
       "type": "object",
       "description": "An event type definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -89,17 +103,28 @@
         "category": {
           "type": "string",
           "description": "Event category",
-          "enum": ["domain", "integration", "notification", "system", "command", "query"]
+          "enum": [
+            "domain",
+            "integration",
+            "notification",
+            "system",
+            "command",
+            "query"
+          ]
         },
         "payload": {
           "type": "array",
           "description": "Event payload fields",
-          "items": { "$ref": "#/$defs/EventFieldSpec" }
+          "items": {
+            "$ref": "#/$defs/EventFieldSpec"
+          }
         },
         "metadata": {
           "type": "array",
           "description": "Standard metadata fields",
-          "items": { "$ref": "#/$defs/EventFieldSpec" }
+          "items": {
+            "$ref": "#/$defs/EventFieldSpec"
+          }
         },
         "topic": {
           "type": "string",
@@ -126,11 +151,13 @@
         }
       }
     },
-
     "EventFieldSpec": {
       "type": "object",
       "description": "An event field",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -150,11 +177,12 @@
         }
       }
     },
-
     "HandlerSpec": {
       "type": "object",
       "description": "An event handler",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -163,7 +191,9 @@
         "handles": {
           "type": "array",
           "description": "Events this handler processes",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "function": {
           "type": "string",
@@ -178,16 +208,22 @@
         },
         "timeout": {
           "type": "number",
-          "description": "Handler timeout in seconds"
+          "description": "Handler timeout in seconds",
+          "minimum": 0
         },
         "concurrency": {
           "type": "integer",
-          "description": "Max concurrent executions"
+          "description": "Max concurrent executions",
+          "minimum": 1
         },
         "ordering": {
           "type": "string",
           "description": "Event ordering guarantee",
-          "enum": ["none", "fifo", "partition_fifo"]
+          "enum": [
+            "none",
+            "fifo",
+            "partition_fifo"
+          ]
         },
         "idempotent": {
           "type": "boolean",
@@ -200,34 +236,43 @@
         "filters": {
           "type": "array",
           "description": "Event filters",
-          "items": { "$ref": "#/$defs/EventFilterSpec" }
+          "items": {
+            "$ref": "#/$defs/EventFilterSpec"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "RetrySpec": {
       "type": "object",
       "description": "Retry configuration",
       "properties": {
         "max_attempts": {
           "type": "integer",
-          "description": "Maximum retry attempts"
+          "description": "Maximum retry attempts",
+          "minimum": 1
         },
         "backoff": {
           "type": "string",
           "description": "Backoff strategy",
-          "enum": ["fixed", "exponential", "linear", "fibonacci"]
+          "enum": [
+            "fixed",
+            "exponential",
+            "linear",
+            "fibonacci"
+          ]
         },
         "initial_delay": {
           "type": "number",
-          "description": "Initial delay in seconds"
+          "description": "Initial delay in seconds",
+          "minimum": 0
         },
         "max_delay": {
           "type": "number",
-          "description": "Maximum delay in seconds"
+          "description": "Maximum delay in seconds",
+          "minimum": 0
         },
         "jitter": {
           "type": "boolean",
@@ -236,11 +281,12 @@
         "retryable_exceptions": {
           "type": "array",
           "description": "Exceptions that trigger retry",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "EventFilterSpec": {
       "type": "object",
       "description": "An event filter",
@@ -252,14 +298,23 @@
         "operator": {
           "type": "string",
           "description": "Filter operator",
-          "enum": ["eq", "neq", "gt", "gte", "lt", "lte", "in", "contains", "regex"]
+          "enum": [
+            "eq",
+            "neq",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "in",
+            "contains",
+            "regex"
+          ]
         },
         "value": {
           "description": "Filter value"
         }
       }
     },
-
     "EventBusSpec": {
       "type": "object",
       "description": "Event bus configuration",
@@ -267,7 +322,16 @@
         "type": {
           "type": "string",
           "description": "Event bus type",
-          "enum": ["in_memory", "redis", "rabbitmq", "kafka", "sqs", "pubsub", "nats", "custom"]
+          "enum": [
+            "in_memory",
+            "redis",
+            "rabbitmq",
+            "kafka",
+            "sqs",
+            "pubsub",
+            "nats",
+            "custom"
+          ]
         },
         "async_dispatch": {
           "type": "boolean",
@@ -280,7 +344,11 @@
         "ordering_guarantee": {
           "type": "string",
           "description": "Ordering guarantee level",
-          "enum": ["none", "per_partition", "global"]
+          "enum": [
+            "none",
+            "per_partition",
+            "global"
+          ]
         },
         "at_least_once": {
           "type": "boolean",
@@ -304,11 +372,12 @@
         }
       }
     },
-
     "TopicSpec": {
       "type": "object",
       "description": "A topic/channel definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -320,7 +389,8 @@
         },
         "partitions": {
           "type": "integer",
-          "description": "Number of partitions"
+          "description": "Number of partitions",
+          "minimum": 1
         },
         "retention": {
           "type": "string",
@@ -329,23 +399,28 @@
         "events": {
           "type": "array",
           "description": "Event types published to this topic",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "subscribers": {
           "type": "array",
           "description": "Subscriber handler names",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "SagaSpec": {
       "type": "object",
       "description": "A saga/process manager definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -358,37 +433,49 @@
         "starts_with": {
           "type": "array",
           "description": "Events that start this saga",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "steps": {
           "type": "array",
           "description": "Saga steps",
-          "items": { "$ref": "#/$defs/SagaStepSpec" }
+          "items": {
+            "$ref": "#/$defs/SagaStepSpec"
+          }
         },
         "compensations": {
           "type": "array",
           "description": "Compensation actions",
-          "items": { "$ref": "#/$defs/CompensationSpec" }
+          "items": {
+            "$ref": "#/$defs/CompensationSpec"
+          }
         },
         "timeout": {
           "type": "number",
-          "description": "Saga timeout in seconds"
+          "description": "Saga timeout in seconds",
+          "minimum": 0
         },
         "persistence": {
           "type": "string",
           "description": "State persistence strategy",
-          "enum": ["in_memory", "database", "event_store"]
+          "enum": [
+            "in_memory",
+            "database",
+            "event_store"
+          ]
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "SagaStepSpec": {
       "type": "object",
       "description": "A saga step",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -401,24 +488,34 @@
         "wait_for": {
           "type": "array",
           "description": "Events to wait for",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "timeout": {
           "type": "number",
-          "description": "Step timeout in seconds"
+          "description": "Step timeout in seconds",
+          "minimum": 0
         },
         "on_failure": {
           "type": "string",
           "description": "Failure handling",
-          "enum": ["compensate", "retry", "skip", "abort"]
+          "enum": [
+            "compensate",
+            "retry",
+            "skip",
+            "abort"
+          ]
         }
       }
     },
-
     "CompensationSpec": {
       "type": "object",
       "description": "A compensation action",
-      "required": ["step", "action"],
+      "required": [
+        "step",
+        "action"
+      ],
       "properties": {
         "step": {
           "type": "string",

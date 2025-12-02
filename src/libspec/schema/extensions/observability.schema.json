@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/observability.schema.json",
   "title": "Observability Extension",
   "description": "Extension for debugging and monitoring: logging, metrics, tracing, health checks.",
-
   "$defs": {
     "ObservabilityLibraryFields": {
       "description": "Fields added to Library when observability extension is active",
@@ -15,7 +14,9 @@
         "metrics": {
           "type": "array",
           "description": "Metrics exposed by the library",
-          "items": { "$ref": "#/$defs/MetricSpec" }
+          "items": {
+            "$ref": "#/$defs/MetricSpec"
+          }
         },
         "tracing": {
           "$ref": "#/$defs/TracingSpec"
@@ -23,14 +24,15 @@
         "health_checks": {
           "type": "array",
           "description": "Health check endpoints",
-          "items": { "$ref": "#/$defs/HealthCheckSpec" }
+          "items": {
+            "$ref": "#/$defs/HealthCheckSpec"
+          }
         },
         "debug_tools": {
           "$ref": "#/$defs/DebugToolsSpec"
         }
       }
     },
-
     "LoggingSpec": {
       "type": "object",
       "description": "Logging configuration",
@@ -44,7 +46,13 @@
           "description": "Log levels used",
           "items": {
             "type": "string",
-            "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+            "enum": [
+              "DEBUG",
+              "INFO",
+              "WARNING",
+              "ERROR",
+              "CRITICAL"
+            ]
           }
         },
         "structured": {
@@ -54,12 +62,16 @@
         "context_fields": {
           "type": "array",
           "description": "Context fields included in log entries",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "sensitive_fields": {
           "type": "array",
           "description": "Fields that are masked in logs",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "rate_limiting": {
           "type": "boolean",
@@ -71,11 +83,13 @@
         }
       }
     },
-
     "MetricSpec": {
       "type": "object",
       "description": "A metric exposed by the library",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -84,7 +98,13 @@
         "type": {
           "type": "string",
           "description": "Metric type",
-          "enum": ["counter", "gauge", "histogram", "summary", "info"]
+          "enum": [
+            "counter",
+            "gauge",
+            "histogram",
+            "summary",
+            "info"
+          ]
         },
         "description": {
           "type": "string",
@@ -93,7 +113,9 @@
         "labels": {
           "type": "array",
           "description": "Label names for this metric",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "unit": {
           "type": "string",
@@ -102,11 +124,13 @@
         "buckets": {
           "type": "array",
           "description": "Histogram buckets (for histogram type)",
-          "items": { "type": "number" }
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
         }
       }
     },
-
     "TracingSpec": {
       "type": "object",
       "description": "Distributed tracing configuration",
@@ -114,17 +138,32 @@
         "span_names": {
           "type": "array",
           "description": "Span names used",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "propagation": {
           "type": "string",
           "description": "Context propagation format",
-          "enum": ["w3c", "b3", "jaeger", "xray", "datadog", "custom"]
+          "enum": [
+            "w3c",
+            "b3",
+            "jaeger",
+            "xray",
+            "datadog",
+            "custom"
+          ]
         },
         "sampling": {
           "type": "string",
           "description": "Sampling strategy",
-          "enum": ["always", "never", "probabilistic", "rate_limited", "parent_based"]
+          "enum": [
+            "always",
+            "never",
+            "probabilistic",
+            "rate_limited",
+            "parent_based"
+          ]
         },
         "sampling_rate": {
           "type": "number",
@@ -135,25 +174,33 @@
         "attributes": {
           "type": "array",
           "description": "Standard span attributes",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "events": {
           "type": "array",
           "description": "Span events emitted",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "baggage": {
           "type": "array",
           "description": "Baggage items propagated",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "HealthCheckSpec": {
       "type": "object",
       "description": "A health check endpoint",
-      "required": ["name", "type"],
+      "required": [
+        "name",
+        "type"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -162,7 +209,11 @@
         "type": {
           "type": "string",
           "description": "Health check type",
-          "enum": ["liveness", "readiness", "startup"]
+          "enum": [
+            "liveness",
+            "readiness",
+            "startup"
+          ]
         },
         "endpoint": {
           "type": "string",
@@ -174,20 +225,23 @@
         },
         "timeout": {
           "type": "number",
-          "description": "Timeout in seconds"
+          "description": "Timeout in seconds",
+          "exclusiveMinimum": 0
         },
         "interval": {
           "type": "number",
-          "description": "Check interval in seconds"
+          "description": "Check interval in seconds",
+          "exclusiveMinimum": 0
         },
         "dependencies": {
           "type": "array",
           "description": "Dependencies checked",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "DebugToolsSpec": {
       "type": "object",
       "description": "Debugging tool configuration",
@@ -200,12 +254,19 @@
         "sensitive_fields": {
           "type": "array",
           "description": "Fields redacted in debug output",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "trace_format": {
           "type": "string",
           "description": "Trace output format",
-          "enum": ["json", "text", "compact", "pretty"]
+          "enum": [
+            "json",
+            "text",
+            "compact",
+            "pretty"
+          ]
         },
         "profiling_supported": {
           "type": "boolean",

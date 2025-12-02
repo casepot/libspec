@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/state.schema.json",
   "title": "State Extension",
   "description": "Extension for state management: state machines, reducers, selectors, stores.",
-
   "$defs": {
     "StateLibraryFields": {
       "description": "Fields added to Library when state extension is active",
@@ -12,31 +11,40 @@
         "stores": {
           "type": "array",
           "description": "State store definitions",
-          "items": { "$ref": "#/$defs/StoreSpec" }
+          "items": {
+            "$ref": "#/$defs/StoreSpec"
+          }
         },
         "state_machines": {
           "type": "array",
           "description": "State machine definitions",
-          "items": { "$ref": "#/$defs/StateMachineSpec" }
+          "items": {
+            "$ref": "#/$defs/StateMachineSpec"
+          }
         },
         "actions": {
           "type": "array",
           "description": "Action definitions",
-          "items": { "$ref": "#/$defs/ActionSpec" }
+          "items": {
+            "$ref": "#/$defs/ActionSpec"
+          }
         },
         "selectors": {
           "type": "array",
           "description": "Selector definitions",
-          "items": { "$ref": "#/$defs/SelectorSpec" }
+          "items": {
+            "$ref": "#/$defs/SelectorSpec"
+          }
         },
         "middleware": {
           "type": "array",
           "description": "State middleware",
-          "items": { "$ref": "#/$defs/StateMiddlewareSpec" }
+          "items": {
+            "$ref": "#/$defs/StateMiddlewareSpec"
+          }
         }
       }
     },
-
     "StateTypeFields": {
       "description": "Fields added to TypeDef when state extension is active",
       "type": "object",
@@ -54,11 +62,12 @@
         }
       }
     },
-
     "StoreSpec": {
       "type": "object",
       "description": "A state store definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -67,7 +76,14 @@
         "type": {
           "type": "string",
           "description": "Store implementation type",
-          "enum": ["redux", "mobx", "zustand", "recoil", "pinia", "custom"]
+          "enum": [
+            "redux",
+            "mobx",
+            "zustand",
+            "recoil",
+            "pinia",
+            "custom"
+          ]
         },
         "state_type": {
           "type": "string",
@@ -80,12 +96,16 @@
         "reducers": {
           "type": "array",
           "description": "Reducer functions",
-          "items": { "$ref": "#/$defs/ReducerSpec" }
+          "items": {
+            "$ref": "#/$defs/ReducerSpec"
+          }
         },
         "slices": {
           "type": "array",
           "description": "State slices",
-          "items": { "$ref": "#/$defs/SliceSpec" }
+          "items": {
+            "$ref": "#/$defs/SliceSpec"
+          }
         },
         "persistence": {
           "$ref": "#/$defs/PersistenceSpec"
@@ -99,11 +119,12 @@
         }
       }
     },
-
     "ReducerSpec": {
       "type": "object",
       "description": "A reducer function",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -116,7 +137,9 @@
         "handles": {
           "type": "array",
           "description": "Action types this reducer handles",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "pure": {
           "type": "boolean",
@@ -127,11 +150,12 @@
         }
       }
     },
-
     "SliceSpec": {
       "type": "object",
       "description": "A state slice",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -148,30 +172,41 @@
         "reducers": {
           "type": "array",
           "description": "Slice reducers",
-          "items": { "$ref": "#/$defs/ReducerSpec" }
+          "items": {
+            "$ref": "#/$defs/ReducerSpec"
+          }
         },
         "actions": {
           "type": "array",
           "description": "Auto-generated action names",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "selectors": {
           "type": "array",
           "description": "Slice selectors",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "extra_reducers": {
           "type": "array",
           "description": "External action handlers",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "StateMachineSpec": {
       "type": "object",
       "description": "A finite state machine definition",
-      "required": ["name", "states", "initial"],
+      "required": [
+        "name",
+        "states",
+        "initial"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -184,7 +219,9 @@
         "states": {
           "type": "array",
           "description": "State definitions",
-          "items": { "$ref": "#/$defs/MachineStateSpec" }
+          "items": {
+            "$ref": "#/$defs/MachineStateSpec"
+          }
         },
         "initial": {
           "type": "string",
@@ -197,27 +234,37 @@
         "events": {
           "type": "array",
           "description": "Event definitions",
-          "items": { "$ref": "#/$defs/MachineEventSpec" }
+          "items": {
+            "$ref": "#/$defs/MachineEventSpec"
+          }
         },
         "transitions": {
           "type": "array",
           "description": "Transition definitions",
-          "items": { "$ref": "#/$defs/TransitionSpec" }
+          "items": {
+            "$ref": "#/$defs/TransitionSpec"
+          }
         },
         "guards": {
           "type": "array",
           "description": "Guard conditions",
-          "items": { "$ref": "#/$defs/GuardSpec" }
+          "items": {
+            "$ref": "#/$defs/GuardSpec"
+          }
         },
         "actions": {
           "type": "array",
           "description": "Side effect actions",
-          "items": { "$ref": "#/$defs/MachineActionSpec" }
+          "items": {
+            "$ref": "#/$defs/MachineActionSpec"
+          }
         },
         "services": {
           "type": "array",
           "description": "Invoked services",
-          "items": { "$ref": "#/$defs/ServiceSpec" }
+          "items": {
+            "$ref": "#/$defs/ServiceSpec"
+          }
         },
         "hierarchical": {
           "type": "boolean",
@@ -232,11 +279,12 @@
         }
       }
     },
-
     "MachineStateSpec": {
       "type": "object",
       "description": "A state in a state machine",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -245,32 +293,48 @@
         "type": {
           "type": "string",
           "description": "State type",
-          "enum": ["atomic", "compound", "parallel", "final", "history"]
+          "enum": [
+            "atomic",
+            "compound",
+            "parallel",
+            "final",
+            "history"
+          ]
         },
         "entry": {
           "type": "array",
           "description": "Entry actions",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "exit": {
           "type": "array",
           "description": "Exit actions",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "on": {
           "type": "object",
           "description": "Event handlers (event -> transition)",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "invoke": {
           "type": "array",
           "description": "Invoked services in this state",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "children": {
           "type": "array",
           "description": "Child states (for compound/parallel)",
-          "items": { "$ref": "#/$defs/MachineStateSpec" }
+          "items": {
+            "$ref": "#/$defs/MachineStateSpec"
+          }
         },
         "initial": {
           "type": "string",
@@ -279,18 +343,21 @@
         "tags": {
           "type": "array",
           "description": "State tags for querying",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "MachineEventSpec": {
       "type": "object",
       "description": "An event in a state machine",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -305,7 +372,6 @@
         }
       }
     },
-
     "TransitionSpec": {
       "type": "object",
       "description": "A state transition",
@@ -329,7 +395,9 @@
         "actions": {
           "type": "array",
           "description": "Transition actions",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "internal": {
           "type": "boolean",
@@ -340,11 +408,12 @@
         }
       }
     },
-
     "GuardSpec": {
       "type": "object",
       "description": "A guard condition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -360,11 +429,12 @@
         }
       }
     },
-
     "MachineActionSpec": {
       "type": "object",
       "description": "A state machine action",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -377,18 +447,25 @@
         "type": {
           "type": "string",
           "description": "Action type",
-          "enum": ["assign", "raise", "send", "log", "custom"]
+          "enum": [
+            "assign",
+            "raise",
+            "send",
+            "log",
+            "custom"
+          ]
         },
         "description": {
           "type": "string"
         }
       }
     },
-
     "ServiceSpec": {
       "type": "object",
       "description": "An invoked service",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -397,7 +474,12 @@
         "type": {
           "type": "string",
           "description": "Service type",
-          "enum": ["promise", "callback", "observable", "machine"]
+          "enum": [
+            "promise",
+            "callback",
+            "observable",
+            "machine"
+          ]
         },
         "src": {
           "type": "string",
@@ -413,11 +495,12 @@
         }
       }
     },
-
     "ActionSpec": {
       "type": "object",
       "description": "A state action definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -444,11 +527,12 @@
         }
       }
     },
-
     "SelectorSpec": {
       "type": "object",
       "description": "A state selector",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -461,7 +545,9 @@
         "input_selectors": {
           "type": "array",
           "description": "Input selectors (for memoization)",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "return_type": {
           "type": "string",
@@ -476,11 +562,12 @@
         }
       }
     },
-
     "StateMiddlewareSpec": {
       "type": "object",
       "description": "State middleware",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -492,14 +579,20 @@
         },
         "order": {
           "type": "integer",
-          "description": "Execution order"
+          "description": "Execution order",
+          "minimum": 0
         },
         "intercepts": {
           "type": "array",
           "description": "What this middleware intercepts",
           "items": {
             "type": "string",
-            "enum": ["actions", "state", "dispatch", "subscribe"]
+            "enum": [
+              "actions",
+              "state",
+              "dispatch",
+              "subscribe"
+            ]
           }
         },
         "description": {
@@ -507,7 +600,6 @@
         }
       }
     },
-
     "StateShapeSpec": {
       "type": "object",
       "description": "State shape definition",
@@ -519,7 +611,9 @@
         "entities": {
           "type": "array",
           "description": "Entity types in state",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "ids_key": {
           "type": "string",
@@ -533,7 +627,6 @@
         }
       }
     },
-
     "PersistenceSpec": {
       "type": "object",
       "description": "State persistence configuration",
@@ -541,7 +634,13 @@
         "storage": {
           "type": "string",
           "description": "Storage type",
-          "enum": ["localStorage", "sessionStorage", "indexedDB", "asyncStorage", "custom"]
+          "enum": [
+            "localStorage",
+            "sessionStorage",
+            "indexedDB",
+            "asyncStorage",
+            "custom"
+          ]
         },
         "key": {
           "type": "string",
@@ -550,16 +649,21 @@
         "whitelist": {
           "type": "array",
           "description": "Paths to persist",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "blacklist": {
           "type": "array",
           "description": "Paths to exclude",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "version": {
           "type": "integer",
-          "description": "Persistence version"
+          "description": "Persistence version",
+          "minimum": 0
         },
         "migrate": {
           "type": "string",

@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/data.schema.json",
   "title": "Data Extension",
   "description": "Extension for data processing libraries: transforms, pipelines, dtype behavior, evaluation strategies.",
-
   "$defs": {
     "DataLibraryFields": {
       "description": "Fields added to Library when data extension is active",
@@ -12,29 +11,36 @@
         "dtypes": {
           "type": "array",
           "description": "Data types supported by the library",
-          "items": { "$ref": "#/$defs/DTypeSpec" }
+          "items": {
+            "$ref": "#/$defs/DTypeSpec"
+          }
         },
         "transforms": {
           "type": "array",
           "description": "Data transformation operations",
-          "items": { "$ref": "#/$defs/TransformSpec" }
+          "items": {
+            "$ref": "#/$defs/TransformSpec"
+          }
         },
         "pipelines": {
           "type": "array",
           "description": "Pipeline/workflow definitions",
-          "items": { "$ref": "#/$defs/PipelineSpec" }
+          "items": {
+            "$ref": "#/$defs/PipelineSpec"
+          }
         },
         "io_formats": {
           "type": "array",
           "description": "Supported I/O formats",
-          "items": { "$ref": "#/$defs/IOFormatSpec" }
+          "items": {
+            "$ref": "#/$defs/IOFormatSpec"
+          }
         },
         "evaluation_strategy": {
           "$ref": "#/$defs/EvaluationStrategySpec"
         }
       }
     },
-
     "DataTypeFields": {
       "description": "Fields added to TypeDef when data extension is active",
       "type": "object",
@@ -53,7 +59,6 @@
         }
       }
     },
-
     "DataMethodFields": {
       "description": "Fields added to Method when data extension is active",
       "type": "object",
@@ -69,7 +74,12 @@
         "copy_semantics": {
           "type": "string",
           "description": "Copy behavior",
-          "enum": ["copy", "view", "copy_on_write", "configurable"]
+          "enum": [
+            "copy",
+            "view",
+            "copy_on_write",
+            "configurable"
+          ]
         },
         "broadcasting": {
           "$ref": "#/$defs/BroadcastingSpec"
@@ -87,11 +97,12 @@
         }
       }
     },
-
     "DTypeSpec": {
       "type": "object",
       "description": "A data type definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -100,7 +111,17 @@
         "category": {
           "type": "string",
           "description": "Type category",
-          "enum": ["numeric", "string", "temporal", "boolean", "categorical", "nested", "binary", "null", "custom"]
+          "enum": [
+            "numeric",
+            "string",
+            "temporal",
+            "boolean",
+            "categorical",
+            "nested",
+            "binary",
+            "null",
+            "custom"
+          ]
         },
         "numpy_equivalent": {
           "type": "string",
@@ -116,7 +137,8 @@
         },
         "bit_width": {
           "type": "integer",
-          "description": "Bit width (for numeric types)"
+          "description": "Bit width (for numeric types)",
+          "minimum": 1
         },
         "signed": {
           "type": "boolean",
@@ -131,7 +153,6 @@
         }
       }
     },
-
     "DTypeBehaviorSpec": {
       "type": "object",
       "description": "Data type handling behavior for a type",
@@ -139,7 +160,9 @@
         "supported_dtypes": {
           "type": "array",
           "description": "Supported data types",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "default_dtype": {
           "type": "string",
@@ -156,11 +179,12 @@
         "coercion_rules": {
           "type": "array",
           "description": "Type coercion rules",
-          "items": { "$ref": "#/$defs/CoercionRule" }
+          "items": {
+            "$ref": "#/$defs/CoercionRule"
+          }
         }
       }
     },
-
     "CoercionRule": {
       "type": "object",
       "description": "A type coercion rule",
@@ -176,7 +200,12 @@
         "behavior": {
           "type": "string",
           "description": "What happens during coercion",
-          "enum": ["implicit", "explicit", "error", "warning"]
+          "enum": [
+            "implicit",
+            "explicit",
+            "error",
+            "warning"
+          ]
         },
         "lossy": {
           "type": "boolean",
@@ -184,11 +213,13 @@
         }
       }
     },
-
     "TransformSpec": {
       "type": "object",
       "description": "A data transformation operation",
-      "required": ["name", "category"],
+      "required": [
+        "name",
+        "category"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -197,7 +228,18 @@
         "category": {
           "type": "string",
           "description": "Transform category",
-          "enum": ["select", "filter", "aggregate", "join", "reshape", "sort", "window", "fill", "cast", "custom"]
+          "enum": [
+            "select",
+            "filter",
+            "aggregate",
+            "join",
+            "reshape",
+            "sort",
+            "window",
+            "fill",
+            "cast",
+            "custom"
+          ]
         },
         "method": {
           "type": "string",
@@ -224,7 +266,6 @@
         }
       }
     },
-
     "MethodChainingSpec": {
       "type": "object",
       "description": "Method chaining behavior",
@@ -240,20 +281,25 @@
         "chainable_methods": {
           "type": "array",
           "description": "Methods that support chaining",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "terminal_methods": {
           "type": "array",
           "description": "Methods that break the chain (return different type)",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "PipelineSpec": {
       "type": "object",
       "description": "A data pipeline definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -262,17 +308,29 @@
         "type": {
           "type": "string",
           "description": "Pipeline type",
-          "enum": ["sequential", "dag", "streaming", "batch"]
+          "enum": [
+            "sequential",
+            "dag",
+            "streaming",
+            "batch"
+          ]
         },
         "stages": {
           "type": "array",
           "description": "Pipeline stages",
-          "items": { "$ref": "#/$defs/PipelineStage" }
+          "items": {
+            "$ref": "#/$defs/PipelineStage"
+          }
         },
         "error_handling": {
           "type": "string",
           "description": "How errors are handled",
-          "enum": ["fail_fast", "collect", "skip", "retry"]
+          "enum": [
+            "fail_fast",
+            "collect",
+            "skip",
+            "retry"
+          ]
         },
         "checkpointing": {
           "type": "boolean",
@@ -283,11 +341,12 @@
         }
       }
     },
-
     "PipelineStage": {
       "type": "object",
       "description": "A pipeline stage",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -300,7 +359,9 @@
         "inputs": {
           "type": "array",
           "description": "Input names (for DAG)",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "output": {
           "type": "string",
@@ -312,11 +373,12 @@
         }
       }
     },
-
     "IOFormatSpec": {
       "type": "object",
       "description": "A supported I/O format",
-      "required": ["format"],
+      "required": [
+        "format"
+      ],
       "properties": {
         "format": {
           "type": "string",
@@ -337,7 +399,9 @@
         "compression": {
           "type": "array",
           "description": "Supported compression codecs",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "schema_support": {
           "type": "boolean",
@@ -349,7 +413,6 @@
         }
       }
     },
-
     "EvaluationStrategySpec": {
       "type": "object",
       "description": "Evaluation strategy configuration",
@@ -357,17 +420,25 @@
         "default": {
           "type": "string",
           "description": "Default evaluation strategy",
-          "enum": ["eager", "lazy", "configurable"]
+          "enum": [
+            "eager",
+            "lazy",
+            "configurable"
+          ]
         },
         "lazy_operations": {
           "type": "array",
           "description": "Operations that are always lazy",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "eager_triggers": {
           "type": "array",
           "description": "Operations that trigger evaluation",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "collect_method": {
           "type": "string",
@@ -387,7 +458,6 @@
         }
       }
     },
-
     "MemoryLayoutSpec": {
       "type": "object",
       "description": "Memory layout configuration",
@@ -395,7 +465,13 @@
         "layout": {
           "type": "string",
           "description": "Memory layout",
-          "enum": ["row_major", "column_major", "chunked", "arrow", "custom"]
+          "enum": [
+            "row_major",
+            "column_major",
+            "chunked",
+            "arrow",
+            "custom"
+          ]
         },
         "contiguous": {
           "type": "boolean",
@@ -412,11 +488,15 @@
         "string_storage": {
           "type": "string",
           "description": "String storage strategy",
-          "enum": ["utf8", "large_utf8", "dictionary", "fixed_size"]
+          "enum": [
+            "utf8",
+            "large_utf8",
+            "dictionary",
+            "fixed_size"
+          ]
         }
       }
     },
-
     "ParallelismSpec": {
       "type": "object",
       "description": "Parallelism configuration",
@@ -424,11 +504,19 @@
         "backend": {
           "type": "string",
           "description": "Parallelism backend",
-          "enum": ["threads", "processes", "dask", "ray", "spark", "none"]
+          "enum": [
+            "threads",
+            "processes",
+            "dask",
+            "ray",
+            "spark",
+            "none"
+          ]
         },
         "default_threads": {
           "type": "integer",
-          "description": "Default thread count"
+          "description": "Default thread count",
+          "minimum": 1
         },
         "auto_parallel": {
           "type": "boolean",
@@ -436,16 +524,18 @@
         },
         "min_size_for_parallel": {
           "type": "integer",
-          "description": "Minimum data size for parallel execution"
+          "description": "Minimum data size for parallel execution",
+          "minimum": 0
         },
         "parallel_operations": {
           "type": "array",
           "description": "Operations that support parallelism",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-
     "BroadcastingSpec": {
       "type": "object",
       "description": "Broadcasting behavior for operations",
@@ -464,7 +554,6 @@
         }
       }
     },
-
     "DTypePromotionSpec": {
       "type": "object",
       "description": "Data type promotion behavior",
@@ -472,7 +561,12 @@
         "rules": {
           "type": "string",
           "description": "Promotion rule set",
-          "enum": ["numpy", "pandas", "strict", "custom"]
+          "enum": [
+            "numpy",
+            "pandas",
+            "strict",
+            "custom"
+          ]
         },
         "result_dtype": {
           "type": "string",
@@ -481,7 +575,12 @@
         "overflow_behavior": {
           "type": "string",
           "description": "Behavior on overflow",
-          "enum": ["wrap", "saturate", "error", "promote"]
+          "enum": [
+            "wrap",
+            "saturate",
+            "error",
+            "promote"
+          ]
         }
       }
     }

@@ -10,6 +10,18 @@ from typing import Any, Dict, Set
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from libspec.models import (
+    AsyncFunctionFields,
+    AsyncMethodFields,
+    AsyncTypeFields,
+    CLILibraryFields,
+    ConfigLibraryFields,
+    DataLibraryFields,
+    DataMethodFields,
+    DataTypeFields,
+    ErrorsLibraryFields,
+    EventsLibraryFields,
+    EventsMethodFields,
+    EventsTypeFields,
     ExtensionName,
     Feature,
     FeatureStatus,
@@ -20,10 +32,28 @@ from libspec.models import (
     Library,
     LibspecSpec,
     Module,
+    ObservabilityLibraryFields,
+    ORMLibraryFields,
     ParameterKind,
+    PerfFunctionFields,
+    PerfMethodFields,
+    PerfTypeFields,
+    PluginsLibraryFields,
+    PluginsTypeFields,
     Principle,
+    SafetyFunctionFields,
+    SafetyMethodFields,
+    SafetyTypeFields,
+    StateLibraryFields,
+    StateTypeFields,
+    TestingLibraryFields,
+    TestingTypeFields,
     TypeDef,
     TypeKind,
+    VersioningLibraryFields,
+    VersioningMethodFields,
+    VersioningTypeFields,
+    WebLibraryFields,
 )
 from libspec.models.utils import SPEC_DIR_CONTEXT_KEY, STRICT_CONTEXT_KEY
 
@@ -170,6 +200,55 @@ def _load_extension_field_index() -> dict[str, dict[str, set[str]]]:
 
 _EXTENSION_FIELD_INDEX = _load_extension_field_index()
 
+_EXTENSION_VALIDATORS: dict[str, dict[str, type[BaseModel]]] = {
+    "async": {
+        "method": AsyncMethodFields,
+        "function": AsyncFunctionFields,
+        "type": AsyncTypeFields,
+    },
+    "cli": {"library": CLILibraryFields},
+    "config": {"library": ConfigLibraryFields},
+    "data": {
+        "library": DataLibraryFields,
+        "method": DataMethodFields,
+        "type": DataTypeFields,
+    },
+    "errors": {"library": ErrorsLibraryFields},
+    "events": {
+        "library": EventsLibraryFields,
+        "method": EventsMethodFields,
+        "type": EventsTypeFields,
+    },
+    "lifecycle": {
+        "library": LifecycleLibraryFields,
+        "type": LifecycleFields,
+        "function": LifecycleFields,
+        "feature": LifecycleFields,
+        "method": LifecycleFields,
+    },
+    "observability": {"library": ObservabilityLibraryFields},
+    "orm": {"library": ORMLibraryFields},
+    "perf": {
+        "type": PerfTypeFields,
+        "method": PerfMethodFields,
+        "function": PerfFunctionFields,
+    },
+    "plugins": {"library": PluginsLibraryFields, "type": PluginsTypeFields},
+    "safety": {
+        "type": SafetyTypeFields,
+        "method": SafetyMethodFields,
+        "function": SafetyFunctionFields,
+    },
+    "state": {"library": StateLibraryFields, "type": StateTypeFields},
+    "testing": {"library": TestingLibraryFields, "type": TestingTypeFields},
+    "versioning": {
+        "library": VersioningLibraryFields,
+        "method": VersioningMethodFields,
+        "type": VersioningTypeFields,
+    },
+    "web": {"library": WebLibraryFields},
+}
+
 
 def _coerce_enums(data: dict[str, Any]) -> dict[str, Any]:
     """Convert string enum values to Enum instances for strict validation."""
@@ -204,32 +283,155 @@ def _coerce_enums(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def _validate_extension_payloads(data: dict[str, Any], declared: set[str], context: dict[str, Any]) -> None:
-    """Run extension-level validation for selected extensions in strict mode."""
+def _iter_methods(type_def: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return all method-like entries from a type definition."""
 
-    if "lifecycle" in declared:
-        library = data.get("library", {})
+    return [
+        *type_def.get("methods", []),
+        *type_def.get("class_methods", []),
+        *type_def.get("static_methods", []),
+    ]
 
-        lib_fields = {
-            key: library[key]
-            for key in LifecycleLibraryFields.model_fields
-            if key in library
-        }
-        if lib_fields:
-            LifecycleLibraryFields.model_validate(
-                lib_fields, strict=context.get(STRICT_CONTEXT_KEY, False), context=context
-            )
 
-        lifecycle_keys = set(LifecycleFields.model_fields.keys())
-        for collection_key in ("types", "functions", "features"):
-            for entity in library.get(collection_key, []):
-                payload = {k: entity[k] for k in lifecycle_keys if k in entity}
-                if payload:
-                    LifecycleFields.model_validate(
-                        payload,
-                        strict=context.get(STRICT_CONTEXT_KEY, False),
-                        context=context,
+def _ensure_strict_paths(library: dict[str, Any], declared: set[str], context: dict[str, Any]) -> None:
+    """In strict mode, enforce that selected path fields reference real files/directories."""
+
+    if not context.get(STRICT_CONTEXT_KEY):
+        return
+
+    base_dir = Path(context.get(SPEC_DIR_CONTEXT_KEY, Path.cwd()))
+
+    def _check_path(path_value: str, field: str) -> None:
+        candidate = Path(path_value)
+        probe = candidate if candidate.is_absolute() else base_dir / candidate
+        if not probe.exists():
+            raise SpecLoadError(f"{field} must reference an existing file or directory: {path_value}")
+
+    if "testing" in declared:
+        coverage = library.get("coverage", {}) or {}
+        for target in coverage.get("targets", []) or []:
+            path_value = target.get("path")
+            if path_value:
+                _check_path(path_value, "coverage.targets.path")
+        for type_def in library.get("types", []):
+            for golden in type_def.get("golden_tests", []) or []:
+                _check_path(golden, "testing.golden_tests")
+
+    if "config" in declared:
+        sources = library.get("config_sources", {}) or {}
+        for loc in sources.get("file_locations", []) or []:
+            _check_path(loc, "config.file_locations")
+
+    if "plugins" in declared:
+        discovery = library.get("discovery", {}) or {}
+        for mechanism in discovery.get("mechanisms", []) or []:
+            for directory in mechanism.get("directories", []) or []:
+                _check_path(directory, "plugins.discovery.directories")
+
+    if "orm" in declared:
+        migrations = library.get("migrations", {}) or {}
+        directory = migrations.get("directory")
+        if directory:
+            _check_path(directory, "orm.migrations.directory")
+
+
+STRICT_BOOL_KEYS = {
+    "async",
+    "awaitable",
+    "blocking",
+    "deterministic",
+    "idempotent",
+    "jitter",
+    "pure",
+    "retryable",
+}
+
+
+def _has_extension_fields(entity: dict[str, Any], model_cls: type[BaseModel]) -> bool:
+    """Return True when the entity includes any fields defined by the model."""
+
+    if not isinstance(entity, dict):
+        return False
+    for name, field in model_cls.model_fields.items():
+        if name in entity:
+            return True
+        alias = field.alias
+        if alias and alias in entity:
+            return True
+    return False
+
+
+def _enforce_strict_scalars(payload: Any) -> None:
+    """Recursively enforce strict booleans for risky flags when in strict mode."""
+
+    def _walk(value: Any, path: str = "") -> None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                new_path = f"{path}.{key}" if path else key
+                if key in STRICT_BOOL_KEYS and item is not None and not isinstance(item, bool):
+                    raise SpecLoadError(
+                        f"{new_path} must be a boolean when strict models are enabled"
                     )
+                _walk(item, new_path)
+        elif isinstance(value, list):
+            for idx, item in enumerate(value):
+                _walk(item, f"{path}[{idx}]" if path else str(idx))
+
+    _walk(payload)
+
+
+def _validate_extension_payloads(data: dict[str, Any], declared: set[str], context: dict[str, Any]) -> None:
+    """Run extension-level validation for declared extensions in strict mode."""
+
+    if not declared:
+        return
+
+    library = data.get("library", {})
+    strict_flag = bool(context.get(STRICT_CONTEXT_KEY))
+
+    for ext in declared:
+        scopes = _EXTENSION_VALIDATORS.get(ext)
+        if not scopes:
+            continue
+
+        library_model = scopes.get("library")
+        if library_model is not None and _has_extension_fields(library, library_model):
+            if strict_flag:
+                _enforce_strict_scalars(library)
+            library_model.model_validate(library, strict=False, context=context)
+
+        type_model = scopes.get("type")
+        method_model = scopes.get("method")
+        if type_model is not None or method_model is not None:
+            for type_def in library.get("types", []):
+                if type_model is not None and _has_extension_fields(type_def, type_model):
+                    if strict_flag:
+                        _enforce_strict_scalars(type_def)
+                    type_model.model_validate(type_def, strict=False, context=context)
+                if method_model is not None:
+                    for method in _iter_methods(type_def):
+                        if _has_extension_fields(method, method_model):
+                            if strict_flag:
+                                _enforce_strict_scalars(method)
+                            method_model.model_validate(method, strict=False, context=context)
+
+        function_model = scopes.get("function")
+        if function_model is not None:
+            for func in library.get("functions", []):
+                if _has_extension_fields(func, function_model):
+                    if strict_flag:
+                        _enforce_strict_scalars(func)
+                    function_model.model_validate(func, strict=False, context=context)
+
+        feature_model = scopes.get("feature")
+        if feature_model is not None:
+            for feature in library.get("features", []):
+                if _has_extension_fields(feature, feature_model):
+                    if strict_flag:
+                        _enforce_strict_scalars(feature)
+                    feature_model.model_validate(feature, strict=False, context=context)
+
+    _ensure_strict_paths(library, declared, context)
 
 
 def _ensure_no_extra_fields_when_extensions_absent(data: dict[str, Any]) -> None:

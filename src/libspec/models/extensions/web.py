@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
+from pydantic import Field, RootModel, conint
 
 
 class WebExtension(RootModel[Any]):
@@ -69,7 +69,7 @@ class RequestBodySpec(ExtensionModel):
 
 class ResponseSpec(ExtensionModel):
     type: str | None = Field(None, description='Response model type')
-    status: int | None = Field(200, description='HTTP status code')
+    status: conint(ge=100, le=599) | None = Field(200, description='HTTP status code')
     content_type: str | None = Field(
         'application/json', description='Response content type'
     )
@@ -78,7 +78,7 @@ class ResponseSpec(ExtensionModel):
 
 
 class ErrorResponseSpec(ExtensionModel):
-    status: int = Field(..., description='HTTP status code')
+    status: conint(ge=100, le=599) = Field(..., description='HTTP status code')
     type: str | None = Field(None, description='Error response model type')
     exception: str | None = Field(
         None, description='Exception type that triggers this response'
@@ -102,7 +102,9 @@ class Position(Enum):
 class MiddlewareSpec(ExtensionModel):
     name: str = Field(..., description='Middleware name')
     type: str | None = Field(None, description='Middleware class/function reference')
-    order: int | None = Field(None, description='Execution order (lower = earlier)')
+    order: conint(ge=0) | None = Field(
+        None, description='Execution order (lower = earlier)'
+    )
     applies_to: AppliesTo | None = Field(
         None, description='Which routes this applies to'
     )
@@ -154,16 +156,18 @@ class WSMessageSpec(ExtensionModel):
 
 class ErrorHandlerSpec(ExtensionModel):
     exception: str = Field(..., description='Exception type to handle')
-    status: int = Field(..., description='HTTP status code')
+    status: conint(ge=100, le=599) = Field(..., description='HTTP status code')
     response_type: str | None = Field(None, description='Response model type')
     handler: str | None = Field(None, description='Custom handler function')
 
 
 class RateLimitSpec(ExtensionModel):
-    requests: int | None = Field(None, description='Number of requests allowed')
+    requests: conint(ge=1) | None = Field(
+        None, description='Number of requests allowed'
+    )
     window: str | None = Field(None, description="Time window (e.g., '1m', '1h')")
     key: str | None = Field(None, description="Rate limit key (e.g., 'ip', 'user')")
-    burst: int | None = Field(None, description='Burst allowance')
+    burst: conint(ge=1) | None = Field(None, description='Burst allowance')
 
 
 class RouteSpec(ExtensionModel):

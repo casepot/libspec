@@ -106,3 +106,114 @@ def test_non_empty_parameter_name() -> None:
                 "parameters": [{"name": "", "kind": "positional_or_keyword"}],
             }
         )
+
+
+def test_async_flags_require_bool_in_strict_mode(tmp_path: Path) -> None:
+    spec_path = tmp_path / "spec.json"
+    data = {
+        "extensions": ["async"],
+        "library": {
+            "name": "mylib",
+            "version": "0.1.0",
+            "types": [
+                {
+                    "name": "Worker",
+                    "kind": "class",
+                    "module": "mylib",
+                    "methods": [
+                        {
+                            "name": "run",
+                            "signature": "(self) -> None",
+                            "async": "yes",
+                        }
+                    ],
+                }
+            ],
+        },
+    }
+    spec_path.write_text(json.dumps(data))
+
+    with pytest.raises(SpecLoadError):
+        load_spec(spec_path, strict=True)
+
+    # lenient mode should still coerce/allow the flag
+    load_spec(spec_path, strict=False)
+
+
+def test_events_retry_limits_positive(tmp_path: Path) -> None:
+    spec_path = tmp_path / "spec.json"
+    data = {
+        "extensions": ["events"],
+        "library": {
+            "name": "mylib",
+            "version": "0.1.0",
+            "events": [{"name": "UserCreated"}],
+            "handlers": [
+                {
+                    "name": "on_user_created",
+                    "handles": ["UserCreated"],
+                    "function": "handle_user_created",
+                    "retry": {"max_attempts": 0},
+                }
+            ],
+        },
+    }
+    spec_path.write_text(json.dumps(data))
+
+    with pytest.raises(SpecLoadError):
+        load_spec(spec_path, strict=True)
+
+
+def test_coverage_paths_checked_in_strict_mode(tmp_path: Path) -> None:
+    src_dir = tmp_path / "src"
+    src_dir.mkdir()
+    target = src_dir / "module.py"
+    target.write_text("print('ok')\n")
+
+    spec_path = tmp_path / "spec.json"
+    data = {
+        "extensions": ["testing"],
+        "library": {
+            "name": "mylib",
+            "version": "0.1.0",
+            "coverage": {
+                "tool": "coverage.py",
+                "targets": [{"path": "src/module.py", "minimum": 80}],
+            },
+        },
+    }
+    spec_path.write_text(json.dumps(data))
+
+    load_spec(spec_path, strict=True)
+
+    data["library"]["coverage"]["targets"][0]["path"] = "src/missing.py"
+    spec_path.write_text(json.dumps(data))
+    with pytest.raises(SpecLoadError):
+        load_spec(spec_path, strict=True)
+
+
+def test_perf_benchmarks_require_positive_decimal(tmp_path: Path) -> None:
+    spec_path = tmp_path / "spec.json"
+    data = {
+        "extensions": ["perf"],
+        "library": {
+            "name": "mylib",
+            "version": "0.1.0",
+            "functions": [
+                {
+                    "name": "bench",
+                    "module": "mylib",
+                    "signature": "() -> None",
+                    "benchmarks": [{"mean": 0.0}],
+                }
+            ],
+        },
+    }
+    spec_path.write_text(json.dumps(data))
+
+    with pytest.raises(SpecLoadError):
+        load_spec(spec_path, strict=True)
+
+    data["library"]["functions"][0]["benchmarks"][0]["mean"] = 1.23
+    spec_path.write_text(json.dumps(data))
+    load_spec(spec_path, strict=True)

@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel, confloat, conint
+from pydantic import Field, PositiveFloat, RootModel, confloat, conint
 
 
 class ObservabilityExtension(RootModel[Any]):
@@ -62,7 +62,7 @@ class MetricSpec(ExtensionModel):
     unit: str | None = Field(
         None, description="Unit of measurement (e.g., 'seconds', 'bytes')"
     )
-    buckets: list[float] | None = Field(
+    buckets: list[confloat(ge=0.0)] | None = Field(
         None, description='Histogram buckets (for histogram type)'
     )
 
@@ -109,8 +109,10 @@ class HealthCheckSpec(ExtensionModel):
     type: Type1 = Field(..., description='Health check type')
     endpoint: str | None = Field(None, description='HTTP endpoint path')
     method: str | None = Field(None, description='Method to call for health check')
-    timeout: float | None = Field(None, description='Timeout in seconds')
-    interval: float | None = Field(None, description='Check interval in seconds')
+    timeout: PositiveFloat | None = Field(None, description='Timeout in seconds')
+    interval: PositiveFloat | None = Field(
+        None, description='Check interval in seconds'
+    )
     dependencies: list[str] | None = Field(None, description='Dependencies checked')
 
 

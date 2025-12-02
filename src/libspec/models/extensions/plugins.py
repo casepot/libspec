@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Any
 
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
+from pydantic import Field, RootModel, conint
 
 
 class PluginsExtension(RootModel[Any]):
@@ -142,7 +142,7 @@ class DiscoveryMechanismSpec(ExtensionModel):
 class PluginHookRegistration(ExtensionModel):
     hook: str = Field(..., description='Hook name')
     handler: str = Field(..., description='Handler method reference')
-    priority: int | None = Field(None, description='Handler priority')
+    priority: conint(ge=0) | None = Field(None, description='Handler priority')
 
 
 class PluginLifecycleSpec(ExtensionModel):
@@ -229,7 +229,9 @@ class PluginSpec(ExtensionModel):
     )
     dependencies: list[str] | None = Field(None, description='Plugin dependencies')
     conflicts: list[str] | None = Field(None, description='Conflicting plugins')
-    priority: int | None = Field(None, description='Plugin priority (lower = earlier)')
+    priority: conint(ge=0) | None = Field(
+        None, description='Plugin priority (lower = earlier)'
+    )
     enabled_by_default: bool | None = Field(
         None, description='Whether plugin is enabled by default'
     )

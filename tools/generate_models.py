@@ -16,6 +16,7 @@ from typing import Iterable
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "src" / "libspec" / "schema" / "extensions"
 OUTPUT_DIR = ROOT / "src" / "libspec" / "models" / "extensions"
+SKIP_SCHEMAS = {"lifecycle.schema.json"}
 
 CODEGEN_OPTS = [
     "--input-file-type",
@@ -41,7 +42,10 @@ def datamodel_codegen_available() -> str:
 
 
 def generate_one(schema: Path, out_dir: Path, codegen_bin: str) -> None:
-    out_path = out_dir / (schema.stem + ".py")
+    stem = schema.stem
+    if stem.endswith(".schema"):
+        stem = stem.removesuffix(".schema")
+    out_path = out_dir / f"{stem}.py"
     cmd = [
         codegen_bin,
         "--input",
@@ -66,6 +70,8 @@ def generate_all(out_dir: Path) -> None:
     codegen_bin = datamodel_codegen_available()
     out_dir.mkdir(parents=True, exist_ok=True)
     for schema in sorted(SCHEMA_DIR.glob("*.schema.json")):
+        if schema.name in SKIP_SCHEMAS:
+            continue
         generate_one(schema, out_dir, codegen_bin)
     rename_async(out_dir)
 
@@ -82,6 +88,17 @@ def main(argv: list[str]) -> int:
         with tempfile.TemporaryDirectory() as td:
             tmp_out = Path(td)
             generate_all(tmp_out)
+            for schema_name in SKIP_SCHEMAS:
+                stem = Path(schema_name).stem
+                if stem.endswith(".schema"):
+                    stem = stem.removesuffix(".schema")
+                source = OUTPUT_DIR / f"{stem}.py"
+                if source.exists():
+                    target = tmp_out / source.name
+                    target.write_text(source.read_text())
+            init_src = OUTPUT_DIR / "__init__.py"
+            if init_src.exists():
+                (tmp_out / "__init__.py").write_text(init_src.read_text())
             rename_async(tmp_out)
             if diff_dirs(tmp_out, OUTPUT_DIR):
                 sys.stderr.write("Generated extension models are out of date. Run `uv run python tools/generate_models.py` to update.\n")

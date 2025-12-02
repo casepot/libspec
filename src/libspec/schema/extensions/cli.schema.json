@@ -3,7 +3,6 @@
   "$id": "https://libspec.dev/schema/1.0/extensions/cli.schema.json",
   "title": "CLI Extension",
   "description": "Extension for command-line interfaces: commands, arguments, options, subcommands.",
-
   "$defs": {
     "CLILibraryFields": {
       "description": "Fields added to Library when CLI extension is active",
@@ -16,12 +15,16 @@
         "commands": {
           "type": "array",
           "description": "CLI commands",
-          "items": { "$ref": "#/$defs/CommandSpec" }
+          "items": {
+            "$ref": "#/$defs/CommandSpec"
+          }
         },
         "global_options": {
           "type": "array",
           "description": "Options available to all commands",
-          "items": { "$ref": "#/$defs/OptionSpec" }
+          "items": {
+            "$ref": "#/$defs/OptionSpec"
+          }
         },
         "shell_completion": {
           "$ref": "#/$defs/ShellCompletionSpec"
@@ -32,15 +35,18 @@
         "exit_codes": {
           "type": "array",
           "description": "Exit code definitions",
-          "items": { "$ref": "#/$defs/ExitCodeSpec" }
+          "items": {
+            "$ref": "#/$defs/ExitCodeSpec"
+          }
         }
       }
     },
-
     "CommandSpec": {
       "type": "object",
       "description": "A CLI command definition",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -49,7 +55,9 @@
         "aliases": {
           "type": "array",
           "description": "Command aliases",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "handler": {
           "type": "string",
@@ -58,17 +66,23 @@
         "arguments": {
           "type": "array",
           "description": "Positional arguments",
-          "items": { "$ref": "#/$defs/ArgumentSpec" }
+          "items": {
+            "$ref": "#/$defs/ArgumentSpec"
+          }
         },
         "options": {
           "type": "array",
           "description": "Command options/flags",
-          "items": { "$ref": "#/$defs/OptionSpec" }
+          "items": {
+            "$ref": "#/$defs/OptionSpec"
+          }
         },
         "subcommands": {
           "type": "array",
           "description": "Subcommands",
-          "items": { "$ref": "#/$defs/CommandSpec" }
+          "items": {
+            "$ref": "#/$defs/CommandSpec"
+          }
         },
         "help": {
           "type": "string",
@@ -97,18 +111,21 @@
         "examples": {
           "type": "array",
           "description": "Usage examples",
-          "items": { "$ref": "#/$defs/ExampleSpec" }
+          "items": {
+            "$ref": "#/$defs/ExampleSpec"
+          }
         },
         "context_settings": {
           "$ref": "#/$defs/ContextSettingsSpec"
         }
       }
     },
-
     "ArgumentSpec": {
       "type": "object",
       "description": "A positional argument",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -127,7 +144,10 @@
           "description": "Default value"
         },
         "nargs": {
-          "type": ["integer", "string"],
+          "type": [
+            "integer",
+            "string"
+          ],
           "description": "Number of arguments (int, '?', '*', '+')"
         },
         "metavar": {
@@ -147,11 +167,12 @@
         }
       }
     },
-
     "OptionSpec": {
       "type": "object",
       "description": "A command option/flag",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -210,7 +231,10 @@
           "description": "Environment variable name"
         },
         "prompt": {
-          "type": ["boolean", "string"],
+          "type": [
+            "boolean",
+            "string"
+          ],
           "description": "Whether to prompt if not provided"
         },
         "confirmation_prompt": {
@@ -234,7 +258,6 @@
         }
       }
     },
-
     "ExampleSpec": {
       "type": "object",
       "description": "A usage example",
@@ -253,15 +276,18 @@
         }
       }
     },
-
     "ExitCodeSpec": {
       "type": "object",
       "description": "An exit code definition",
-      "required": ["code"],
+      "required": [
+        "code"
+      ],
       "properties": {
         "code": {
           "type": "integer",
-          "description": "Exit code value"
+          "description": "Exit code value",
+          "minimum": 0,
+          "maximum": 255
         },
         "name": {
           "type": "string",
@@ -273,7 +299,6 @@
         }
       }
     },
-
     "ShellCompletionSpec": {
       "type": "object",
       "description": "Shell completion configuration",
@@ -283,7 +308,12 @@
           "description": "Supported shells",
           "items": {
             "type": "string",
-            "enum": ["bash", "zsh", "fish", "powershell"]
+            "enum": [
+              "bash",
+              "zsh",
+              "fish",
+              "powershell"
+            ]
           }
         },
         "install_command": {
@@ -296,7 +326,6 @@
         }
       }
     },
-
     "CompletionSpec": {
       "type": "object",
       "description": "Completion configuration for an argument/option",
@@ -304,7 +333,14 @@
         "type": {
           "type": "string",
           "description": "Completion type",
-          "enum": ["path", "file", "directory", "choice", "dynamic", "none"]
+          "enum": [
+            "path",
+            "file",
+            "directory",
+            "choice",
+            "dynamic",
+            "none"
+          ]
         },
         "function": {
           "type": "string",
@@ -316,14 +352,14 @@
         }
       }
     },
-
     "HelpFormattingSpec": {
       "type": "object",
       "description": "Help formatting configuration",
       "properties": {
         "max_width": {
           "type": "integer",
-          "description": "Maximum help text width"
+          "description": "Maximum help text width",
+          "minimum": 1
         },
         "show_default": {
           "type": "boolean",
@@ -340,11 +376,14 @@
         "color": {
           "type": "string",
           "description": "Color support",
-          "enum": ["auto", "always", "never"]
+          "enum": [
+            "auto",
+            "always",
+            "never"
+          ]
         }
       }
     },
-
     "ContextSettingsSpec": {
       "type": "object",
       "description": "Command context settings",
