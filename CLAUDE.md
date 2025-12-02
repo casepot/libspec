@@ -10,9 +10,7 @@ uv run libspec                           # Run CLI
 uv run pytest                            # Run tests
 uv run ruff check src/                   # Lint (use --fix for auto-fixes)
 uv run mypy src/                         # Type check
-uv run python tools/generate_schema.py   # Regenerate core schema (use --check in CI)
-uv run python tools/generate_models.py   # Regenerate extension models (async → async_ guard)
-uv run python tools/check_generated.py   # Drift check extension models
+uv run python tools/generate_schema.py   # Regenerate JSON schemas from Pydantic models (use --check in CI)
 ```
 
 Publishing:
@@ -23,11 +21,27 @@ uv publish                    # Publish to PyPI
 
 ## Architecture
 
+### Pydantic-First Design
+
+**IMPORTANT:** This project uses Pydantic models as the single source of truth. All schema work happens in Python/Pydantic:
+
+- **Models** (`src/libspec/models/`) - Pydantic models define all types, validation, and constraints
+- **JSON Schemas** (`src/libspec/schema/`) - Generated artifacts from Pydantic models via `tools/generate_schema.py`
+
+**Never edit JSON schema files directly.** Always modify the Pydantic models and regenerate schemas.
+
+### Models (`src/libspec/models/`)
+
+- `core.py` - Core entity types (TypeDef, FunctionDef, Feature, Module, etc.)
+- `types.py` - Enums and constrained string types
+- `base.py` - Base model classes (LibspecModel, ExtensibleModel, ExtensionModel)
+- `extensions/` - Extension models (async_, web, testing, errors, perf, etc.)
+
 ### Schema System (`src/libspec/schema/`)
 
-JSON Schema definitions for library documentation:
-- `core.schema.json` - Base schema for library, types, functions, features, modules, principles (generated from Pydantic models via `tools/generate_schema.py`)
-- `extensions/` - Domain extensions (async, web, data, cli, orm, testing, events, state, plugins) and concern extensions (errors, perf, safety, config, versioning, observability); extension models are generated from these schemas via `tools/generate_models.py` (async rename guard included)
+JSON Schema definitions (generated from Pydantic models):
+- `core.schema.json` - Base schema for library, types, functions, features, modules, principles
+- `extensions/` - Domain extensions (async, web, data, cli, orm, testing, events, state, plugins) and concern extensions (errors, perf, safety, config, versioning, observability)
 
 Core API in `src/libspec/__init__.py`: `get_schema_path()`, `validate_spec()`, `get_core_schema()`
 
@@ -44,7 +58,6 @@ Key files:
 - `spec_loader.py` - Spec file loading and parsing
 - `output.py` - JSON/text output formatting
 - `config.py` - `[tool.libspec]` config loading from pyproject.toml
-- `tools/generate_models.py` - Regenerates extension models from JSON Schema (auto-renames `async.py` → `async_.py`); `tools/check_generated.py` fails if drift is detected.
 - CLI flag `--strict-models` (or `[tool.libspec].strict_models = true`) enables strict Pydantic parsing plus duplicate detection.
 
 ### Lint System (`src/libspec/cli/lint/`)
@@ -54,8 +67,9 @@ Rule-based linting with categories:
 - `N` (naming): ID/name conventions
 - `C` (completeness): Missing signatures, empty enums
 - `X` (consistency): Dangling refs, duplicates
+- `V` (version): Python version compatibility
 
-`LintRule` base class in `base.py`. Rules in `rules/` subdirectory (structural.py, naming.py, completeness.py, consistency.py).
+`LintRule` base class in `base.py`. Rules in `rules/` subdirectory (structural.py, naming.py, completeness.py, consistency.py, version.py).
 
 Configure in pyproject.toml under `[tool.libspec.lint]`.
 
