@@ -11,16 +11,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
+from pydantic import Field
+
 from libspec.models.base import ExtensionModel
-from pydantic import Field, RootModel
-
-
-class OrmExtension(RootModel[Any]):
-    root: Any = Field(
-        ...,
-        description='Extension for object-relational mapping: models, relationships, queries, migrations.',
-        title='ORM Extension',
-    )
 
 
 class OnUpdate(Enum):
@@ -65,7 +58,7 @@ class ColumnSpec(ExtensionModel):
     python_type: str | None = Field(None, description='Python type for this column')
 
 
-class Type(Enum):
+class RelationshipType(Enum):
     one_to_one = 'one_to_one'
     one_to_many = 'one_to_many'
     many_to_one = 'many_to_one'
@@ -84,7 +77,7 @@ class Lazy(Enum):
 
 class RelationshipSpec(ExtensionModel):
     name: str = Field(..., description='Relationship attribute name')
-    type: Type = Field(..., description='Relationship type')
+    type: RelationshipType = Field(..., description='Relationship type')
     target: str = Field(..., description='Target model name')
     back_populates: str | None = Field(
         None, description='Back-reference attribute on target'
@@ -115,7 +108,7 @@ class IndexSpec(ExtensionModel):
     )
 
 
-class Type1(Enum):
+class ConstraintType(Enum):
     check = 'check'
     unique = 'unique'
     foreign_key = 'foreign_key'
@@ -130,7 +123,7 @@ class Initially(Enum):
 
 class ConstraintSpec(ExtensionModel):
     name: str | None = Field(None, description='Constraint name')
-    type: Type1 = Field(..., description='Constraint type')
+    type: ConstraintType = Field(..., description='Constraint type')
     columns: list[str] | None = Field(None, description='Columns involved')
     expression: str | None = Field(None, description='Constraint expression')
     deferrable: bool | None = Field(
@@ -139,14 +132,14 @@ class ConstraintSpec(ExtensionModel):
     initially: Initially | None = Field(None, description='Initial constraint mode')
 
 
-class Type2(Enum):
+class InheritanceType(Enum):
     single_table = 'single_table'
     joined = 'joined'
     concrete = 'concrete'
 
 
 class PolymorphicSpec(ExtensionModel):
-    type: Type2 | None = Field(None, description='Inheritance type')
+    type: InheritanceType | None = Field(None, description='Inheritance type')
     discriminator: str | None = Field(None, description='Discriminator column')
     identity: str | None = Field(None, description='Polymorphic identity value')
 
