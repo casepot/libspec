@@ -16,7 +16,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import LocalPath, NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import FunctionReference, LocalPath, NonEmptyStr, TypeAnnotationStr
 
 # -----------------------------------------------------------------------------
 # Enums
@@ -26,80 +26,80 @@ from libspec.models.types import LocalPath, NonEmptyStr, TypeAnnotationStr
 class FixtureScope(str, Enum):
     """Pytest fixture scope."""
 
-    FUNCTION = "function"
-    CLASS = "class"
-    MODULE = "module"
-    PACKAGE = "package"
-    SESSION = "session"
+    function = "function"
+    class_ = "class"
+    module = "module"
+    package = "package"
+    session = "session"
 
 
 class MockType(str, Enum):
     """Type of test double."""
 
-    MOCK = "mock"
-    STUB = "stub"
-    SPY = "spy"
-    FAKE = "fake"
-    DUMMY = "dummy"
+    mock = "mock"
+    stub = "stub"
+    spy = "spy"
+    fake = "fake"
+    dummy = "dummy"
 
 
 class TestCategory(str, Enum):
     """Test pattern category."""
 
-    UNIT = "unit"
-    INTEGRATION = "integration"
-    E2E = "e2e"
-    PROPERTY = "property"
-    SNAPSHOT = "snapshot"
-    CONTRACT = "contract"
-    PERFORMANCE = "performance"
+    unit = "unit"
+    integration = "integration"
+    e2e = "e2e"
+    property_ = "property"
+    snapshot = "snapshot"
+    contract = "contract"
+    performance = "performance"
 
 
 class CoverageTool(str, Enum):
     """Coverage measurement tool."""
 
-    COVERAGE_PY = "coverage.py"
-    PYTEST_COV = "pytest-cov"
-    ISTANBUL = "istanbul"
-    JACOCO = "jacoco"
-    CUSTOM = "custom"
+    coverage_py = "coverage.py"
+    pytest_cov = "pytest-cov"
+    istanbul = "istanbul"
+    jacoco = "jacoco"
+    custom = "custom"
 
 
 class ConftestScope(str, Enum):
     """Scope of a conftest.py file."""
 
-    PROJECT = "project"
-    PACKAGE = "package"
-    MODULE = "module"
+    project = "project"
+    package = "package"
+    module = "module"
 
 
 class HookPhase(str, Enum):
     """Pytest hook execution phase."""
 
-    CONFIGURE = "configure"
-    COLLECTION = "collection"
-    RUNTEST = "runtest"
-    REPORTING = "reporting"
-    SESSIONSTART = "sessionstart"
-    SESSIONFINISH = "sessionfinish"
+    configure = "configure"
+    collection = "collection"
+    runtest = "runtest"
+    reporting = "reporting"
+    sessionstart = "sessionstart"
+    sessionfinish = "sessionfinish"
 
 
 class AsyncioMode(str, Enum):
     """pytest-asyncio mode setting."""
 
-    AUTO = "auto"
-    STRICT = "strict"
+    auto = "auto"
+    strict = "strict"
 
 
 class CoverageReportFormat(str, Enum):
     """Coverage report output format."""
 
-    TERM = "term"
-    TERM_MISSING = "term-missing"
-    HTML = "html"
-    XML = "xml"
-    JSON = "json"
-    LCOV = "lcov"
+    term = "term"
+    term_missing = "term-missing"
+    html = "html"
+    xml = "xml"
+    json = "json"
+    lcov = "lcov"
 
 
 # -----------------------------------------------------------------------------
@@ -113,7 +113,7 @@ class FixtureSpec(ExtensionModel):
     name: NonEmptyStr = Field(description="Fixture name")
     scope: FixtureScope | None = Field(default=None, description="Fixture scope")
     type: TypeAnnotationStr | None = Field(default=None, description="Return type annotation")
-    factory: str | None = Field(
+    factory: FunctionReference | None = Field(
         default=None, description="Factory function reference"
     )
     dependencies: list[str] = Field(
@@ -145,7 +145,7 @@ class MockSpec(ExtensionModel):
     target: str | None = Field(
         default=None, description="What this mocks (type reference)"
     )
-    factory: str | None = Field(
+    factory: FunctionReference | None = Field(
         default=None, description="Factory function reference"
     )
     configurable: list[str] = Field(
@@ -363,7 +363,7 @@ class HookSpec(ExtensionModel):
     purpose: str | None = Field(
         default=None, description="What this hook implementation does"
     )
-    location: str | None = Field(
+    location: FunctionReference | None = Field(
         default=None, description="File where this hook is implemented"
     )
     tryfirst: bool | None = Field(

@@ -13,13 +13,13 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import NonEmptyStr
 
 
-class CancellationMode(Enum):
+class CancellationMode(str, Enum):
     """How async operations handle cancellation requests.
 
     - cooperative: Operation checks for cancellation explicitly
@@ -66,7 +66,7 @@ class AsyncTransitionSpec(ExtensionModel):
     )
 
 
-class Primitive(Enum):
+class Primitive(str, Enum):
     """Type of synchronization primitive for concurrent access.
 
     - mailbox: Actor-style message passing
@@ -87,7 +87,7 @@ class Primitive(Enum):
     condition = 'condition'
 
 
-class Semantics(Enum):
+class Semantics(str, Enum):
     """Ordering and delivery semantics for message passing.
 
     - fifo: First-in, first-out ordering
@@ -102,7 +102,7 @@ class Semantics(Enum):
     lifo = 'lifo'
 
 
-class SyncBackpressure(Enum):
+class SyncBackpressure(str, Enum):
     """How synchronization primitives handle capacity limits.
 
     - block: Block sender until space available
@@ -130,8 +130,15 @@ class SyncSpec(ExtensionModel):
         None, description='What happens when capacity is reached'
     )
 
+    @model_validator(mode='after')
+    def validate_bounded_capacity(self) -> 'SyncSpec':
+        """If bounded=True, then capacity is required."""
+        if self.bounded is True and self.capacity is None:
+            raise ValueError('capacity is required when bounded=True')
+        return self
 
-class Kind(Enum):
+
+class Kind(str, Enum):
     """Observable stream temperature (hot vs cold).
 
     - hot: Emits regardless of subscribers; late subscribers miss events
@@ -142,7 +149,7 @@ class Kind(Enum):
     cold = 'cold'
 
 
-class ObservableBackpressure(Enum):
+class ObservableBackpressure(str, Enum):
     """How observables handle slow consumers.
 
     - buffer: Buffer items until consumer catches up
@@ -176,8 +183,15 @@ class ObservableSpec(ExtensionModel):
         None, description='Whether multiple subscribers share the same stream'
     )
 
+    @model_validator(mode='after')
+    def validate_replay_buffer(self) -> 'ObservableSpec':
+        """If replay=True, then replay_buffer is required."""
+        if self.replay is True and self.replay_buffer is None:
+            raise ValueError('replay_buffer is required when replay=True')
+        return self
 
-class Executor(Enum):
+
+class Executor(str, Enum):
     """Where async operations are executed.
 
     - event_loop: Single-threaded asyncio event loop
@@ -192,7 +206,7 @@ class Executor(Enum):
     custom = 'custom'
 
 
-class Priority(Enum):
+class Priority(str, Enum):
     """Task scheduling priority levels.
 
     - low: Background tasks, can be delayed

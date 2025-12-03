@@ -190,12 +190,12 @@ class TestDeprecationInfo:
             message="Use new_function instead",
             since="1.0.0",
             removal="2.0.0",
-            replacement="new_function",
+            replacement="#/functions/new_function",
         )
         assert info.message == "Use new_function instead"
         assert info.since == "1.0.0"
         assert info.removal == "2.0.0"
-        assert info.replacement == "new_function"
+        assert info.replacement == "#/functions/new_function"
 
     def test_method_with_deprecation(self) -> None:
         """Method can have deprecation info."""
@@ -229,11 +229,11 @@ class TestDeprecationInfo:
             signature="() -> None",
             deprecation=DeprecationInfo(
                 message="Deprecated",
-                replacement="new_func",
+                replacement="#/functions/new_func",
             ),
         )
         assert func.deprecation is not None
-        assert func.deprecation.replacement == "new_func"
+        assert func.deprecation.replacement == "#/functions/new_func"
 
 
 class TestGenericParamValidation:

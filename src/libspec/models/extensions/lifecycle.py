@@ -15,6 +15,7 @@ from typing import Annotated, Literal, Union
 from pydantic import (
     AnyUrl,
     Field,
+    HttpUrl,
     NonNegativeInt,
     ValidationInfo,
     field_validator,
@@ -24,15 +25,7 @@ from typing_extensions import Self
 
 from ..base import ExtensionModel
 from ..types import KebabCaseId, NonEmptyStr
-from ..utils import ensure_strict_bool, validate_local_path
-
-
-def _validate_path_or_url(value: str, info: ValidationInfo, field: str) -> str:
-    """Allow URLs; otherwise enforce local path existence in strict mode."""
-
-    if value.startswith(("http://", "https://")):
-        return value
-    return validate_local_path(value, info, field)
+from ..utils import ensure_strict_bool, validate_local_path, validate_path_or_url
 
 # -----------------------------------------------------------------------------
 # Evidence Types (Discriminated Union Members)
@@ -50,16 +43,8 @@ class PrEvidence(EvidenceBase):
     """Pull/merge request evidence."""
 
     type: Literal["pr"]
-    url: AnyUrl  # URL to the PR
+    url: HttpUrl | None  # URL to the PR
     author: str | None = None
-
-    @field_validator("url")
-    @classmethod
-    def validate_url(cls, v: str) -> str:
-        """L006: Validate URL format."""
-        if not v.startswith(("http://", "https://")):
-            raise ValueError(f"PR URL must be http/https: {v}")
-        return v
 
 
 class TestsEvidence(EvidenceBase):
@@ -96,22 +81,14 @@ class DesignDocEvidence(EvidenceBase):
     @field_validator("reference")
     @classmethod
     def validate_reference(cls, v: str, info: ValidationInfo) -> str:
-        return _validate_path_or_url(v, info, "reference")
+        return validate_path_or_url(v, info, "reference")
 
 
 class DocsEvidence(EvidenceBase):
     """Documentation URL evidence."""
 
     type: Literal["docs"]
-    url: AnyUrl
-
-    @field_validator("url")
-    @classmethod
-    def validate_url(cls, v: str) -> str:
-        """L006: Validate URL format."""
-        if not v.startswith(("http://", "https://")):
-            raise ValueError(f"Docs URL must be http/https: {v}")
-        return v
+    url: HttpUrl | None
 
 
 class ApprovalEvidence(EvidenceBase):
@@ -133,7 +110,7 @@ class BenchmarkEvidence(EvidenceBase):
     @field_validator("reference")
     @classmethod
     def validate_reference(cls, v: str, info: ValidationInfo) -> str:
-        return _validate_path_or_url(v, info, "reference")
+        return validate_path_or_url(v, info, "reference")
 
 
 class MigrationGuideEvidence(EvidenceBase):
@@ -145,7 +122,7 @@ class MigrationGuideEvidence(EvidenceBase):
     @field_validator("reference")
     @classmethod
     def validate_reference(cls, v: str, info: ValidationInfo) -> str:
-        return _validate_path_or_url(v, info, "reference")
+        return validate_path_or_url(v, info, "reference")
 
 
 class DeprecationNoticeEvidence(EvidenceBase):
@@ -178,7 +155,7 @@ class CustomEvidence(EvidenceBase):
     def validate_optional_reference(cls, v: str | None, info: ValidationInfo) -> str | None:
         if v is None:
             return None
-        return _validate_path_or_url(v, info, "reference")
+        return validate_path_or_url(v, info, "reference")
 
 
 # Discriminated union of all evidence types

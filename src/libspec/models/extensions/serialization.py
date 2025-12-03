@@ -14,10 +14,10 @@ from enum import Enum
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr
+from libspec.models.types import FunctionReference, NonEmptyStr
 
 
-class SerializationFormat(Enum):
+class SerializationFormat(str, Enum):
     """Supported serialization formats."""
 
     json = "json"
@@ -33,7 +33,7 @@ class SerializationFormat(Enum):
     custom = "custom"
 
 
-class EncodingStrategy(Enum):
+class EncodingStrategy(str, Enum):
     """Encoding strategy for complex types."""
 
     iso8601 = "iso8601"
@@ -46,7 +46,7 @@ class EncodingStrategy(Enum):
     custom = "custom"
 
 
-class NamingConvention(Enum):
+class NamingConvention(str, Enum):
     """Field naming conventions."""
 
     snake_case = "snake_case"
@@ -56,7 +56,7 @@ class NamingConvention(Enum):
     preserve = "preserve"
 
 
-class DateTimeFormat(Enum):
+class DateTimeFormat(str, Enum):
     """DateTime serialization format."""
 
     iso8601 = "iso8601"
@@ -67,7 +67,7 @@ class DateTimeFormat(Enum):
     custom = "custom"
 
 
-class BinaryEncoding(Enum):
+class BinaryEncoding(str, Enum):
     """Binary data encoding."""
 
     base64 = "base64"
@@ -76,7 +76,7 @@ class BinaryEncoding(Enum):
     raw = "raw"
 
 
-class NullHandling(Enum):
+class NullHandling(str, Enum):
     """How null/None values are handled."""
 
     include = "include"
@@ -84,7 +84,7 @@ class NullHandling(Enum):
     use_default = "use_default"
 
 
-class CircularRefHandling(Enum):
+class CircularRefHandling(str, Enum):
     """How circular references are handled."""
 
     error = "error"
@@ -93,7 +93,7 @@ class CircularRefHandling(Enum):
     max_depth = "max_depth"
 
 
-class SchemaFormat(Enum):
+class SchemaFormat(str, Enum):
     """Schema output format."""
 
     json_schema = "json_schema"
@@ -104,7 +104,7 @@ class SchemaFormat(Enum):
     custom = "custom"
 
 
-class ValidationMode(Enum):
+class ValidationMode(str, Enum):
     """Validation strictness mode."""
 
     strict = "strict"
@@ -113,7 +113,7 @@ class ValidationMode(Enum):
     none = "none"
 
 
-class CoercionBehavior(Enum):
+class CoercionBehavior(str, Enum):
     """How type coercion behaves."""
 
     implicit = "implicit"
@@ -122,7 +122,7 @@ class CoercionBehavior(Enum):
     warn = "warn"
 
 
-class SerializationErrorKind(Enum):
+class SerializationErrorKind(str, Enum):
     """Types of serialization errors."""
 
     encoding_error = "encoding_error"
@@ -164,8 +164,8 @@ class EncoderSpec(ExtensionModel):
 
     name: NonEmptyStr = Field(default=..., description="Encoder name")
     type: str = Field(default=..., description="Type this encoder handles")
-    function: str | None = Field(None, description="Encoder function reference")
-    method: str | None = Field(None, description="Encoder method on the type")
+    function: FunctionReference | None = Field(None, description="Encoder function reference")
+    method: FunctionReference | None = Field(None, description="Encoder method on the type")
     priority: int | None = Field(
         None, ge=0, description="Priority when multiple encoders match"
     )
@@ -178,7 +178,7 @@ class DecoderSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description="Decoder name")
     type: str = Field(default=..., description="Type this decoder produces")
     function: str | None = Field(None, description="Decoder function reference")
-    factory: str | None = Field(None, description="Factory method on the type")
+    factory: FunctionReference | None = Field(None, description="Factory method on the type")
     priority: int | None = Field(
         None, ge=0, description="Priority when multiple decoders match"
     )

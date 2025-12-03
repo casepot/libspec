@@ -10,13 +10,13 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import AnyUrl, Field
+from pydantic import Field, HttpUrl
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import CrossReference, VersionConstraintStr
 
 
-class Stability(Enum):
+class Stability(str, Enum):
     """API stability level indicating maturity and change likelihood.
 
     - stable: Production-ready, backward-compatible changes only
@@ -118,4 +118,4 @@ class VersioningLibraryFields(ExtensionModel):
         None, description='Breaking changes by version'
     )
     compatibility: CompatibilitySpec | None = None
-    changelog_url: AnyUrl | None = Field(None, description='URL to changelog')
+    changelog_url: HttpUrl | None = Field(None, description='URL to changelog')

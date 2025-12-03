@@ -17,7 +17,7 @@ from libspec.models.base import ExtensionModel
 from libspec.models.types import NonEmptyStr, TypeAnnotationStr
 
 
-class CopySemantics(Enum):
+class CopySemantics(str, Enum):
     """Data copy behavior for operations.
 
     - copy: Always create a deep copy
@@ -32,7 +32,7 @@ class CopySemantics(Enum):
     configurable = 'configurable'
 
 
-class DTypeCategory(Enum):
+class DTypeCategory(str, Enum):
     """Data type category for classification.
 
     - numeric: Integer, float, decimal types
@@ -75,7 +75,7 @@ class DTypeSpec(ExtensionModel):
     description: str | None = None
 
 
-class Behavior(Enum):
+class Behavior(str, Enum):
     """Type coercion behavior.
 
     - implicit: Automatically convert types
@@ -99,7 +99,7 @@ class CoercionRule(ExtensionModel):
     )
 
 
-class TransformCategory(Enum):
+class TransformCategory(str, Enum):
     """Data transformation operation category.
 
     - select: Column/field selection
@@ -156,7 +156,7 @@ class MethodChainingSpec(ExtensionModel):
     )
 
 
-class PipelineType(Enum):
+class PipelineType(str, Enum):
     """Data pipeline execution model.
 
     - sequential: Linear step-by-step execution
@@ -171,7 +171,7 @@ class PipelineType(Enum):
     batch = 'batch'
 
 
-class ErrorHandling(Enum):
+class ErrorHandling(str, Enum):
     """Pipeline error handling strategy.
 
     - fail_fast: Stop on first error
@@ -212,7 +212,7 @@ class IOFormatSpec(ExtensionModel):
     )
 
 
-class Default(Enum):
+class Default(str, Enum):
     """Default evaluation strategy.
 
     - eager: Evaluate operations immediately
@@ -245,7 +245,7 @@ class EvaluationStrategySpec(ExtensionModel):
     explain_method: str | None = Field(None, description='Method to explain query plan')
 
 
-class Layout(Enum):
+class Layout(str, Enum):
     """Memory layout for data storage.
 
     - row_major: Row-contiguous (C-style)
@@ -262,7 +262,7 @@ class Layout(Enum):
     custom = 'custom'
 
 
-class StringStorage(Enum):
+class StringStorage(str, Enum):
     """String data storage strategy.
 
     - utf8: Standard UTF-8 encoding
@@ -293,7 +293,7 @@ class MemoryLayoutSpec(ExtensionModel):
     )
 
 
-class Backend(Enum):
+class Backend(str, Enum):
     """Parallelism execution backend.
 
     - threads: ThreadPoolExecutor
@@ -340,7 +340,7 @@ class BroadcastingSpec(ExtensionModel):
     )
 
 
-class Rules(Enum):
+class Rules(str, Enum):
     """Type promotion rule set.
 
     - numpy: NumPy-style type promotion
@@ -355,7 +355,7 @@ class Rules(Enum):
     custom = 'custom'
 
 
-class OverflowBehavior(Enum):
+class OverflowBehavior(str, Enum):
     """Numeric overflow handling behavior.
 
     - wrap: Wrap around (modular arithmetic)

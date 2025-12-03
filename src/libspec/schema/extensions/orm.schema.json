@@ -812,25 +812,25 @@
       "type": "object"
     },
     "OnDelete": {
-      "description": "Foreign key ON DELETE referential action.\n\n- CASCADE: Delete child rows when parent is deleted\n- SET_NULL: Set child foreign key to NULL\n- SET_DEFAULT: Set child foreign key to default value\n- RESTRICT: Prevent deletion if children exist\n- NO_ACTION: Defer check until transaction end",
+      "description": "Foreign key ON DELETE referential action.\n\nValues use lowercase with underscores, mapping to SQL keywords:\n- cascade: Delete child rows when parent is deleted (SQL: CASCADE)\n- set_null: Set child foreign key to NULL (SQL: SET NULL)\n- set_default: Set child foreign key to default value (SQL: SET DEFAULT)\n- restrict: Prevent deletion if children exist (SQL: RESTRICT)\n- no_action: Defer check until transaction end (SQL: NO ACTION)",
       "enum": [
-        "CASCADE",
-        "SET NULL",
-        "SET DEFAULT",
-        "RESTRICT",
-        "NO ACTION"
+        "cascade",
+        "set_null",
+        "set_default",
+        "restrict",
+        "no_action"
       ],
       "title": "OnDelete",
       "type": "string"
     },
     "OnUpdate": {
-      "description": "Foreign key ON UPDATE referential action.\n\n- CASCADE: Update child rows when parent key changes\n- SET_NULL: Set child foreign key to NULL\n- SET_DEFAULT: Set child foreign key to default value\n- RESTRICT: Prevent update if children exist\n- NO_ACTION: Defer check until transaction end",
+      "description": "Foreign key ON UPDATE referential action.\n\nValues use lowercase with underscores, mapping to SQL keywords:\n- cascade: Update child rows when parent key changes (SQL: CASCADE)\n- set_null: Set child foreign key to NULL (SQL: SET NULL)\n- set_default: Set child foreign key to default value (SQL: SET DEFAULT)\n- restrict: Prevent update if children exist (SQL: RESTRICT)\n- no_action: Defer check until transaction end (SQL: NO ACTION)",
       "enum": [
-        "CASCADE",
-        "SET NULL",
-        "SET DEFAULT",
-        "RESTRICT",
-        "NO ACTION"
+        "cascade",
+        "set_null",
+        "set_default",
+        "restrict",
+        "no_action"
       ],
       "title": "OnUpdate",
       "type": "string"
@@ -922,6 +922,8 @@
         "method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {

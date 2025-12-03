@@ -18,6 +18,8 @@
         "creator": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -97,6 +99,8 @@
         "function": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -514,6 +518,8 @@
         "function": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -583,6 +589,8 @@
         "function": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -685,6 +693,8 @@
         "src": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {

@@ -29,6 +29,7 @@
           "anyOf": [
             {
               "format": "uri",
+              "maxLength": 2083,
               "minLength": 1,
               "type": "string"
             },

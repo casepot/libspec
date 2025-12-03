@@ -79,6 +79,8 @@
         "factory": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -301,13 +303,13 @@
     "Method": {
       "description": "HTTP request methods.\n\nStandard methods plus wildcard for matching any method.",
       "enum": [
-        "GET",
-        "POST",
-        "PUT",
-        "DELETE",
-        "PATCH",
-        "HEAD",
-        "OPTIONS",
+        "get",
+        "post",
+        "put",
+        "delete",
+        "patch",
+        "head",
+        "options",
         "*"
       ],
       "title": "Method",
@@ -420,6 +422,8 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -820,6 +824,8 @@
         "handler": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1157,6 +1163,8 @@
         "handler": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {

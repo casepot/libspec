@@ -39,7 +39,7 @@ class SafetyFunctionFields(ExtensionModel):
     atomic: bool | None = Field(None, description='Whether this operation is atomic')
 
 
-class ThreadSafetyMode(Enum):
+class ThreadSafetyMode(str, Enum):
     """How thread safety is achieved for a type.
 
     - immutable: Thread-safe through immutability
@@ -58,24 +58,24 @@ class ThreadSafetyMode(Enum):
     none = 'none'
 
 
-class LockType(Enum):
+class LockType(str, Enum):
     """Type of lock used for synchronization.
 
-    - Lock: Basic mutual exclusion lock
-    - RLock: Reentrant lock (same thread can acquire multiple times)
-    - RWLock: Read-write lock (multiple readers, single writer)
-    - Semaphore: Counting semaphore for resource pooling
+    - lock: Basic mutual exclusion lock
+    - rlock: Reentrant lock (same thread can acquire multiple times)
+    - rwlock: Read-write lock (multiple readers, single writer)
+    - semaphore: Counting semaphore for resource pooling
     - none: No locking mechanism
     """
 
-    Lock = 'Lock'
-    RLock = 'RLock'
-    RWLock = 'RWLock'
-    Semaphore = 'Semaphore'
+    lock = 'lock'
+    rlock = 'rlock'
+    rwlock = 'rwlock'
+    semaphore = 'semaphore'
     none = 'none'
 
 
-class LockGranularity(Enum):
+class LockGranularity(str, Enum):
     """Granularity level of locking mechanisms.
 
     - global_: Single lock for all instances (coarse-grained)
@@ -117,7 +117,7 @@ class ReentrancySpec(ExtensionModel):
     )
 
 
-class Leaks(Enum):
+class Leaks(str, Enum):
     """Memory leak potential classification.
 
     - none: No memory leaks possible
@@ -132,7 +132,7 @@ class Leaks(Enum):
     external = 'external'
 
 
-class Cleanup(Enum):
+class Cleanup(str, Enum):
     """How resources are cleaned up.
 
     - automatic: Garbage collector handles cleanup
@@ -160,7 +160,7 @@ class MemorySafetySpec(ExtensionModel):
     )
 
 
-class Model(Enum):
+class Model(str, Enum):
     """Concurrency model used by the type.
 
     - shared_nothing: No shared state between threads/processes

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import AnyUrl, Field
+from pydantic import Field, HttpUrl
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import NonEmptyStr, TypeAnnotationStr
@@ -33,7 +33,7 @@ class ExceptionField(ExtensionModel):
     description: str | None = Field(None, description='What this field contains')
 
 
-class Severity(Enum):
+class Severity(str, Enum):
     """Error severity level.
 
     - info: Informational message, no action needed
@@ -53,7 +53,7 @@ class ErrorCode(ExtensionModel):
     type: str | None = Field(default=None, description='Associated exception type')
     category: str | None = Field(default=None, description='Error category for grouping')
     description: str = Field(default=..., description='Human-readable description')
-    docs_url: AnyUrl | None = Field(None, description='URL to detailed documentation')
+    docs_url: HttpUrl | None = Field(None, description='URL to detailed documentation')
     severity: Severity | None = Field(None, description='Error severity level')
 
 

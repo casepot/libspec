@@ -15,7 +15,12 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import EnvVarName, NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import (
+    EnvVarName,
+    FunctionReference,
+    NonEmptyStr,
+    TypeAnnotationStr,
+)
 
 
 class ExampleSpec(ExtensionModel):
@@ -30,7 +35,7 @@ class ExitCodeSpec(ExtensionModel):
     description: str | None = Field(None, description='When this code is returned')
 
 
-class Shell(Enum):
+class Shell(str, Enum):
     """Shell types for command completion.
 
     - bash: Bourne Again Shell
@@ -55,7 +60,7 @@ class ShellCompletionSpec(ExtensionModel):
     )
 
 
-class CompletionType(Enum):
+class CompletionType(str, Enum):
     """Type of shell completion for an argument or option.
 
     - path: Complete any filesystem path
@@ -76,7 +81,7 @@ class CompletionType(Enum):
 
 class CompletionSpec(ExtensionModel):
     type: CompletionType | None = Field(None, description='Completion type')
-    function: str | None = Field(
+    function: FunctionReference | None = Field(
         None, description='Custom completion function reference'
     )
     file_pattern: str | None = Field(
@@ -84,7 +89,7 @@ class CompletionSpec(ExtensionModel):
     )
 
 
-class Color(Enum):
+class Color(str, Enum):
     """Color output mode for CLI help and messages.
 
     - auto: Use color when terminal supports it
@@ -179,7 +184,7 @@ class OptionSpec(ExtensionModel):
 class CommandSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Command name')
     aliases: list[str] | None = Field(None, description='Command aliases')
-    handler: str | None = Field(None, description='Handler function reference')
+    handler: FunctionReference | None = Field(None, description='Handler function reference')
     arguments: list[ArgumentSpec] | None = Field(
         None, description='Positional arguments'
     )

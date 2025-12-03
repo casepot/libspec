@@ -15,26 +15,26 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import MimeType, NonEmptyStr, RoutePath, TypeAnnotationStr
+from libspec.models.types import FunctionReference, MimeType, NonEmptyStr, RoutePath, TypeAnnotationStr
 
 
-class Method(Enum):
+class Method(str, Enum):
     """HTTP request methods.
 
     Standard methods plus wildcard for matching any method.
     """
 
-    GET = 'GET'
-    POST = 'POST'
-    PUT = 'PUT'
-    DELETE = 'DELETE'
-    PATCH = 'PATCH'
-    HEAD = 'HEAD'
-    OPTIONS = 'OPTIONS'
+    GET = 'get'
+    POST = 'post'
+    PUT = 'put'
+    DELETE = 'delete'
+    PATCH = 'patch'
+    HEAD = 'head'
+    OPTIONS = 'options'
     WILDCARD = '*'
 
 
-class Auth(Enum):
+class Auth(str, Enum):
     """Authentication requirement level for a route.
 
     - required: Authentication is mandatory
@@ -99,7 +99,7 @@ class ErrorResponseSpec(ExtensionModel):
     description: str | None = None
 
 
-class AppliesTo(Enum):
+class AppliesTo(str, Enum):
     """Which routes middleware applies to.
 
     - all: Applies to all routes
@@ -112,7 +112,7 @@ class AppliesTo(Enum):
     specific = 'specific'
 
 
-class Position(Enum):
+class Position(str, Enum):
     """When middleware runs relative to the request handler.
 
     - before: Runs before the handler
@@ -127,7 +127,7 @@ class Position(Enum):
 
 class MiddlewareSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Middleware name')
-    type: str | None = Field(None, description='Middleware class/function reference')
+    type: FunctionReference | None = Field(None, description='Middleware class/function reference')
     order: Annotated[int, Field(ge=0)] | None = Field(
         default=None, description='Execution order (lower = earlier)'
     )
@@ -154,7 +154,7 @@ class MiddlewareSpec(ExtensionModel):
         return self
 
 
-class Scope(Enum):
+class Scope(str, Enum):
     """Dependency injection lifetime scope.
 
     - request: New instance per HTTP request
@@ -172,7 +172,7 @@ class Scope(Enum):
 class DependencySpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Dependency name')
     type: str = Field(default=..., description='Dependency type')
-    factory: str | None = Field(None, description='Factory function reference')
+    factory: FunctionReference | None = Field(None, description='Factory function reference')
     scope: Scope | None = Field(None, description='Dependency lifetime')
     cacheable: bool | None = Field(True, description='Whether result can be cached')
     async_: bool | None = Field(
@@ -184,7 +184,7 @@ class DependencySpec(ExtensionModel):
     description: str | None = None
 
 
-class Direction(Enum):
+class Direction(str, Enum):
     """WebSocket message flow direction.
 
     - client_to_server: Client sends to server only
@@ -219,11 +219,18 @@ class RateLimitSpec(ExtensionModel):
     key: str | None = Field(None, description="Rate limit key (e.g., 'ip', 'user')")
     burst: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Burst allowance')
 
+    @model_validator(mode='after')
+    def validate_rate_limit_config(self) -> 'RateLimitSpec':
+        """Validate requests and window are set together."""
+        if (self.requests is None) != (self.window is None):
+            raise ValueError("requests and window must both be set or both be None")
+        return self
+
 
 class RouteSpec(ExtensionModel):
     path: RoutePath = Field(default=..., description="URL path pattern (e.g., '/users/{user_id}')")
     method: Method = Field(default=..., description='HTTP method')
-    handler: str | None = Field(None, description='Handler function reference')
+    handler: FunctionReference | None = Field(None, description='Handler function reference')
     name: str | None = Field(None, description='Route name for URL generation')
     path_params: list[PathParamSpec] | None = Field(
         None, description='Path parameter definitions'
@@ -287,7 +294,7 @@ class RouteSpec(ExtensionModel):
 
 class WebSocketSpec(ExtensionModel):
     path: str = Field(default=..., description='WebSocket endpoint path')
-    handler: str | None = Field(None, description='Handler function reference')
+    handler: FunctionReference | None = Field(None, description='Handler function reference')
     subprotocols: list[str] | None = Field(None, description='Supported subprotocols')
     auth: Auth | None = None
     message_types: list[WSMessageSpec] | None = Field(

@@ -56,8 +56,14 @@ ModulePath = Annotated[
 NonEmptyStr = Annotated[str, StringConstraints(min_length=1)]
 """Generic non-empty string for required text fields."""
 
-# Cross-reference format (relaxed initially - allows most formats)
-CrossReference = Annotated[str, StringConstraints(min_length=1)]
+# Cross-reference format with strict validation
+CrossReference = Annotated[
+    str,
+    StringConstraints(
+        pattern=r"^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+        min_length=1,
+    ),
+]
 """Reference to another entity: #/types/X, #/functions/Y, or external lib#/types/Z."""
 
 # Type annotation strings (Python type expressions)
@@ -79,16 +85,6 @@ LocalPath = Annotated[str, StringConstraints(min_length=1)]
 # -----------------------------------------------------------------------------
 # Pattern-Based Constrained Types
 # -----------------------------------------------------------------------------
-
-# Cross-reference with format validation
-CrossReferenceStrict = Annotated[
-    str,
-    StringConstraints(
-        pattern=r"^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
-        min_length=1,
-    ),
-]
-"""Validated cross-reference format: #/types/X, #/functions/Y, or lib#/types/Z."""
 
 # Function/method reference (dotted Python path)
 FunctionReference = Annotated[

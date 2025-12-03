@@ -92,12 +92,12 @@
       "type": "string"
     },
     "LockType": {
-      "description": "Type of lock used for synchronization.\n\n- Lock: Basic mutual exclusion lock\n- RLock: Reentrant lock (same thread can acquire multiple times)\n- RWLock: Read-write lock (multiple readers, single writer)\n- Semaphore: Counting semaphore for resource pooling\n- none: No locking mechanism",
+      "description": "Type of lock used for synchronization.\n\n- lock: Basic mutual exclusion lock\n- rlock: Reentrant lock (same thread can acquire multiple times)\n- rwlock: Read-write lock (multiple readers, single writer)\n- semaphore: Counting semaphore for resource pooling\n- none: No locking mechanism",
       "enum": [
-        "Lock",
-        "RLock",
-        "RWLock",
-        "Semaphore",
+        "lock",
+        "rlock",
+        "rwlock",
+        "semaphore",
         "none"
       ],
       "title": "LockType",

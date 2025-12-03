@@ -12,13 +12,13 @@ from enum import Enum
 
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import MetricName, NonEmptyStr
 
 
-class LogLevel(Enum):
+class LogLevel(str, Enum):
     """Standard Python logging levels."""
 
     DEBUG = 'DEBUG'
@@ -48,7 +48,7 @@ class LoggingSpec(ExtensionModel):
     sampling: bool | None = Field(None, description='Whether log sampling is supported')
 
 
-class MetricType(Enum):
+class MetricType(str, Enum):
     """Prometheus-style metric types.
 
     - counter: Monotonically increasing value (e.g., request count)
@@ -77,8 +77,18 @@ class MetricSpec(ExtensionModel):
         default=None, description='Histogram buckets (for histogram type)'
     )
 
+    @model_validator(mode='after')
+    def validate_histogram_buckets(self) -> 'MetricSpec':
+        """If type=histogram, buckets is required and must be sorted."""
+        if self.type == MetricType.histogram:
+            if self.buckets is None or len(self.buckets) == 0:
+                raise ValueError('buckets is required when type=histogram')
+            if self.buckets != sorted(self.buckets):
+                raise ValueError('buckets must be sorted in ascending order')
+        return self
 
-class Propagation(Enum):
+
+class Propagation(str, Enum):
     """Distributed tracing context propagation format.
 
     - w3c: W3C Trace Context (standard)
@@ -97,7 +107,7 @@ class Propagation(Enum):
     custom = 'custom'
 
 
-class Sampling(Enum):
+class Sampling(str, Enum):
     """Trace sampling strategy.
 
     - always: Sample every trace
@@ -127,8 +137,16 @@ class TracingSpec(ExtensionModel):
     events: list[str] | None = Field(None, description='Span events emitted')
     baggage: list[str] | None = Field(None, description='Baggage items propagated')
 
+    @model_validator(mode='after')
+    def validate_probabilistic_sampling(self) -> 'TracingSpec':
+        """If sampling=probabilistic, sampling_rate is required."""
+        if self.sampling == Sampling.probabilistic:
+            if self.sampling_rate is None:
+                raise ValueError('sampling_rate is required when sampling=probabilistic')
+        return self
 
-class HealthCheckType(Enum):
+
+class HealthCheckType(str, Enum):
     """Kubernetes-style health check type.
 
     - liveness: Is the application alive? Failure triggers restart
@@ -154,8 +172,16 @@ class HealthCheckSpec(ExtensionModel):
     )
     dependencies: list[str] | None = Field(None, description='Dependencies checked')
 
+    @model_validator(mode='after')
+    def validate_timeout_less_than_interval(self) -> 'HealthCheckSpec':
+        """Timeout must be less than interval (if both are set)."""
+        if self.timeout is not None and self.interval is not None:
+            if self.timeout >= self.interval:
+                raise ValueError('timeout must be less than interval')
+        return self
 
-class TraceFormat(Enum):
+
+class TraceFormat(str, Enum):
     """Debug trace output format.
 
     - json: Machine-readable JSON format

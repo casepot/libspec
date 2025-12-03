@@ -14,41 +14,43 @@ from typing import Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import LocalPath, NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import FunctionReference, LocalPath, NonEmptyStr, TypeAnnotationStr
 
 
-class OnUpdate(Enum):
+class OnUpdate(str, Enum):
     """Foreign key ON UPDATE referential action.
 
-    - CASCADE: Update child rows when parent key changes
-    - SET_NULL: Set child foreign key to NULL
-    - SET_DEFAULT: Set child foreign key to default value
-    - RESTRICT: Prevent update if children exist
-    - NO_ACTION: Defer check until transaction end
+    Values use lowercase with underscores, mapping to SQL keywords:
+    - cascade: Update child rows when parent key changes (SQL: CASCADE)
+    - set_null: Set child foreign key to NULL (SQL: SET NULL)
+    - set_default: Set child foreign key to default value (SQL: SET DEFAULT)
+    - restrict: Prevent update if children exist (SQL: RESTRICT)
+    - no_action: Defer check until transaction end (SQL: NO ACTION)
     """
 
-    CASCADE = 'CASCADE'
-    SET_NULL = 'SET NULL'
-    SET_DEFAULT = 'SET DEFAULT'
-    RESTRICT = 'RESTRICT'
-    NO_ACTION = 'NO ACTION'
+    cascade = 'cascade'
+    set_null = 'set_null'
+    set_default = 'set_default'
+    restrict = 'restrict'
+    no_action = 'no_action'
 
 
-class OnDelete(Enum):
+class OnDelete(str, Enum):
     """Foreign key ON DELETE referential action.
 
-    - CASCADE: Delete child rows when parent is deleted
-    - SET_NULL: Set child foreign key to NULL
-    - SET_DEFAULT: Set child foreign key to default value
-    - RESTRICT: Prevent deletion if children exist
-    - NO_ACTION: Defer check until transaction end
+    Values use lowercase with underscores, mapping to SQL keywords:
+    - cascade: Delete child rows when parent is deleted (SQL: CASCADE)
+    - set_null: Set child foreign key to NULL (SQL: SET NULL)
+    - set_default: Set child foreign key to default value (SQL: SET DEFAULT)
+    - restrict: Prevent deletion if children exist (SQL: RESTRICT)
+    - no_action: Defer check until transaction end (SQL: NO ACTION)
     """
 
-    CASCADE = 'CASCADE'
-    SET_NULL = 'SET NULL'
-    SET_DEFAULT = 'SET DEFAULT'
-    RESTRICT = 'RESTRICT'
-    NO_ACTION = 'NO ACTION'
+    cascade = 'cascade'
+    set_null = 'set_null'
+    set_default = 'set_default'
+    restrict = 'restrict'
+    no_action = 'no_action'
 
 
 class ColumnSpec(ExtensionModel):
@@ -100,7 +102,7 @@ class ColumnSpec(ExtensionModel):
         return self
 
 
-class RelationshipType(Enum):
+class RelationshipType(str, Enum):
     """ORM relationship cardinality.
 
     - one_to_one: Each parent has exactly one child
@@ -115,7 +117,7 @@ class RelationshipType(Enum):
     many_to_many = 'many_to_many'
 
 
-class Lazy(Enum):
+class Lazy(str, Enum):
     """SQLAlchemy relationship loading strategy.
 
     - select: Lazy load with separate SELECT on access
@@ -179,7 +181,7 @@ class IndexSpec(ExtensionModel):
     )
 
 
-class ConstraintType(Enum):
+class ConstraintType(str, Enum):
     """Database table constraint type.
 
     - check: CHECK constraint on column values
@@ -196,7 +198,7 @@ class ConstraintType(Enum):
     exclude = 'exclude'
 
 
-class Initially(Enum):
+class Initially(str, Enum):
     """When deferrable constraints are checked.
 
     - IMMEDIATE: Check constraint at statement end
@@ -218,7 +220,7 @@ class ConstraintSpec(ExtensionModel):
     initially: Initially | None = Field(None, description='Initial constraint mode')
 
 
-class InheritanceType(Enum):
+class InheritanceType(str, Enum):
     """SQLAlchemy model inheritance strategy.
 
     - single_table: All classes in one table with discriminator
@@ -265,7 +267,7 @@ class SessionManagementSpec(ExtensionModel):
     )
 
 
-class Pattern(Enum):
+class Pattern(str, Enum):
     """Database query/persistence pattern.
 
     - repository: Repository pattern (abstraction over data access)
@@ -285,12 +287,12 @@ class Pattern(Enum):
 class QueryPatternSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Pattern name')
     pattern: Pattern | None = Field(None, description='Query pattern type')
-    method: str | None = Field(None, description='Method reference')
+    method: FunctionReference | None = Field(None, description='Method reference')
     description: str | None = Field(None, description='Pattern description')
     example: str | None = Field(None, description='Usage example')
 
 
-class Tool(Enum):
+class Tool(str, Enum):
     """Database migration tool.
 
     - alembic: SQLAlchemy's Alembic
@@ -317,7 +319,7 @@ class MigrationSpec(ExtensionModel):
     )
 
 
-class Name(Enum):
+class Name(str, Enum):
     """Supported database system.
 
     - postgresql: PostgreSQL

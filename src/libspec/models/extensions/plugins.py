@@ -15,7 +15,7 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr
+from libspec.models.types import FunctionReference, NonEmptyStr
 
 
 class PluginsTypeFields(ExtensionModel):
@@ -30,7 +30,7 @@ class PluginsTypeFields(ExtensionModel):
     )
 
 
-class Lifecycle(Enum):
+class Lifecycle(str, Enum):
     """Plugin/extension instance lifecycle.
 
     - singleton: Single instance for application lifetime
@@ -66,7 +66,7 @@ class ExtensionPointSpec(ExtensionModel):
     description: str | None = None
 
 
-class HookType(Enum):
+class HookType(str, Enum):
     """Plugin hook mechanism type.
 
     - filter: Transform data as it passes through
@@ -81,7 +81,7 @@ class HookType(Enum):
     wrapper = 'wrapper'
 
 
-class ExecutionOrder(Enum):
+class ExecutionOrder(str, Enum):
     """How multiple hook handlers are executed.
 
     - sequential: Run handlers one by one in order
@@ -96,7 +96,7 @@ class ExecutionOrder(Enum):
     first_match = 'first_match'
 
 
-class ResultCollection(Enum):
+class ResultCollection(str, Enum):
     """How results from multiple hook handlers are collected.
 
     - none: Discard all results
@@ -120,7 +120,7 @@ class HookParamSpec(ExtensionModel):
     description: str | None = None
 
 
-class Validation(Enum):
+class Validation(str, Enum):
     """When registry entries are validated.
 
     - none: No validation
@@ -135,7 +135,7 @@ class Validation(Enum):
     both = 'both'
 
 
-class OverridePolicy(Enum):
+class OverridePolicy(str, Enum):
     """How duplicate registry entries are handled.
 
     - error: Raise exception on duplicate
@@ -160,7 +160,7 @@ class RegistryMethodsSpec(ExtensionModel):
     has: str | None = Field(None, description='Check existence method name')
 
 
-class DiscoveryMechanismType(Enum):
+class DiscoveryMechanismType(str, Enum):
     """How plugins are discovered and loaded.
 
     - entry_points: Python package entry points (setuptools)
@@ -204,14 +204,14 @@ class PluginHookRegistration(ExtensionModel):
 
 
 class PluginLifecycleSpec(ExtensionModel):
-    on_load: str | None = Field(None, description='Method called when plugin loads')
-    on_enable: str | None = Field(
+    on_load: FunctionReference | None = Field(None, description='Method called when plugin loads')
+    on_enable: FunctionReference | None = Field(
         None, description='Method called when plugin is enabled'
     )
-    on_disable: str | None = Field(
+    on_disable: FunctionReference | None = Field(
         None, description='Method called when plugin is disabled'
     )
-    on_unload: str | None = Field(None, description='Method called when plugin unloads')
+    on_unload: FunctionReference | None = Field(None, description='Method called when plugin unloads')
     hot_reload: bool | None = Field(
         None, description='Whether plugin supports hot reload'
     )

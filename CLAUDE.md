@@ -76,3 +76,14 @@ Configure in pyproject.toml under `[tool.libspec.lint]`.
 ## Output Formats
 
 All CLI commands default to JSON with metadata envelope. Use `--text` for compact output, `--no-meta` to omit envelope.
+
+## Multi-File Refactoring
+
+For systematic changes across files, dispatch parallel subagents (one per file) with explicit targets from a plan:
+
+```
+Task: "Update web.py: MiddlewareSpec.type, DependencySpec.factory → FunctionReference | None"
+Task: "Update cli.py: CommandSpec.handler → FunctionReference | None"
+```
+
+Avoid subagents for: cross-file dependencies (order matters), single-line fixes.

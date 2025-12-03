@@ -45,7 +45,7 @@ class SettingSpec(ExtensionModel):
     )
 
 
-class PriorityEnum(Enum):
+class PriorityEnum(str, Enum):
     """Configuration source priority order.
 
     - cli: Command-line arguments (highest priority)
@@ -64,7 +64,7 @@ class PriorityEnum(Enum):
     secrets_manager = 'secrets_manager'
 
 
-class FileFormat(Enum):
+class FileFormat(str, Enum):
     """Configuration file format.
 
     - toml: TOML format (pyproject.toml style)
@@ -116,7 +116,7 @@ class ProfileSpec(ExtensionModel):
     )
 
 
-class SecretsStorage(Enum):
+class SecretsStorage(str, Enum):
     """Where secrets are stored and retrieved from.
 
     - env: Environment variables

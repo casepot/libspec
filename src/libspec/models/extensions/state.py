@@ -11,13 +11,13 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr
+from libspec.models.types import FunctionReference, NonEmptyStr
 
 
-class StoreType(Enum):
+class StoreType(str, Enum):
     """State management library/pattern.
 
     - redux: Redux-style centralized store
@@ -38,7 +38,7 @@ class StoreType(Enum):
 
 class ReducerSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Reducer name')
-    function: str | None = Field(None, description='Reducer function reference')
+    function: FunctionReference | None = Field(None, description='Reducer function reference')
     handles: list[str] | None = Field(
         None, description='Action types this reducer handles'
     )
@@ -58,7 +58,7 @@ class SliceSpec(ExtensionModel):
     )
 
 
-class MachineStateType(Enum):
+class MachineStateType(str, Enum):
     """XState-style state machine state type.
 
     - atomic: Simple state with no children
@@ -91,6 +91,40 @@ class MachineStateSpec(ExtensionModel):
     tags: list[str] | None = Field(None, description='State tags for querying')
     description: str | None = None
 
+    @model_validator(mode='after')
+    def validate_type_consistency(self) -> 'MachineStateSpec':
+        """Validate that type is consistent with children and initial fields."""
+        if self.type is None:
+            return self
+
+        has_children = self.children is not None and len(self.children) > 0
+        has_initial = self.initial is not None
+
+        # Atomic and final states should not have children
+        if self.type in (MachineStateType.atomic, MachineStateType.final, MachineStateType.history):
+            if has_children:
+                raise ValueError(
+                    f"State '{self.name}' has type '{self.type}' but defines "
+                    f"children (children should be empty for {self.type} states)"
+                )
+
+        # Compound states should have children or initial
+        if self.type == MachineStateType.compound:
+            if not has_children and not has_initial:
+                raise ValueError(
+                    f"State '{self.name}' has type 'compound' but has no children "
+                    f"or initial state defined"
+                )
+
+        # Parallel states should have children
+        if self.type == MachineStateType.parallel:
+            if not has_children:
+                raise ValueError(
+                    f"State '{self.name}' has type 'parallel' but has no children defined"
+                )
+
+        return self
+
 
 class MachineEventSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Event name')
@@ -112,11 +146,11 @@ class TransitionSpec(ExtensionModel):
 
 class GuardSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Guard name')
-    function: str | None = Field(None, description='Guard function reference')
+    function: FunctionReference | None = Field(None, description='Guard function reference')
     condition: str | None = Field(None, description='Condition description')
 
 
-class MachineActionType(Enum):
+class MachineActionType(str, Enum):
     """State machine action type.
 
     - assign: Update context/extended state
@@ -140,7 +174,7 @@ class MachineActionSpec(ExtensionModel):
     description: str | None = None
 
 
-class ServiceType(Enum):
+class ServiceType(str, Enum):
     """Invoked service type in state machines.
 
     - promise: Promise/async function service
@@ -158,7 +192,7 @@ class ServiceType(Enum):
 class ServiceSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Service name')
     type: ServiceType | None = Field(None, description='Service type')
-    src: str | None = Field(None, description='Service source/function reference')
+    src: FunctionReference | None = Field(None, description='Service source/function reference')
     on_done: str | None = Field(None, description='Transition on success')
     on_error: str | None = Field(None, description='Transition on error')
 
@@ -167,7 +201,7 @@ class ActionSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Action type name')
     type: str | None = Field(None, description='Action creator type reference')
     payload_type: str | None = Field(None, description='Payload type')
-    creator: str | None = Field(None, description='Action creator function reference')
+    creator: FunctionReference | None = Field(None, description='Action creator function reference')
     async_: bool | None = Field(
         None, alias='async', description='Whether this is an async action/thunk'
     )
@@ -176,7 +210,7 @@ class ActionSpec(ExtensionModel):
 
 class SelectorSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Selector name')
-    function: str | None = Field(None, description='Selector function reference')
+    function: FunctionReference | None = Field(None, description='Selector function reference')
     input_selectors: list[str] | None = Field(
         None, description='Input selectors (for memoization)'
     )
@@ -185,7 +219,7 @@ class SelectorSpec(ExtensionModel):
     description: str | None = None
 
 
-class Intercept(Enum):
+class Intercept(str, Enum):
     """What state middleware intercepts.
 
     - actions: Intercept action dispatches
@@ -217,7 +251,7 @@ class StateShapeSpec(ExtensionModel):
     entities_key: str | None = Field('entities', description='Key for entity maps')
 
 
-class PersistenceStorage(Enum):
+class PersistenceStorage(str, Enum):
     """State persistence storage backend.
 
     - localStorage: Browser localStorage

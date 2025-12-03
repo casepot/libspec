@@ -14,7 +14,7 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr, TimeWindow
+from libspec.models.types import FunctionReference, NonEmptyStr, TimeWindow
 
 
 class EventsTypeFields(ExtensionModel):
@@ -32,7 +32,7 @@ class EventsMethodFields(ExtensionModel):
     )
 
 
-class EventCategory(Enum):
+class EventCategory(str, Enum):
     """Category of event for routing and handling.
 
     - domain: Core business domain events
@@ -58,7 +58,7 @@ class EventFieldSpec(ExtensionModel):
     description: str | None = None
 
 
-class Ordering(Enum):
+class Ordering(str, Enum):
     """Event ordering guarantee for handlers.
 
     - none: No ordering guarantee
@@ -71,7 +71,7 @@ class Ordering(Enum):
     partition_fifo = 'partition_fifo'
 
 
-class Backoff(Enum):
+class Backoff(str, Enum):
     """Retry backoff strategy for failed operations.
 
     - fixed: Same delay between retries
@@ -116,7 +116,7 @@ class RetrySpec(ExtensionModel):
         return self
 
 
-class Operator(Enum):
+class Operator(str, Enum):
     """Comparison operators for event filtering.
 
     Standard comparison and pattern matching operators.
@@ -139,7 +139,7 @@ class EventFilterSpec(ExtensionModel):
     value: Any | None = Field(None, description='Filter value')
 
 
-class EventBusType(Enum):
+class EventBusType(str, Enum):
     """Event bus/message broker implementation.
 
     - in_memory: Local in-process event bus
@@ -162,7 +162,7 @@ class EventBusType(Enum):
     custom = 'custom'
 
 
-class OrderingGuarantee(Enum):
+class OrderingGuarantee(str, Enum):
     """Message ordering guarantee level.
 
     - none: No ordering guarantees
@@ -207,7 +207,7 @@ class TopicSpec(ExtensionModel):
     description: str | None = None
 
 
-class Persistence(Enum):
+class Persistence(str, Enum):
     """Where saga/process state is persisted.
 
     - in_memory: No persistence (lost on restart)
@@ -220,7 +220,7 @@ class Persistence(Enum):
     event_store = 'event_store'
 
 
-class OnFailure(Enum):
+class OnFailure(str, Enum):
     """How saga steps handle failures.
 
     - compensate: Run compensation actions
@@ -274,7 +274,7 @@ class EventSpec(ExtensionModel):
 class HandlerSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Handler name')
     handles: list[str] | None = Field(None, description='Events this handler processes')
-    function: str | None = Field(None, description='Handler function reference')
+    function: FunctionReference | None = Field(None, description='Handler function reference')
     async_: bool | None = Field(
         None, alias='async', description='Whether handler is async'
     )

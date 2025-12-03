@@ -14,7 +14,7 @@ import re
 import warnings
 from typing import Any, Literal
 
-from pydantic import AnyUrl, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+from pydantic import ConfigDict, Field, HttpUrl, ValidationInfo, field_validator, model_validator
 from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
@@ -774,10 +774,10 @@ class Library(ExtensibleModel):
     description: str | None = Field(
         default=None, description="Longer description (Markdown supported)"
     )
-    repository: AnyUrl | None = Field(
+    repository: HttpUrl | None = Field(
         default=None, description="URL to source repository"
     )
-    documentation: AnyUrl | None = Field(
+    documentation: HttpUrl | None = Field(
         default=None, description="URL to documentation"
     )
     principles: list[Principle] = Field(

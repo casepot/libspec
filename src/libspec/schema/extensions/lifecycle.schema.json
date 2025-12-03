@@ -447,10 +447,18 @@
           "type": "string"
         },
         "url": {
-          "format": "uri",
-          "minLength": 1,
-          "title": "Url",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url"
         }
       },
       "required": [
@@ -768,10 +776,18 @@
           "type": "string"
         },
         "url": {
-          "format": "uri",
-          "minLength": 1,
-          "title": "Url",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Url"
         }
       },
       "required": [

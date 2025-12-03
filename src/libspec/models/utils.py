@@ -6,6 +6,7 @@ validators can stay small and consistent across models.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -60,5 +61,48 @@ def validate_local_path(value: str, info: ValidationInfo, field: str) -> str:
     except Exception as exc:  # TypeAdapter raises ValidationError
         raise ValueError(f"{field} must reference an existing file or directory: {value}") from exc
 
+    return value
+
+
+def validate_path_or_url(value: str, info: ValidationInfo, field: str) -> str:
+    """Allow URLs; otherwise enforce local path existence in strict mode.
+
+    This validator accepts:
+    - HTTP/HTTPS URLs (passed through without validation)
+    - Local file/directory paths (validated in strict mode via validate_local_path)
+
+    Args:
+        value: The string to validate (URL or path)
+        info: Pydantic validation context
+        field: Field name for error messages
+
+    Returns:
+        The original value if valid
+
+    Raises:
+        ValueError: If strict mode is enabled and path doesn't exist
+    """
+    if value.startswith(("http://", "https://")):
+        return value
+    return validate_local_path(value, info, field)
+
+
+def validate_regex_pattern(value: str, field: str) -> str:
+    """Validate that a string is a valid regular expression pattern.
+
+    Args:
+        value: The regex pattern string to validate
+        field: Field name for error messages
+
+    Returns:
+        The original pattern if valid
+
+    Raises:
+        ValueError: If the pattern is not a valid regex
+    """
+    try:
+        re.compile(value)
+    except re.error as exc:
+        raise ValueError(f"{field} must be a valid regex pattern: {exc}") from exc
     return value
 
