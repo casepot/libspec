@@ -639,7 +639,7 @@
         "concurrency": {
           "anyOf": [
             {
-              "minimum": 1,
+              "exclusiveMinimum": 0,
               "type": "integer"
             },
             {
@@ -888,7 +888,7 @@
         "max_attempts": {
           "anyOf": [
             {
-              "minimum": 1,
+              "exclusiveMinimum": 0,
               "type": "integer"
             },
             {
@@ -1158,7 +1158,7 @@
         "partitions": {
           "anyOf": [
             {
-              "minimum": 1,
+              "exclusiveMinimum": 0,
               "type": "integer"
             },
             {

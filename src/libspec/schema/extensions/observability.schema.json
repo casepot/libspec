@@ -44,7 +44,7 @@
         "repr_depth": {
           "anyOf": [
             {
-              "minimum": 1,
+              "exclusiveMinimum": 0,
               "type": "integer"
             },
             {

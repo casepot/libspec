@@ -3,6 +3,23 @@
     "Constructor": {
       "additionalProperties": false,
       "description": "Constructor specification.",
+      "examples": [
+        {
+          "signature": "(name: str, age: int = 0)"
+        },
+        {
+          "raises": [
+            {
+              "condition": "Invalid config",
+              "exception": "ValueError"
+            }
+          ],
+          "signature": "(config: dict[str, Any])",
+          "validates": [
+            "config keys must be non-empty"
+          ]
+        }
+      ],
       "properties": {
         "parameters": {
           "description": "Constructor parameters",
@@ -123,6 +140,17 @@
     "EnumValue": {
       "additionalProperties": false,
       "description": "An enum member value.",
+      "examples": [
+        {
+          "description": "Primary color red",
+          "name": "RED",
+          "value": 1
+        },
+        {
+          "name": "PENDING",
+          "value": "'pending'"
+        }
+      ],
       "properties": {
         "description": {
           "anyOf": [
@@ -163,12 +191,25 @@
       "required": [
         "name"
       ],
-      "title": "EnumValue",
+      "title": "Enum Value",
       "type": "object"
     },
     "Export": {
       "additionalProperties": false,
       "description": "A symbol exported from a module with origin tracking.",
+      "examples": [
+        {
+          "name": "MyClass",
+          "origin": "defined",
+          "public": true
+        },
+        {
+          "name": "helper",
+          "origin": "reexported",
+          "public": true,
+          "source_module": "mylib._internal"
+        }
+      ],
       "properties": {
         "name": {
           "description": "Exported symbol name",
@@ -675,6 +716,21 @@
     "GenericParam": {
       "additionalProperties": false,
       "description": "A generic type parameter (TypeVar, ParamSpec, or TypeVarTuple).",
+      "examples": [
+        {
+          "bound": "Comparable",
+          "kind": "type_var",
+          "name": "T"
+        },
+        {
+          "kind": "param_spec",
+          "name": "P"
+        },
+        {
+          "kind": "type_var_tuple",
+          "name": "Ts"
+        }
+      ],
       "properties": {
         "bound": {
           "anyOf": [
@@ -748,7 +804,7 @@
       "required": [
         "name"
       ],
-      "title": "GenericParam",
+      "title": "Generic Parameter",
       "type": "object"
     },
     "GenericParamKind": {
@@ -910,6 +966,24 @@
     },
     "Method": {
       "description": "A method definition.",
+      "examples": [
+        {
+          "description": "Read up to size bytes from the stream",
+          "name": "read",
+          "signature": "(self, size: int = -1) -> bytes"
+        },
+        {
+          "name": "__init__",
+          "parameters": [
+            {
+              "name": "path",
+              "required": true,
+              "type": "str"
+            }
+          ],
+          "signature": "(self, path: str) -> None"
+        }
+      ],
       "properties": {
         "async_yields": {
           "anyOf": [
@@ -1181,6 +1255,16 @@
     "OverloadSpec": {
       "additionalProperties": false,
       "description": "An overloaded signature variant for type-checking (@overload decorator).",
+      "examples": [
+        {
+          "description": "Integer input",
+          "signature": "(x: int) -> int"
+        },
+        {
+          "description": "String input",
+          "signature": "(x: str) -> str"
+        }
+      ],
       "properties": {
         "description": {
           "anyOf": [
@@ -1240,12 +1324,25 @@
       "required": [
         "signature"
       ],
-      "title": "OverloadSpec",
+      "title": "Overload Spec",
       "type": "object"
     },
     "Parameter": {
       "additionalProperties": false,
       "description": "A function or method parameter.",
+      "examples": [
+        {
+          "description": "Input data to process",
+          "name": "data",
+          "type": "str"
+        },
+        {
+          "default": "30.0",
+          "kind": "keyword_only",
+          "name": "timeout",
+          "type": "float"
+        }
+      ],
       "properties": {
         "default": {
           "anyOf": [
@@ -1410,6 +1507,18 @@
     },
     "Property": {
       "description": "An instance property or attribute.",
+      "examples": [
+        {
+          "name": "id",
+          "readonly": true,
+          "type": "int"
+        },
+        {
+          "default": "''",
+          "name": "name",
+          "type": "str"
+        }
+      ],
       "properties": {
         "default": {
           "anyOf": [
@@ -1526,6 +1635,16 @@
     "RaisesClause": {
       "additionalProperties": false,
       "description": "An exception that may be raised.",
+      "examples": [
+        {
+          "type": "ValueError",
+          "when": "Input is negative"
+        },
+        {
+          "type": "FileNotFoundError",
+          "when": "Path does not exist"
+        }
+      ],
       "properties": {
         "python_added": {
           "anyOf": [
@@ -1565,12 +1684,22 @@
       "required": [
         "type"
       ],
-      "title": "RaisesClause",
+      "title": "Raises Clause",
       "type": "object"
     },
     "ReturnSpec": {
       "additionalProperties": false,
       "description": "Return value specification.",
+      "examples": [
+        {
+          "description": "True if operation succeeded",
+          "type": "bool"
+        },
+        {
+          "description": "List of matching users",
+          "type": "list[User]"
+        }
+      ],
       "properties": {
         "description": {
           "anyOf": [
@@ -1641,7 +1770,7 @@
       "required": [
         "type"
       ],
-      "title": "ReturnSpec",
+      "title": "Return Specification",
       "type": "object"
     },
     "TypeDef": {
@@ -1908,6 +2037,16 @@
     "YieldSpec": {
       "additionalProperties": false,
       "description": "Generator yield specification.",
+      "examples": [
+        {
+          "description": "Lines from the file",
+          "type": "str"
+        },
+        {
+          "description": "Chunk index and data",
+          "type": "tuple[int, bytes]"
+        }
+      ],
       "properties": {
         "description": {
           "anyOf": [
@@ -1947,7 +2086,7 @@
       "required": [
         "type"
       ],
-      "title": "YieldSpec",
+      "title": "Yield Specification",
       "type": "object"
     }
   },

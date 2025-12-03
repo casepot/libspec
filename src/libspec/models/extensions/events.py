@@ -9,7 +9,7 @@ This module defines models for event-driven architecture:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated, Any
+from typing import Any
 
 from pydantic import Field, model_validator
 
@@ -18,6 +18,8 @@ from libspec.models.types import (
     FunctionReference,
     MethodName,
     NonEmptyStr,
+    NonNegativeFloat,
+    PositiveInt,
     RegexPattern,
     SemVer,
     TimeWindow,
@@ -96,14 +98,12 @@ class Backoff(str, Enum):
 
 
 class RetrySpec(ExtensionModel):
-    max_attempts: Annotated[int, Field(ge=1)] | None = Field(
-        default=None, description='Maximum retry attempts'
-    )
+    max_attempts: PositiveInt | None = Field(default=None, description='Maximum retry attempts')
     backoff: Backoff | None = Field(None, description='Backoff strategy')
-    initial_delay: Annotated[float, Field(ge=0.0)] | None = Field(
+    initial_delay: NonNegativeFloat | None = Field(
         default=None, description='Initial delay in seconds'
     )
-    max_delay: Annotated[float, Field(ge=0.0)] | None = Field(
+    max_delay: NonNegativeFloat | None = Field(
         default=None, description='Maximum delay in seconds'
     )
     jitter: bool | None = Field(None, description='Whether to add jitter')
@@ -228,11 +228,9 @@ class EventBusSpec(ExtensionModel):
 class TopicSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Topic name')
     pattern: RegexPattern | None = Field(None, description='Topic pattern (for wildcards)')
-    partitions: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Number of partitions')
+    partitions: PositiveInt | None = Field(default=None, description='Number of partitions')
     retention: TimeWindow | None = Field(None, description='Message retention period')
-    events: list[str] | None = Field(
-        None, description='Event types published to this topic'
-    )
+    events: list[str] | None = Field(None, description='Event types published to this topic')
     subscribers: list[str] | None = Field(None, description='Subscriber handler names')
     description: str | None = None
 
@@ -269,9 +267,7 @@ class SagaStepSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Step name')
     action: MethodName | None = Field(None, description='Action to perform (command/event)')
     wait_for: list[str] | None = Field(None, description='Events to wait for')
-    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
-        default=None, description='Step timeout in seconds'
-    )
+    timeout: NonNegativeFloat | None = Field(default=None, description='Step timeout in seconds')
     on_failure: OnFailure | None = Field(None, description='Failure handling')
 
 
@@ -305,16 +301,10 @@ class HandlerSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Handler name')
     handles: list[str] | None = Field(None, description='Events this handler processes')
     function: FunctionReference | None = Field(None, description='Handler function reference')
-    async_: bool | None = Field(
-        None, alias='async', description='Whether handler is async'
-    )
+    async_: bool | None = Field(None, alias='async', description='Whether handler is async')
     retry: RetrySpec | None = None
-    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
-        default=None, description='Handler timeout in seconds'
-    )
-    concurrency: Annotated[int, Field(ge=1)] | None = Field(
-        default=None, description='Max concurrent executions'
-    )
+    timeout: NonNegativeFloat | None = Field(default=None, description='Handler timeout in seconds')
+    concurrency: PositiveInt | None = Field(default=None, description='Max concurrent executions')
     ordering: Ordering | None = Field(None, description='Event ordering guarantee')
     idempotent: bool | None = Field(None, description='Whether handler is idempotent')
     dead_letter: TopicName | None = Field(None, description='Dead letter topic on failure')
@@ -335,19 +325,11 @@ class HandlerSpec(ExtensionModel):
 class SagaSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Saga name')
     type: str | None = Field(None, description='Saga class reference')
-    starts_with: list[str] | None = Field(
-        None, description='Events that start this saga'
-    )
+    starts_with: list[str] | None = Field(None, description='Events that start this saga')
     steps: list[SagaStepSpec] | None = Field(None, description='Saga steps')
-    compensations: list[CompensationSpec] | None = Field(
-        None, description='Compensation actions'
-    )
-    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
-        default=None, description='Saga timeout in seconds'
-    )
-    persistence: Persistence | None = Field(
-        None, description='State persistence strategy'
-    )
+    compensations: list[CompensationSpec] | None = Field(None, description='Compensation actions')
+    timeout: NonNegativeFloat | None = Field(default=None, description='Saga timeout in seconds')
+    persistence: Persistence | None = Field(None, description='State persistence strategy')
     description: str | None = None
 
 

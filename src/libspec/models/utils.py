@@ -14,6 +14,61 @@ from pydantic import DirectoryPath, FilePath, TypeAdapter, ValidationInfo
 
 from libspec.models.types import STRICT_CONTEXT_KEY
 
+__all__ = [
+    "SPEC_DIR_CONTEXT_KEY",
+    "STRICT_CONTEXT_KEY",
+    "compare_versions",
+    "ensure_strict_bool",
+    "in_strict_mode",
+    "validate_local_path",
+    "validate_path_or_url",
+    "validate_regex_pattern",
+]
+
+# -----------------------------------------------------------------------------
+# Version Comparison
+# -----------------------------------------------------------------------------
+
+
+def compare_versions(v1: str, v2: str) -> int:
+    """Compare two version strings.
+
+    Returns:
+        -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2.
+        Returns 0 if versions cannot be compared (non-standard formats).
+    """
+    # Strip common prefixes like >=, <=, ~=, ==, etc.
+    def normalize(v: str) -> str:
+        return re.sub(r"^[><=~!]+\s*", "", v.strip())
+
+    v1_clean = normalize(v1)
+    v2_clean = normalize(v2)
+
+    try:
+        # Split into numeric parts
+        parts1 = [int(x) for x in re.split(r"[.-]", v1_clean) if x.isdigit()]
+        parts2 = [int(x) for x in re.split(r"[.-]", v2_clean) if x.isdigit()]
+
+        # Pad to same length
+        max_len = max(len(parts1), len(parts2))
+        parts1.extend([0] * (max_len - len(parts1)))
+        parts2.extend([0] * (max_len - len(parts2)))
+
+        for p1, p2 in zip(parts1, parts2):
+            if p1 < p2:
+                return -1
+            if p1 > p2:
+                return 1
+        return 0
+    except (ValueError, AttributeError):
+        # Cannot compare non-standard versions, assume OK
+        return 0
+
+
+# -----------------------------------------------------------------------------
+# Context Helpers
+# -----------------------------------------------------------------------------
+
 SPEC_DIR_CONTEXT_KEY = "spec_dir"
 
 _PATH_ADAPTER: TypeAdapter[FilePath | DirectoryPath] = TypeAdapter(

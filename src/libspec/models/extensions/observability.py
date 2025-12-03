@@ -9,12 +9,21 @@ This module defines models for observability specifications:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated
 
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import LoggerName, MethodName, MetricName, NonEmptyStr, RoutePath
+from libspec.models.types import (
+    LoggerName,
+    MethodName,
+    MetricName,
+    NonEmptyStr,
+    NonNegativeFloat,
+    PositiveFloat,
+    PositiveInt,
+    RoutePath,
+    SamplingRate,
+)
 
 
 class LogLevel(str, Enum):
@@ -73,10 +82,8 @@ class MetricSpec(ExtensionModel):
     type: MetricType = Field(default=..., description='Metric type')
     description: str | None = Field(None, description='What this metric measures')
     labels: list[str] | None = Field(None, description='Label names for this metric')
-    unit: str | None = Field(
-        None, description="Unit of measurement (e.g., 'seconds', 'bytes')"
-    )
-    buckets: list[Annotated[float, Field(ge=0.0)]] | None = Field(
+    unit: str | None = Field(None, description="Unit of measurement (e.g., 'seconds', 'bytes')")
+    buckets: list[NonNegativeFloat] | None = Field(
         default=None, description='Histogram buckets (for histogram type)'
     )
 
@@ -129,13 +136,9 @@ class Sampling(str, Enum):
 
 class TracingSpec(ExtensionModel):
     span_names: list[str] | None = Field(None, description='Span names used')
-    propagation: Propagation | None = Field(
-        None, description='Context propagation format'
-    )
+    propagation: Propagation | None = Field(None, description='Context propagation format')
     sampling: Sampling | None = Field(None, description='Sampling strategy')
-    sampling_rate: Annotated[float, Field(ge=0.0, le=1.0)] | None = Field(
-        default=None, description='Sampling rate (0.0-1.0)'
-    )
+    sampling_rate: SamplingRate | None = Field(default=None, description='Sampling rate (0.0-1.0)')
     attributes: list[str] | None = Field(None, description='Standard span attributes')
     events: list[str] | None = Field(None, description='Span events emitted')
     baggage: list[str] | None = Field(None, description='Baggage items propagated')
@@ -172,12 +175,8 @@ class HealthCheckSpec(ExtensionModel):
     type: HealthCheckType = Field(default=..., description='Health check type')
     endpoint: RoutePath | None = Field(None, description='HTTP endpoint path')
     method: MethodName | None = Field(None, description='Method to call for health check')
-    timeout: Annotated[float, Field(gt=0)] | None = Field(
-        default=None, description='Timeout in seconds'
-    )
-    interval: Annotated[float, Field(gt=0)] | None = Field(
-        default=None, description='Check interval in seconds'
-    )
+    timeout: PositiveFloat | None = Field(default=None, description='Timeout in seconds')
+    interval: PositiveFloat | None = Field(default=None, description='Check interval in seconds')
     dependencies: list[str] | None = Field(None, description='Dependencies checked')
 
     @model_validator(mode='after')
@@ -205,12 +204,8 @@ class TraceFormat(str, Enum):
 
 
 class DebugToolsSpec(ExtensionModel):
-    repr_depth: Annotated[int, Field(ge=1)] | None = Field(
-        default=None, description='Default __repr__ recursion depth'
-    )
-    sensitive_fields: list[str] | None = Field(
-        None, description='Fields redacted in debug output'
-    )
+    repr_depth: PositiveInt | None = Field(default=None, description='Default __repr__ recursion depth')
+    sensitive_fields: list[str] | None = Field(None, description='Fields redacted in debug output')
     trace_format: TraceFormat | None = Field(None, description='Trace output format')
     profiling_supported: bool | None = Field(
         None, description='Whether profiling hooks are available'

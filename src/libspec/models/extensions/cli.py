@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Annotated, Any
+from typing import Any
 
 from pydantic import Field, model_validator
 
@@ -18,8 +18,10 @@ from libspec.models.base import ExtensionModel
 from libspec.models.types import (
     CommandName,
     EnvVarName,
+    ExitCode,
     FunctionReference,
     NonEmptyStr,
+    PositiveInt,
     RegexPattern,
     TypeAnnotationStr,
 )
@@ -32,7 +34,7 @@ class ExampleSpec(ExtensionModel):
 
 
 class ExitCodeSpec(ExtensionModel):
-    code: Annotated[int, Field(ge=0, le=255)] = Field(default=..., description='Exit code value')
+    code: ExitCode = Field(default=..., description='Exit code value')
     name: str | None = Field(None, description='Exit code name')
     description: str | None = Field(None, description='When this code is returned')
 
@@ -105,15 +107,9 @@ class Color(str, Enum):
 
 
 class HelpFormattingSpec(ExtensionModel):
-    max_width: Annotated[int, Field(ge=1)] | None = Field(
-        default=None, description='Maximum help text width'
-    )
-    show_default: bool | None = Field(
-        None, description='Show defaults in help by default'
-    )
-    show_envvar: bool | None = Field(
-        None, description='Show env vars in help by default'
-    )
+    max_width: PositiveInt | None = Field(default=None, description='Maximum help text width')
+    show_default: bool | None = Field(None, description='Show defaults in help by default')
+    show_envvar: bool | None = Field(None, description='Show env vars in help by default')
     rich_markup: bool | None = Field(
         None, description='Whether rich markup is supported'
     )

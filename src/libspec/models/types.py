@@ -1,10 +1,20 @@
 """Type definitions, enums, and constrained types for libspec models."""
 
+import re
+from decimal import Decimal
 from enum import Enum
 from pathlib import Path as PathlibPath
 from typing import Annotated, Any
 
-from pydantic import BeforeValidator, Field, StringConstraints, ValidationInfo
+from pydantic import (
+    AfterValidator,
+    BeforeValidator,
+    DirectoryPath,
+    Field,
+    FilePath,
+    StringConstraints,
+    ValidationInfo,
+)
 
 # -----------------------------------------------------------------------------
 # Constrained String Types
@@ -151,9 +161,18 @@ MetricName = Annotated[
 ]
 """Prometheus-compatible metric name (e.g., 'http_requests_total', 'process_cpu_seconds')."""
 
-# Regular expression pattern (validated at parse time via validator if needed)
-RegexPattern = Annotated[str, StringConstraints(min_length=1)]
-"""Regular expression pattern string."""
+# Regular expression pattern (validated at parse time)
+def _validate_regex(value: str) -> str:
+    """Validate that a string is a valid regular expression."""
+    try:
+        re.compile(value)
+    except re.error as exc:
+        raise ValueError(f"Invalid regex pattern: {exc}") from exc
+    return value
+
+
+RegexPattern = Annotated[str, StringConstraints(min_length=1), AfterValidator(_validate_regex)]
+"""Regular expression pattern string. Validated to be a syntactically valid regex."""
 
 # Logger name (dotted Python path for logging)
 LoggerName = Annotated[
@@ -255,6 +274,35 @@ NonNegativeInt = Annotated[int, Field(ge=0)]
 
 ByteSize = Annotated[int, Field(ge=0)]
 """Size in bytes (non-negative)."""
+
+# Decimal types for precise measurements
+PositiveDecimal = Annotated[Decimal, Field(gt=0)]
+"""Positive decimal number (>0) for precise measurements like benchmarks, rates."""
+
+NonNegativeDecimal = Annotated[Decimal, Field(ge=0)]
+"""Non-negative decimal (>=0) for optional precise measurements."""
+
+# Float types for durations and rates
+NonNegativeFloat = Annotated[float, Field(ge=0.0)]
+"""Non-negative float (>=0.0) for optional durations and rates."""
+
+PositiveFloat = Annotated[float, Field(gt=0)]
+"""Positive float (>0) for required durations like timeouts and intervals."""
+
+# Exit codes (Unix/POSIX conventions)
+ExitCode = Annotated[int, Field(ge=0, le=255)]
+"""Process exit code (0-255) following Unix/POSIX conventions."""
+
+
+# -----------------------------------------------------------------------------
+# Path Types (Strict Validation)
+# -----------------------------------------------------------------------------
+
+StrictFilePath = FilePath
+"""Path that must exist and be a file. Use when file existence validation is required."""
+
+StrictDirectoryPath = DirectoryPath
+"""Path that must exist and be a directory. Use when directory existence validation is required."""
 
 
 # -----------------------------------------------------------------------------

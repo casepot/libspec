@@ -42,42 +42,7 @@ from .types import (
     VersionConstraintStr,
     Visibility,
 )
-
-
-def _compare_versions(v1: str, v2: str) -> int:
-    """Compare two version strings.
-
-    Returns:
-        -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2.
-        Returns 0 if versions cannot be compared (non-standard formats).
-    """
-    # Strip common prefixes like >=, <=, ~=, ==, etc.
-    def normalize(v: str) -> str:
-        return re.sub(r'^[><=~!]+\s*', '', v.strip())
-
-    v1_clean = normalize(v1)
-    v2_clean = normalize(v2)
-
-    try:
-        # Split into numeric parts
-        parts1 = [int(x) for x in re.split(r'[.-]', v1_clean) if x.isdigit()]
-        parts2 = [int(x) for x in re.split(r'[.-]', v2_clean) if x.isdigit()]
-
-        # Pad to same length
-        max_len = max(len(parts1), len(parts2))
-        parts1.extend([0] * (max_len - len(parts1)))
-        parts2.extend([0] * (max_len - len(parts2)))
-
-        for p1, p2 in zip(parts1, parts2):
-            if p1 < p2:
-                return -1
-            if p1 > p2:
-                return 1
-        return 0
-    except (ValueError, AttributeError):
-        # Cannot compare non-standard versions, assume OK
-        return 0
-
+from .utils import compare_versions
 
 # -----------------------------------------------------------------------------
 # Function/Method Components (Leaf Types)
@@ -86,6 +51,16 @@ def _compare_versions(v1: str, v2: str) -> int:
 
 class Parameter(LibspecModel):
     """A function or method parameter."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Parameter",
+            "examples": [
+                {"name": "data", "type": "str", "description": "Input data to process"},
+                {"name": "timeout", "type": "float", "default": "30.0", "kind": "keyword_only"},
+            ],
+        }
+    )
 
     name: NonEmptyStr = Field(
         description="Parameter name",
@@ -113,6 +88,16 @@ class Parameter(LibspecModel):
 
 class ReturnSpec(LibspecModel):
     """Return value specification."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Return Specification",
+            "examples": [
+                {"type": "bool", "description": "True if operation succeeded"},
+                {"type": "list[User]", "description": "List of matching users"},
+            ],
+        }
+    )
 
     type: TypeAnnotationStr = Field(description="Return type annotation")
     description: str | None = Field(
@@ -144,6 +129,16 @@ class ReturnSpec(LibspecModel):
 class YieldSpec(LibspecModel):
     """Generator yield specification."""
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Yield Specification",
+            "examples": [
+                {"type": "str", "description": "Lines from the file"},
+                {"type": "tuple[int, bytes]", "description": "Chunk index and data"},
+            ],
+        }
+    )
+
     type: TypeAnnotationStr = Field(description="Yielded type annotation")
     description: str | None = Field(
         default=None, description="What each yielded value represents"
@@ -156,6 +151,16 @@ class YieldSpec(LibspecModel):
 
 class RaisesClause(LibspecModel):
     """An exception that may be raised."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Raises Clause",
+            "examples": [
+                {"type": "ValueError", "when": "Input is negative"},
+                {"type": "FileNotFoundError", "when": "Path does not exist"},
+            ],
+        }
+    )
 
     type: TypeAnnotationStr = Field(description="Exception type name")
     when: str | None = Field(
@@ -196,7 +201,7 @@ class DeprecationInfo(LibspecModel):
             )
         # Warn if since >= removal (deprecated version should be before removal)
         if self.since is not None and self.removal is not None:
-            if _compare_versions(self.since, self.removal) >= 0:
+            if compare_versions(self.since, self.removal) >= 0:
                 warnings.warn(
                     f"Deprecation 'since' ({self.since}) should be earlier than "
                     f"'removal' ({self.removal})",
@@ -213,6 +218,17 @@ class DeprecationInfo(LibspecModel):
 
 class GenericParam(LibspecModel):
     """A generic type parameter (TypeVar, ParamSpec, or TypeVarTuple)."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Generic Parameter",
+            "examples": [
+                {"name": "T", "kind": "type_var", "bound": "Comparable"},
+                {"name": "P", "kind": "param_spec"},
+                {"name": "Ts", "kind": "type_var_tuple"},
+            ],
+        }
+    )
 
     name: NonEmptyStr = Field(description="Parameter name (e.g., 'T', 'P', 'Ts')")
     kind: GenericParamKind = Field(
@@ -271,6 +287,16 @@ class GenericParam(LibspecModel):
 class Property(ExtensibleModel):
     """An instance property or attribute."""
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Property",
+            "examples": [
+                {"name": "id", "type": "int", "readonly": True},
+                {"name": "name", "type": "str", "default": "''"},
+            ],
+        }
+    )
+
     name: NonEmptyStr = Field(description="Property name")
     type: TypeAnnotationStr | None = Field(
         default=None, description="Property type annotation"
@@ -314,6 +340,16 @@ class Property(ExtensibleModel):
 class EnumValue(LibspecModel):
     """An enum member value."""
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Enum Value",
+            "examples": [
+                {"name": "RED", "value": 1, "description": "Primary color red"},
+                {"name": "PENDING", "value": "'pending'"},
+            ],
+        }
+    )
+
     name: NonEmptyStr = Field(description="Enum member name")
     value: str | int | None = Field(
         default=None, description="Enum member value (e.g., 'auto()' or explicit value)"
@@ -330,6 +366,16 @@ class EnumValue(LibspecModel):
 
 class OverloadSpec(LibspecModel):
     """An overloaded signature variant for type-checking (@overload decorator)."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Overload Spec",
+            "examples": [
+                {"signature": "(x: int) -> int", "description": "Integer input"},
+                {"signature": "(x: str) -> str", "description": "String input"},
+            ],
+        }
+    )
 
     signature: NonEmptyStr = Field(description="The overloaded signature variant")
     parameters: list[Parameter] = Field(
@@ -350,6 +396,24 @@ class OverloadSpec(LibspecModel):
 
 class Method(ExtensibleModel):
     """A method definition."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Method",
+            "examples": [
+                {
+                    "name": "read",
+                    "signature": "(self, size: int = -1) -> bytes",
+                    "description": "Read up to size bytes from the stream",
+                },
+                {
+                    "name": "__init__",
+                    "signature": "(self, path: str) -> None",
+                    "parameters": [{"name": "path", "type": "str", "required": True}],
+                },
+            ],
+        }
+    )
 
     name: NonEmptyStr = Field(
         description="Method name",
@@ -442,6 +506,20 @@ class Method(ExtensibleModel):
 
 class Constructor(LibspecModel):
     """Constructor specification."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Constructor",
+            "examples": [
+                {"signature": "(name: str, age: int = 0)"},
+                {
+                    "signature": "(config: dict[str, Any])",
+                    "validates": ["config keys must be non-empty"],
+                    "raises": [{"exception": "ValueError", "condition": "Invalid config"}],
+                },
+            ],
+        }
+    )
 
     signature: NonEmptyStr = Field(description="Constructor signature")
     parameters: list[Parameter] = Field(
@@ -817,6 +895,21 @@ class Feature(ExtensibleModel):
 
 class Export(LibspecModel):
     """A symbol exported from a module with origin tracking."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Export",
+            "examples": [
+                {"name": "MyClass", "origin": "defined", "public": True},
+                {
+                    "name": "helper",
+                    "origin": "reexported",
+                    "source_module": "mylib._internal",
+                    "public": True,
+                },
+            ],
+        }
+    )
 
     name: NonEmptyStr = Field(description="Exported symbol name")
     origin: ExportOrigin = Field(

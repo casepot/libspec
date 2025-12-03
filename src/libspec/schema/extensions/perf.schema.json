@@ -266,7 +266,7 @@
         "alignment": {
           "anyOf": [
             {
-              "minimum": 1,
+              "exclusiveMinimum": 0,
               "type": "integer"
             },
             {
@@ -476,7 +476,7 @@
         "max_concurrent": {
           "anyOf": [
             {
-              "minimum": 1,
+              "exclusiveMinimum": 0,
               "type": "integer"
             },
             {
