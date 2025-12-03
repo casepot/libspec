@@ -113,6 +113,11 @@ class RetrySpec(ExtensionModel):
                 UserWarning,
                 stacklevel=2,
             )
+        if self.initial_delay is not None and self.max_delay is not None:
+            if self.max_delay < self.initial_delay:
+                raise ValueError(
+                    f"max_delay ({self.max_delay}) must be >= initial_delay ({self.initial_delay})"
+                )
         return self
 
 
@@ -137,6 +142,7 @@ class EventFilterSpec(ExtensionModel):
     field: str | None = Field(None, description='Field to filter on')
     operator: Operator | None = Field(None, description='Filter operator')
     value: Any | None = Field(None, description='Filter value')
+    description: str | None = None
 
 
 class EventBusType(str, Enum):
@@ -267,7 +273,7 @@ class EventSpec(ExtensionModel):
     version: str | None = Field(None, description='Event schema version')
     idempotency_key: str | None = Field(None, description='Field used for idempotency')
     ordering_key: str | None = Field(None, description='Field used for ordering')
-    ttl: str | None = Field(None, description='Event time-to-live')
+    ttl: TimeWindow | None = Field(None, description='Event time-to-live')
     description: str | None = None
 
 

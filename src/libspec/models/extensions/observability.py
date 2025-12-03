@@ -138,11 +138,16 @@ class TracingSpec(ExtensionModel):
     baggage: list[str] | None = Field(None, description='Baggage items propagated')
 
     @model_validator(mode='after')
-    def validate_probabilistic_sampling(self) -> 'TracingSpec':
-        """If sampling=probabilistic, sampling_rate is required."""
+    def validate_sampling_config(self) -> 'TracingSpec':
+        """Validate sampling configuration consistency."""
         if self.sampling == Sampling.probabilistic:
             if self.sampling_rate is None:
                 raise ValueError('sampling_rate is required when sampling=probabilistic')
+        if self.sampling_rate is not None:
+            if self.sampling not in (Sampling.probabilistic, Sampling.rate_limited):
+                raise ValueError(
+                    f"sampling_rate only valid for probabilistic/rate_limited, not {self.sampling}"
+                )
         return self
 
 

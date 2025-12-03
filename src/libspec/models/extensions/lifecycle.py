@@ -130,7 +130,7 @@ class DeprecationNoticeEvidence(EvidenceBase):
 
     type: Literal["deprecation_notice"]
     reference: NonEmptyStr
-    date: date_type = Field(..., description="Date of the deprecation notice")  # type: ignore[assignment]  # Required - valid Pydantic pattern
+    date: date_type = Field(..., description="Date of the deprecation notice")  # Required for deprecation notices
 
 
 class CustomEvidence(EvidenceBase):

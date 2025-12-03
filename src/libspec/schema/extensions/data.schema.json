@@ -1248,7 +1248,7 @@
       "type": "string"
     },
     "TransformCategory": {
-      "description": "Data transformation operation category.\n\n- select: Column/field selection\n- filter: Row/record filtering\n- aggregate: Grouping and aggregation\n- join: Combining datasets\n- reshape: Pivot, melt, stack operations\n- sort: Ordering records\n- window: Window/rolling operations\n- fill: Missing value handling\n- cast: Type conversion\n- custom: Custom transformation",
+      "description": "Data transformation operation category.\n\n- select: Column/field selection\n- filter: Row/record filtering\n- aggregate: Grouping and aggregation\n- join_: Combining datasets (named join_ to avoid shadowing str.join)\n- reshape: Pivot, melt, stack operations\n- sort: Ordering records\n- window: Window/rolling operations\n- fill: Missing value handling\n- cast: Type conversion\n- custom: Custom transformation",
       "enum": [
         "select",
         "filter",
@@ -1298,6 +1298,8 @@
         "method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {

@@ -146,6 +146,38 @@ MetricName = Annotated[
 RegexPattern = Annotated[str, StringConstraints(min_length=1)]
 """Regular expression pattern string."""
 
+# Logger name (dotted Python path for logging)
+LoggerName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$", min_length=1),
+]
+"""Python logger name (dotted path format, e.g., 'mylib' or 'mylib.submodule')."""
+
+# Message queue topic/channel name
+TopicName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9]*([._-][a-z0-9]+)*$", min_length=1),
+]
+"""Message queue topic/channel name (e.g., 'user-events', 'orders.created')."""
+
+# State tree path
+StatePath = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$", min_length=1),
+]
+"""Dot-separated path in state tree (e.g., 'user.profile.name')."""
+
+# Python entry point group name
+EntryPointGroup = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9]*([._][a-z0-9]+)*$", min_length=1),
+]
+"""Python entry point group name (e.g., 'console_scripts', 'pytest11')."""
+
+# Path or URL (for mixed fields that accept either)
+PathOrUrl = Annotated[str, StringConstraints(min_length=1)]
+"""Either a local file path or URL (validated contextually in strict mode)."""
+
 
 # -----------------------------------------------------------------------------
 # Core Enums
@@ -165,6 +197,7 @@ class TypeKind(str, Enum):
     NEWTYPE = "newtype"  # PEP 484 - distinct wrapper type (e.g., UserId = NewType('UserId', int))
     LITERAL = "literal"  # PEP 586 - literal type definitions
     GENERIC_ALIAS = "generic_alias"  # PEP 695 - type X[T] = ... syntax (Python 3.12+)
+    UNION = "union"  # PEP 604 - union types (X | Y syntax, Python 3.10+)
 
 
 class FunctionKind(str, Enum):
@@ -176,6 +209,10 @@ class FunctionKind(str, Enum):
     ASYNC_CONTEXT_MANAGER = "async_context_manager"
     GENERATOR = "generator"
     ASYNC_GENERATOR = "async_generator"
+    PROPERTY = "property"  # @property decorated method
+    STATICMETHOD = "staticmethod"  # @staticmethod decorated method
+    CLASSMETHOD = "classmethod"  # @classmethod decorated method
+    COROUTINE = "coroutine"  # Async coroutine (distinct from async generator)
 
 
 class ParameterKind(str, Enum):

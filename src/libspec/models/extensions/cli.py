@@ -180,6 +180,16 @@ class OptionSpec(ExtensionModel):
     show_envvar: bool | None = Field(None, description='Whether to show envvar in help')
     shell_complete: CompletionSpec | None = None
 
+    @model_validator(mode='after')
+    def validate_flag_consistency(self) -> 'OptionSpec':
+        """Validate flag-related field consistency."""
+        if self.is_flag:
+            if self.count:
+                raise ValueError("is_flag and count are mutually exclusive")
+            if self.prompt:
+                raise ValueError("Flags (is_flag=True) cannot prompt for input")
+        return self
+
 
 class CommandSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Command name')

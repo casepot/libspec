@@ -607,7 +607,11 @@
         "context_manager",
         "async_context_manager",
         "generator",
-        "async_generator"
+        "async_generator",
+        "property",
+        "staticmethod",
+        "classmethod",
+        "coroutine"
       ],
       "title": "FunctionKind",
       "type": "string"
@@ -1750,7 +1754,8 @@
         "typed_dict",
         "newtype",
         "literal",
-        "generic_alias"
+        "generic_alias",
+        "union"
       ],
       "title": "TypeKind",
       "type": "string"

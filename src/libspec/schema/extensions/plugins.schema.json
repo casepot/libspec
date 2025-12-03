@@ -563,7 +563,7 @@
       "type": "string"
     },
     "OverridePolicy": {
-      "description": "How duplicate registry entries are handled.\n\n- error: Raise exception on duplicate\n- warn: Log warning and keep original\n- replace: Replace existing with new entry\n- ignore: Silently keep original entry",
+      "description": "How duplicate registry entries are handled.\n\n- error: Raise exception on duplicate\n- warn: Log warning and keep original\n- replace_: Replace existing with new entry (named replace_ to avoid shadowing str.replace)\n- ignore: Silently keep original entry",
       "enum": [
         "error",
         "warn",

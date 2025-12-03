@@ -134,6 +134,18 @@
     },
     "ErrorHandlerSpec": {
       "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
         "exception": {
           "description": "Exception type to handle",
           "title": "Exception",
@@ -585,6 +597,18 @@
           "default": null,
           "description": "Burst allowance",
           "title": "Burst"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
         },
         "key": {
           "anyOf": [
@@ -1193,6 +1217,8 @@
         },
         "path": {
           "description": "WebSocket endpoint path",
+          "minLength": 1,
+          "pattern": "^/.*$",
           "title": "Path",
           "type": "string"
         },

@@ -209,6 +209,7 @@ class ErrorHandlerSpec(ExtensionModel):
     status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
     response_type: str | None = Field(None, description='Response model type')
     handler: str | None = Field(None, description='Custom handler function')
+    description: str | None = None
 
 
 class RateLimitSpec(ExtensionModel):
@@ -218,6 +219,7 @@ class RateLimitSpec(ExtensionModel):
     window: str | None = Field(None, description="Time window (e.g., '1m', '1h')")
     key: str | None = Field(None, description="Rate limit key (e.g., 'ip', 'user')")
     burst: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Burst allowance')
+    description: str | None = None
 
     @model_validator(mode='after')
     def validate_rate_limit_config(self) -> 'RateLimitSpec':
@@ -293,7 +295,7 @@ class RouteSpec(ExtensionModel):
 
 
 class WebSocketSpec(ExtensionModel):
-    path: str = Field(default=..., description='WebSocket endpoint path')
+    path: RoutePath = Field(default=..., description='WebSocket endpoint path')
     handler: FunctionReference | None = Field(None, description='Handler function reference')
     subprotocols: list[str] | None = Field(None, description='Supported subprotocols')
     auth: Auth | None = None

@@ -123,6 +123,14 @@ class MachineStateSpec(ExtensionModel):
                     f"State '{self.name}' has type 'parallel' but has no children defined"
                 )
 
+        # Validate initial state is in children
+        if self.initial is not None and self.children:
+            child_names = {c.name for c in self.children}
+            if self.initial not in child_names:
+                raise ValueError(
+                    f"State '{self.name}' initial state '{self.initial}' not in children: {child_names}"
+                )
+
         return self
 
 
@@ -169,7 +177,7 @@ class MachineActionType(str, Enum):
 
 class MachineActionSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Action name')
-    function: str | None = Field(None, description='Action function reference')
+    function: FunctionReference | None = Field(None, description='Action function reference')
     type: MachineActionType | None = Field(None, description='Action type')
     description: str | None = None
 

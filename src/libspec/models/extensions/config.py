@@ -11,7 +11,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import CliFlag, EnvVarName, NonEmptyStr, ShortFlag
@@ -43,6 +43,23 @@ class SettingSpec(ExtensionModel):
     choices: list[Any] | None = Field(
         default=None, description='Valid choices for enum-like settings'
     )
+
+    @model_validator(mode='after')
+    def validate_setting_consistency(self) -> 'SettingSpec':
+        """Validate setting configuration consistency."""
+        import warnings
+
+        if self.required is True and self.default is not None:
+            raise ValueError(
+                f"Setting '{self.name}' is required but has a default value"
+            )
+        if self.deprecated is True and not self.deprecated_message:
+            warnings.warn(
+                f"Setting '{self.name}' is deprecated but has no deprecated_message",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self
 
 
 class PriorityEnum(str, Enum):

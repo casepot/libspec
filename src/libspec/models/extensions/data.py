@@ -14,7 +14,7 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import FunctionReference, NonEmptyStr, TypeAnnotationStr
 
 
 class CopySemantics(str, Enum):
@@ -105,7 +105,7 @@ class TransformCategory(str, Enum):
     - select: Column/field selection
     - filter: Row/record filtering
     - aggregate: Grouping and aggregation
-    - join: Combining datasets
+    - join_: Combining datasets (named join_ to avoid shadowing str.join)
     - reshape: Pivot, melt, stack operations
     - sort: Ordering records
     - window: Window/rolling operations
@@ -117,7 +117,7 @@ class TransformCategory(str, Enum):
     select = 'select'
     filter = 'filter'
     aggregate = 'aggregate'
-    join = 'join'
+    join_ = 'join'  # Avoid shadowing str.join()
     reshape = 'reshape'
     sort = 'sort'
     window = 'window'
@@ -129,7 +129,7 @@ class TransformCategory(str, Enum):
 class TransformSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Transform name')
     category: TransformCategory = Field(default=..., description='Transform category')
-    method: str | None = Field(None, description='Method reference')
+    method: FunctionReference | None = Field(None, description='Method reference')
     input_shape: str | None = Field(
         None, description="Expected input shape (e.g., '1D', '2D', 'any')"
     )

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import FunctionReference, NonEmptyStr
@@ -171,18 +171,36 @@ class EncoderSpec(ExtensionModel):
     )
     description: str | None = None
 
+    @model_validator(mode='after')
+    def validate_encoder_source(self) -> 'EncoderSpec':
+        """Validate encoder has exactly one source."""
+        if self.function is None and self.method is None:
+            raise ValueError(f"Encoder '{self.name}' must specify function or method")
+        if self.function is not None and self.method is not None:
+            raise ValueError(f"Encoder '{self.name}' cannot specify both function and method")
+        return self
+
 
 class DecoderSpec(ExtensionModel):
     """Custom decoder specification."""
 
     name: NonEmptyStr = Field(default=..., description="Decoder name")
     type: str = Field(default=..., description="Type this decoder produces")
-    function: str | None = Field(None, description="Decoder function reference")
+    function: FunctionReference | None = Field(None, description="Decoder function reference")
     factory: FunctionReference | None = Field(None, description="Factory method on the type")
     priority: int | None = Field(
         None, ge=0, description="Priority when multiple decoders match"
     )
     description: str | None = None
+
+    @model_validator(mode='after')
+    def validate_decoder_source(self) -> 'DecoderSpec':
+        """Validate decoder has exactly one source."""
+        if self.function is None and self.factory is None:
+            raise ValueError(f"Decoder '{self.name}' must specify function or factory")
+        if self.function is not None and self.factory is not None:
+            raise ValueError(f"Decoder '{self.name}' cannot specify both function and factory")
+        return self
 
 
 class TypeHandlerSpec(ExtensionModel):

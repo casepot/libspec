@@ -241,6 +241,18 @@
     },
     "EventFilterSpec": {
       "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
         "field": {
           "anyOf": [
             {
@@ -387,6 +399,8 @@
         "ttl": {
           "anyOf": [
             {
+              "minLength": 2,
+              "pattern": "^[0-9]+(ms|s|m|h|d)$",
               "type": "string"
             },
             {

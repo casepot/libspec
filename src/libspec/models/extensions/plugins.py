@@ -140,13 +140,13 @@ class OverridePolicy(str, Enum):
 
     - error: Raise exception on duplicate
     - warn: Log warning and keep original
-    - replace: Replace existing with new entry
+    - replace_: Replace existing with new entry (named replace_ to avoid shadowing str.replace)
     - ignore: Silently keep original entry
     """
 
     error = 'error'
     warn = 'warn'
-    replace = 'replace'
+    replace_ = 'replace'  # Avoid shadowing str.replace()
     ignore = 'ignore'
 
 

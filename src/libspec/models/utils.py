@@ -15,7 +15,9 @@ from pydantic import DirectoryPath, FilePath, TypeAdapter, ValidationInfo
 STRICT_CONTEXT_KEY = "strict_models"
 SPEC_DIR_CONTEXT_KEY = "spec_dir"
 
-_PATH_ADAPTER = TypeAdapter(FilePath | DirectoryPath)
+_PATH_ADAPTER: TypeAdapter[FilePath | DirectoryPath] = TypeAdapter(
+    FilePath | DirectoryPath
+)
 
 
 def in_strict_mode(info: ValidationInfo | None) -> bool:
@@ -68,7 +70,7 @@ def validate_path_or_url(value: str, info: ValidationInfo, field: str) -> str:
     """Allow URLs; otherwise enforce local path existence in strict mode.
 
     This validator accepts:
-    - HTTP/HTTPS URLs (passed through without validation)
+    - HTTP/HTTPS/file:// URLs (passed through without validation)
     - Local file/directory paths (validated in strict mode via validate_local_path)
 
     Args:
@@ -82,7 +84,7 @@ def validate_path_or_url(value: str, info: ValidationInfo, field: str) -> str:
     Raises:
         ValueError: If strict mode is enabled and path doesn't exist
     """
-    if value.startswith(("http://", "https://")):
+    if value.startswith(("http://", "https://", "file://")):
         return value
     return validate_local_path(value, info, field)
 
