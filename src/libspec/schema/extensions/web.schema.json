@@ -111,6 +111,7 @@
         },
         "type": {
           "description": "Dependency type",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -169,6 +170,7 @@
         "response_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -231,6 +233,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -315,7 +318,7 @@
       "type": "object"
     },
     "Method": {
-      "description": "HTTP request methods.\n\nStandard methods plus wildcard for matching any method.",
+      "description": "HTTP request methods.\n\nStandard methods plus wildcard for matching any method.\nMember names use lowercase for consistency with other enums.",
       "enum": [
         "get",
         "post",
@@ -703,6 +706,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -780,6 +784,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -1060,6 +1065,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {

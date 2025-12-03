@@ -236,6 +236,7 @@
         },
         "type": {
           "description": "Type this decoder produces",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -374,6 +375,7 @@
         },
         "type": {
           "description": "Type this encoder handles",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -594,6 +596,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -1408,6 +1411,7 @@
         },
         "type": {
           "description": "Option type",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -1473,6 +1477,8 @@
         "deserialize_method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -1577,6 +1583,8 @@
         "serialize_method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -1603,6 +1611,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -1689,6 +1698,7 @@
         },
         "type": {
           "description": "Type this handler manages",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }

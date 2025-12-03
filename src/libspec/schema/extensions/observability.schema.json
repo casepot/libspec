@@ -137,6 +137,8 @@
         "method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -190,7 +192,7 @@
       "type": "string"
     },
     "LogLevel": {
-      "description": "Standard Python logging levels.\n\nNote: Values are lowercase for consistency with other enums in libspec,\nthough Python's logging module uses uppercase level names.",
+      "description": "Standard Python logging levels.\n\nMember names and values are lowercase for consistency with other enums\nin libspec. Python's logging module uses uppercase level names internally.",
       "enum": [
         "debug",
         "info",

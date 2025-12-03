@@ -170,6 +170,7 @@
         "path": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -205,6 +206,7 @@
           "anyOf": [
             {
               "format": "uri",
+              "maxLength": 2083,
               "minLength": 1,
               "type": "string"
             },
@@ -776,18 +778,11 @@
           "type": "string"
         },
         "url": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Url"
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
         }
       },
       "required": [

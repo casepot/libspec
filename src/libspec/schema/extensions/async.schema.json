@@ -136,6 +136,8 @@
         "on_enter": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -149,6 +151,8 @@
         "on_exit": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {

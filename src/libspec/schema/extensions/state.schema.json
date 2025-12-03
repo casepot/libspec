@@ -51,6 +51,7 @@
         "payload_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -64,6 +65,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -224,6 +226,7 @@
         "payload_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -494,7 +497,7 @@
       "type": "object"
     },
     "PersistenceStorage": {
-      "description": "State persistence storage backend.\n\n- localStorage: Browser localStorage\n- sessionStorage: Browser sessionStorage\n- indexedDB: Browser IndexedDB\n- asyncStorage: React Native AsyncStorage\n- custom: Custom storage implementation",
+      "description": "State persistence storage backend.\n\nMember names use snake_case for consistency with other enums.\nValues retain camelCase for JavaScript compatibility.",
       "enum": [
         "localStorage",
         "sessionStorage",
@@ -955,6 +958,7 @@
         "context_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {

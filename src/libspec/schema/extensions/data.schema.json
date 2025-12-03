@@ -641,6 +641,8 @@
         "collect_method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -682,6 +684,8 @@
         "explain_method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -777,6 +781,8 @@
         "read_method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -816,6 +822,8 @@
         "write_method": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
               "type": "string"
             },
             {
@@ -920,6 +928,8 @@
           "anyOf": [
             {
               "items": {
+                "minLength": 1,
+                "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
                 "type": "string"
               },
               "type": "array"
@@ -962,6 +972,8 @@
           "anyOf": [
             {
               "items": {
+                "minLength": 1,
+                "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
                 "type": "string"
               },
               "type": "array"

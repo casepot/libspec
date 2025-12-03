@@ -100,7 +100,7 @@
         "on_delete": {
           "anyOf": [
             {
-              "$ref": "#/$defs/OnDelete"
+              "$ref": "#/$defs/ReferentialAction"
             },
             {
               "type": "null"
@@ -112,7 +112,7 @@
         "on_update": {
           "anyOf": [
             {
-              "$ref": "#/$defs/OnUpdate"
+              "$ref": "#/$defs/ReferentialAction"
             },
             {
               "type": "null"
@@ -811,30 +811,6 @@
       "title": "ORMLibraryFields",
       "type": "object"
     },
-    "OnDelete": {
-      "description": "Foreign key ON DELETE referential action.\n\nValues use lowercase with underscores, mapping to SQL keywords:\n- cascade: Delete child rows when parent is deleted (SQL: CASCADE)\n- set_null: Set child foreign key to NULL (SQL: SET NULL)\n- set_default: Set child foreign key to default value (SQL: SET DEFAULT)\n- restrict: Prevent deletion if children exist (SQL: RESTRICT)\n- no_action: Defer check until transaction end (SQL: NO ACTION)",
-      "enum": [
-        "cascade",
-        "set_null",
-        "set_default",
-        "restrict",
-        "no_action"
-      ],
-      "title": "OnDelete",
-      "type": "string"
-    },
-    "OnUpdate": {
-      "description": "Foreign key ON UPDATE referential action.\n\nValues use lowercase with underscores, mapping to SQL keywords:\n- cascade: Update child rows when parent key changes (SQL: CASCADE)\n- set_null: Set child foreign key to NULL (SQL: SET NULL)\n- set_default: Set child foreign key to default value (SQL: SET DEFAULT)\n- restrict: Prevent update if children exist (SQL: RESTRICT)\n- no_action: Defer check until transaction end (SQL: NO ACTION)",
-      "enum": [
-        "cascade",
-        "set_null",
-        "set_default",
-        "restrict",
-        "no_action"
-      ],
-      "title": "OnUpdate",
-      "type": "string"
-    },
     "Pattern": {
       "description": "Database query/persistence pattern.\n\n- repository: Repository pattern (abstraction over data access)\n- active_record: Objects know how to persist themselves\n- data_mapper: Separate mapper handles persistence\n- query_builder: Fluent query construction\n- raw_sql: Direct SQL execution",
       "enum": [
@@ -958,6 +934,18 @@
       ],
       "title": "QueryPatternSpec",
       "type": "object"
+    },
+    "ReferentialAction": {
+      "description": "Foreign key referential action (ON UPDATE / ON DELETE).\n\nActions taken when a referenced row is updated or deleted:\n- cascade: Propagate change to child rows (CASCADE)\n- set_null: Set foreign key to NULL (SET NULL)\n- set_default: Set foreign key to default value (SET DEFAULT)\n- restrict: Prevent change if children exist (RESTRICT)\n- no_action: Defer check until transaction end (NO ACTION)",
+      "enum": [
+        "cascade",
+        "set_null",
+        "set_default",
+        "restrict",
+        "no_action"
+      ],
+      "title": "ReferentialAction",
+      "type": "string"
     },
     "RelationshipSpec": {
       "properties": {
