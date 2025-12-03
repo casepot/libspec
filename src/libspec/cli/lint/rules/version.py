@@ -6,9 +6,13 @@ that python_added fields are consistent with python_requires.
 
 from typing import Any, Iterator
 
+from typing_extensions import override
+
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
 from libspec.python_versions import (
+    DEPRECATED_PATTERNS,
+    TYPING_EXTENSIONS_BACKPORTS,
     detect_type_features,
     is_version_compatible,
     parse_python_requires,
@@ -41,6 +45,82 @@ def _check_python_added(
         )
 
 
+def _check_callable_nested_fields(
+    callable_obj: dict[str, Any],
+    base_path: str,
+    base_ref: str,
+    library_requires: str | None,
+    severity: Severity,
+) -> Iterator[LintIssue]:
+    """Check nested python_added fields in a callable (method/function).
+
+    Checks: returns, parameters, raises, overloads, yields, async_yields.
+    """
+    # Check returns
+    returns = callable_obj.get("returns")
+    if returns and isinstance(returns, dict):
+        yield from _check_python_added(
+            f"{base_path}.returns.python_added",
+            f"{base_ref}/returns",
+            returns.get("python_added"),
+            library_requires,
+            severity,
+        )
+
+    # Check parameters
+    for k, param in enumerate(callable_obj.get("parameters", [])):
+        param_name = param.get("name", "")
+        yield from _check_python_added(
+            f"{base_path}.parameters[{k}].python_added",
+            f"{base_ref}/parameters/{param_name}",
+            param.get("python_added"),
+            library_requires,
+            severity,
+        )
+
+    # Check raises
+    for k, raises in enumerate(callable_obj.get("raises", [])):
+        yield from _check_python_added(
+            f"{base_path}.raises[{k}].python_added",
+            f"{base_ref}/raises/{k}",
+            raises.get("python_added"),
+            library_requires,
+            severity,
+        )
+
+    # Check overloads
+    for k, overload in enumerate(callable_obj.get("overloads", [])):
+        yield from _check_python_added(
+            f"{base_path}.overloads[{k}].python_added",
+            f"{base_ref}/overloads/{k}",
+            overload.get("python_added"),
+            library_requires,
+            severity,
+        )
+
+    # Check yields (for generators)
+    yields = callable_obj.get("yields")
+    if yields and isinstance(yields, dict):
+        yield from _check_python_added(
+            f"{base_path}.yields.python_added",
+            f"{base_ref}/yields",
+            yields.get("python_added"),
+            library_requires,
+            severity,
+        )
+
+    # Check async_yields (for async generators)
+    async_yields = callable_obj.get("async_yields")
+    if async_yields and isinstance(async_yields, dict):
+        yield from _check_python_added(
+            f"{base_path}.async_yields.python_added",
+            f"{base_ref}/async_yields",
+            async_yields.get("python_added"),
+            library_requires,
+            severity,
+        )
+
+
 def _check_signature_features(
     entity_path: str,
     entity_ref: str,
@@ -57,7 +137,7 @@ def _check_signature_features(
         return
 
     features = list(detect_type_features(signature))
-    for feature_name, feature_version, context in features:
+    for feature_name, feature_version, _context in features:
         if version_compare(feature_version, min_version) > 0:
             yield LintIssue(
                 rule="V002",
@@ -81,6 +161,7 @@ class PythonAddedCompatibility(LintRule):
     default_severity = Severity.WARNING
     category = "version"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         library = spec.get("library", {})
         python_requires = library.get("python_requires")
@@ -98,17 +179,89 @@ class PythonAddedCompatibility(LintRule):
                 severity,
             )
 
-            # Check methods
+            # Check methods (and nested fields)
             for j, method in enumerate(type_def.get("methods", [])):
                 method_name = method.get("name", "")
                 method_added = method.get("python_added")
+                base_path = f"$.library.types[{i}].methods[{j}]"
+                base_ref = f"#/types/{name}/methods/{method_name}"
                 yield from _check_python_added(
-                    f"$.library.types[{i}].methods[{j}].python_added",
-                    f"#/types/{name}/methods/{method_name}",
+                    f"{base_path}.python_added",
+                    base_ref,
                     method_added,
                     python_requires,
                     severity,
                 )
+                # Check nested fields (returns, parameters, raises, overloads, yields)
+                yield from _check_callable_nested_fields(
+                    method, base_path, base_ref, python_requires, severity
+                )
+
+            # Check class_methods (and nested fields)
+            for j, method in enumerate(type_def.get("class_methods", [])):
+                method_name = method.get("name", "")
+                method_added = method.get("python_added")
+                base_path = f"$.library.types[{i}].class_methods[{j}]"
+                base_ref = f"#/types/{name}/class_methods/{method_name}"
+                yield from _check_python_added(
+                    f"{base_path}.python_added",
+                    base_ref,
+                    method_added,
+                    python_requires,
+                    severity,
+                )
+                yield from _check_callable_nested_fields(
+                    method, base_path, base_ref, python_requires, severity
+                )
+
+            # Check static_methods (and nested fields)
+            for j, method in enumerate(type_def.get("static_methods", [])):
+                method_name = method.get("name", "")
+                method_added = method.get("python_added")
+                base_path = f"$.library.types[{i}].static_methods[{j}]"
+                base_ref = f"#/types/{name}/static_methods/{method_name}"
+                yield from _check_python_added(
+                    f"{base_path}.python_added",
+                    base_ref,
+                    method_added,
+                    python_requires,
+                    severity,
+                )
+                yield from _check_callable_nested_fields(
+                    method, base_path, base_ref, python_requires, severity
+                )
+
+            # Check construction (and nested fields)
+            construction = type_def.get("construction")
+            if construction:
+                base_path = f"$.library.types[{i}].construction"
+                base_ref = f"#/types/{name}/construction"
+                yield from _check_python_added(
+                    f"{base_path}.python_added",
+                    base_ref,
+                    construction.get("python_added"),
+                    python_requires,
+                    severity,
+                )
+                # Check construction parameters
+                for k, param in enumerate(construction.get("parameters", [])):
+                    param_name = param.get("name", "")
+                    yield from _check_python_added(
+                        f"{base_path}.parameters[{k}].python_added",
+                        f"{base_ref}/parameters/{param_name}",
+                        param.get("python_added"),
+                        python_requires,
+                        severity,
+                    )
+                # Check construction raises
+                for k, raises in enumerate(construction.get("raises", [])):
+                    yield from _check_python_added(
+                        f"{base_path}.raises[{k}].python_added",
+                        f"{base_ref}/raises/{k}",
+                        raises.get("python_added"),
+                        python_requires,
+                        severity,
+                    )
 
             # Check properties
             for j, prop in enumerate(type_def.get("properties", [])):
@@ -134,16 +287,22 @@ class PythonAddedCompatibility(LintRule):
                     severity,
                 )
 
-        # Check functions
+        # Check functions (and nested fields)
         for i, func in enumerate(library.get("functions", [])):
             name = func.get("name", "")
             python_added = func.get("python_added")
+            base_path = f"$.library.functions[{i}]"
+            base_ref = f"#/functions/{name}"
             yield from _check_python_added(
-                f"$.library.functions[{i}].python_added",
-                f"#/functions/{name}",
+                f"{base_path}.python_added",
+                base_ref,
                 python_added,
                 python_requires,
                 severity,
+            )
+            # Check nested fields (returns, parameters, raises, overloads, yields)
+            yield from _check_callable_nested_fields(
+                func, base_path, base_ref, python_requires, severity
             )
 
 
@@ -157,6 +316,7 @@ class SignatureVersionFeatures(LintRule):
     default_severity = Severity.WARNING
     category = "version"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         library = spec.get("library", {})
         python_requires = library.get("python_requires")
@@ -232,6 +392,7 @@ class MissingPythonRequires(LintRule):
     default_severity = Severity.INFO
     category = "version"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         library = spec.get("library", {})
         python_requires = library.get("python_requires")
@@ -264,9 +425,12 @@ class MissingPythonRequires(LintRule):
             if signature:
                 all_features.extend(detect_type_features(signature))
 
-        # Only report if we found version-specific features >= 3.9
-        # (3.8 is baseline, so features from 3.8 don't trigger this)
-        notable_features = [f for f in all_features if f[1] >= "3.9"]
+        # Get configurable baseline (defaults to 3.8)
+        baseline = config.get("lint", {}).get("baseline_python_version", "3.8")
+        # Compare version strings - features newer than baseline trigger this rule
+        notable_features = [
+            f for f in all_features if version_compare(f[1], baseline) > 0
+        ]
         if notable_features:
             # Find the highest required version
             highest_version = max(f[1] for f in notable_features)
@@ -349,6 +513,7 @@ class GenericParamVersionFeatures(LintRule):
                     ref=f"#/{entity_type}/{entity_name}/generic_params/{gparam_name}",
                 )
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         library = spec.get("library", {})
         python_requires = library.get("python_requires")
@@ -394,6 +559,7 @@ class ExceptionGroupVersionFeatures(LintRule):
     EXCEPTION_GROUP_TYPES = {"BaseExceptionGroup", "ExceptionGroup"}
     REQUIRED_VERSION = "3.11"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         library = spec.get("library", {})
         python_requires = library.get("python_requires")
@@ -485,3 +651,215 @@ class ExceptionGroupVersionFeatures(LintRule):
                         path=f"$.library.functions[{i}].raises[{k}].type",
                         ref=f"#/functions/{func_name}",
                     )
+
+
+def _check_typing_extensions_needed(
+    signature: str,
+    min_version: str,
+) -> Iterator[tuple[str, str, str]]:
+    """Check if signature uses features that need typing_extensions.
+
+    Yields:
+        Tuples of (feature_name, stdlib_version, typing_extensions_version).
+    """
+    import re
+
+    for feature, (stdlib_ver, te_ver) in TYPING_EXTENSIONS_BACKPORTS.items():
+        # Use word boundary to avoid partial matches
+        pattern = rf"\b{re.escape(feature)}\b"
+        if re.search(pattern, signature):
+            # Only report if stdlib version is newer than target
+            if version_compare(stdlib_ver, min_version) > 0:
+                yield (feature, stdlib_ver, te_ver)
+
+
+def _check_deprecated_patterns(
+    signature: str,
+    min_version: str,
+) -> Iterator[tuple[str, str, str, str]]:
+    """Check if signature uses deprecated typing patterns.
+
+    Yields:
+        Tuples of (old_style, new_style, deprecated_since, found_pattern).
+    """
+    import re
+
+    for pattern, old_style, new_style, deprecated_since in DEPRECATED_PATTERNS:
+        # Only suggest if target version supports the new syntax
+        if version_compare(min_version, deprecated_since) >= 0:
+            if re.search(pattern, signature):
+                yield (old_style, new_style, deprecated_since, pattern)
+
+
+@RuleRegistry.register
+class TypingExtensionsBackport(LintRule):
+    """Detect features that require typing_extensions for older Python versions."""
+
+    id = "V006"
+    name = "typing-extensions-backport"
+    description = "Feature requires typing_extensions for older Python versions"
+    default_severity = Severity.INFO
+    category = "version"
+
+    @override
+    def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
+        library = spec.get("library", {})
+        python_requires = library.get("python_requires")
+        severity = self.get_severity(config)
+
+        if python_requires is None:
+            return
+
+        min_version = parse_python_requires(python_requires)
+        if min_version is None:
+            return
+
+        # Collect all signatures
+        signatures_to_check: list[tuple[str, str, str]] = []  # (sig, path, ref)
+
+        for i, type_def in enumerate(library.get("types", [])):
+            name = type_def.get("name", "")
+
+            for j, method in enumerate(type_def.get("methods", [])):
+                method_name = method.get("name", "")
+                signature = method.get("signature", "")
+                if signature:
+                    signatures_to_check.append((
+                        signature,
+                        f"$.library.types[{i}].methods[{j}].signature",
+                        f"#/types/{name}/methods/{method_name}",
+                    ))
+
+            for j, method in enumerate(type_def.get("class_methods", [])):
+                method_name = method.get("name", "")
+                signature = method.get("signature", "")
+                if signature:
+                    signatures_to_check.append((
+                        signature,
+                        f"$.library.types[{i}].class_methods[{j}].signature",
+                        f"#/types/{name}/class_methods/{method_name}",
+                    ))
+
+            for j, method in enumerate(type_def.get("static_methods", [])):
+                method_name = method.get("name", "")
+                signature = method.get("signature", "")
+                if signature:
+                    signatures_to_check.append((
+                        signature,
+                        f"$.library.types[{i}].static_methods[{j}].signature",
+                        f"#/types/{name}/static_methods/{method_name}",
+                    ))
+
+        for i, func in enumerate(library.get("functions", [])):
+            name = func.get("name", "")
+            signature = func.get("signature", "")
+            if signature:
+                signatures_to_check.append((
+                    signature,
+                    f"$.library.functions[{i}].signature",
+                    f"#/functions/{name}",
+                ))
+
+        # Check each signature
+        for signature, path, ref in signatures_to_check:
+            for feature, stdlib_ver, te_ver in _check_typing_extensions_needed(
+                signature, min_version
+            ):
+                yield LintIssue(
+                    rule="V006",
+                    severity=severity,
+                    message=(
+                        f"'{feature}' requires Python {stdlib_ver}+ or "
+                        f"typing_extensions>={te_ver} for Python {min_version}"
+                    ),
+                    path=path,
+                    ref=ref,
+                    suggested_fix=f"from typing_extensions import {feature}",
+                )
+
+
+@RuleRegistry.register
+class DeprecatedTypingPatterns(LintRule):
+    """Detect deprecated typing patterns that can be modernized."""
+
+    id = "V007"
+    name = "deprecated-typing-patterns"
+    description = "Signature uses deprecated typing patterns"
+    default_severity = Severity.INFO
+    category = "version"
+
+    @override
+    def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
+        library = spec.get("library", {})
+        python_requires = library.get("python_requires")
+        severity = self.get_severity(config)
+
+        if python_requires is None:
+            return
+
+        min_version = parse_python_requires(python_requires)
+        if min_version is None:
+            return
+
+        # Collect all signatures
+        signatures_to_check: list[tuple[str, str, str]] = []  # (sig, path, ref)
+
+        for i, type_def in enumerate(library.get("types", [])):
+            name = type_def.get("name", "")
+
+            for j, method in enumerate(type_def.get("methods", [])):
+                method_name = method.get("name", "")
+                signature = method.get("signature", "")
+                if signature:
+                    signatures_to_check.append((
+                        signature,
+                        f"$.library.types[{i}].methods[{j}].signature",
+                        f"#/types/{name}/methods/{method_name}",
+                    ))
+
+            for j, method in enumerate(type_def.get("class_methods", [])):
+                method_name = method.get("name", "")
+                signature = method.get("signature", "")
+                if signature:
+                    signatures_to_check.append((
+                        signature,
+                        f"$.library.types[{i}].class_methods[{j}].signature",
+                        f"#/types/{name}/class_methods/{method_name}",
+                    ))
+
+            for j, method in enumerate(type_def.get("static_methods", [])):
+                method_name = method.get("name", "")
+                signature = method.get("signature", "")
+                if signature:
+                    signatures_to_check.append((
+                        signature,
+                        f"$.library.types[{i}].static_methods[{j}].signature",
+                        f"#/types/{name}/static_methods/{method_name}",
+                    ))
+
+        for i, func in enumerate(library.get("functions", [])):
+            name = func.get("name", "")
+            signature = func.get("signature", "")
+            if signature:
+                signatures_to_check.append((
+                    signature,
+                    f"$.library.functions[{i}].signature",
+                    f"#/functions/{name}",
+                ))
+
+        # Check each signature
+        for signature, path, ref in signatures_to_check:
+            for old_style, new_style, deprecated_since, _ in _check_deprecated_patterns(
+                signature, min_version
+            ):
+                yield LintIssue(
+                    rule="V007",
+                    severity=severity,
+                    message=(
+                        f"'{old_style}' is deprecated since Python {deprecated_since}, "
+                        f"use '{new_style}' instead"
+                    ),
+                    path=path,
+                    ref=ref,
+                    suggested_fix=f"Replace {old_style} with {new_style}",
+                )
