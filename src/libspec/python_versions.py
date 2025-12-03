@@ -179,6 +179,67 @@ def version_compare(v1: str, v2: str) -> int:
     return 0
 
 
+# Mapping of typing features to typing_extensions backport availability
+# Format: feature -> (stdlib_version, typing_extensions_version)
+TYPING_EXTENSIONS_BACKPORTS: dict[str, tuple[str, str]] = {
+    # PEP 544 (Protocols) - available in typing_extensions since early versions
+    "Protocol": ("3.8", "3.7"),
+    "runtime_checkable": ("3.8", "3.7"),
+    # PEP 586 (Literal)
+    "Literal": ("3.8", "3.7"),
+    # PEP 589 (TypedDict)
+    "TypedDict": ("3.8", "3.7"),
+    # PEP 591 (Final)
+    "Final": ("3.8", "3.7"),
+    "final": ("3.8", "3.7"),
+    # PEP 593 (Annotated)
+    "Annotated": ("3.9", "3.7"),
+    # PEP 612 (ParamSpec)
+    "ParamSpec": ("3.10", "3.10"),
+    "Concatenate": ("3.10", "3.10"),
+    # PEP 613 (TypeAlias)
+    "TypeAlias": ("3.10", "3.10"),
+    # PEP 647 (TypeGuard)
+    "TypeGuard": ("3.10", "3.10"),
+    # PEP 646 (TypeVarTuple)
+    "TypeVarTuple": ("3.11", "4.0"),
+    "Unpack": ("3.11", "4.0"),
+    # PEP 655 (Required/NotRequired for TypedDict)
+    "Required": ("3.11", "4.0"),
+    "NotRequired": ("3.11", "4.0"),
+    # PEP 673 (Self)
+    "Self": ("3.11", "4.0"),
+    # PEP 675 (LiteralString)
+    "LiteralString": ("3.11", "4.0"),
+    # PEP 681 (dataclass_transform)
+    "dataclass_transform": ("3.11", "4.1"),
+    # PEP 698 (override)
+    "override": ("3.12", "4.4"),
+    # PEP 702 (deprecated)
+    "deprecated": ("3.13", "4.5"),
+    # PEP 705 (ReadOnly)
+    "ReadOnly": ("3.13", "4.9"),
+    # PEP 742 (TypeIs)
+    "TypeIs": ("3.13", "4.10"),
+}
+
+
+# Deprecated typing patterns that can be modernized
+# Format: (regex_pattern, old_style, new_style, deprecated_since_version)
+DEPRECATED_PATTERNS: list[tuple[str, str, str, str]] = [
+    # PEP 585 (Python 3.9) - Generic types can use built-in syntax
+    (r"\bList\[", "List[T]", "list[T]", "3.9"),
+    (r"\bDict\[", "Dict[K, V]", "dict[K, V]", "3.9"),
+    (r"\bSet\[", "Set[T]", "set[T]", "3.9"),
+    (r"\bFrozenSet\[", "FrozenSet[T]", "frozenset[T]", "3.9"),
+    (r"\bTuple\[", "Tuple[T, ...]", "tuple[T, ...]", "3.9"),
+    (r"\bType\[", "Type[C]", "type[C]", "3.9"),
+    # PEP 604 (Python 3.10) - Union syntax
+    (r"\bOptional\[", "Optional[X]", "X | None", "3.10"),
+    (r"\bUnion\[", "Union[X, Y]", "X | Y", "3.10"),
+]
+
+
 def is_version_compatible(
     feature_version: str, library_requires: str | None
 ) -> bool:

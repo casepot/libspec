@@ -72,6 +72,9 @@ class TypeKind(str, Enum):
     TYPE_ALIAS = "type_alias"
     NAMEDTUPLE = "namedtuple"
     TYPED_DICT = "typed_dict"  # PEP 589
+    NEWTYPE = "newtype"  # PEP 484 - distinct wrapper type (e.g., UserId = NewType('UserId', int))
+    LITERAL = "literal"  # PEP 586 - literal type definitions
+    GENERIC_ALIAS = "generic_alias"  # PEP 695 - type X[T] = ... syntax (Python 3.12+)
 
 
 class FunctionKind(str, Enum):
@@ -111,6 +114,19 @@ class GenericVariance(str, Enum):
     CONTRAVARIANT = "contravariant"
 
 
+class BehaviorMode(str, Enum):
+    """Mode for handling implicit/explicit behaviors.
+
+    Common pattern used across extensions for specifying how the library
+    handles automatic vs manual operations (e.g., type coercion, validation).
+    """
+
+    IMPLICIT = "implicit"  # Automatically applied
+    EXPLICIT = "explicit"  # Must be explicitly requested
+    ERROR = "error"  # Raise an error
+    WARN = "warn"  # Log a warning but continue
+
+
 class ExtensionName(str, Enum):
     """Available extension names."""
 
@@ -124,7 +140,7 @@ class ExtensionName(str, Enum):
     EVENTS = "events"
     STATE = "state"
     PLUGINS = "plugins"
-    ML = "ml"
+    ML = "ml"  # PLANNED: Not yet implemented - ML-specific fields pending design
     SERIALIZATION = "serialization"
 
     # Concern extensions
@@ -171,6 +187,6 @@ class Visibility(str, Enum):
 # Python version constraint for tracking feature introduction
 PythonVersion = Annotated[
     str,
-    StringConstraints(pattern=r"^3\.(8|9|10|11|12|13|14)(\+)?$", min_length=3),
+    StringConstraints(pattern=r"^3\.\d+(\+)?$", min_length=3),
 ]
 """Python version string (e.g., '3.10', '3.11+'). For tracking when features were introduced."""
