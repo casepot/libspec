@@ -2,6 +2,8 @@
 
 from typing import Any, Iterator
 
+from typing_extensions import override
+
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
 
@@ -16,6 +18,7 @@ class MissingTypeDescription(LintRule):
     default_severity = Severity.ERROR
     category = "structural"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -41,6 +44,7 @@ class MissingMethodDescription(LintRule):
     default_severity = Severity.WARNING
     category = "structural"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -69,6 +73,7 @@ class MissingFunctionDescription(LintRule):
     default_severity = Severity.WARNING
     category = "structural"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         functions = spec.get("library", {}).get("functions", [])
         severity = self.get_severity(config)
@@ -94,6 +99,7 @@ class EmptyType(LintRule):
     default_severity = Severity.WARNING
     category = "structural"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)

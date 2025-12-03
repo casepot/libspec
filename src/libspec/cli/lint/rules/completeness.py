@@ -2,6 +2,8 @@
 
 from typing import Any, Iterator
 
+from typing_extensions import override
+
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
 
@@ -16,6 +18,7 @@ class FeatureNoSteps(LintRule):
     default_severity = Severity.WARNING
     category = "completeness"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         features = spec.get("library", {}).get("features", [])
         severity = self.get_severity(config)
@@ -42,6 +45,7 @@ class MethodNoSignature(LintRule):
     default_severity = Severity.ERROR
     category = "completeness"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -69,6 +73,7 @@ class TypeNoModule(LintRule):
     default_severity = Severity.ERROR
     category = "completeness"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -94,6 +99,7 @@ class EnumNoValues(LintRule):
     default_severity = Severity.WARNING
     category = "completeness"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -121,6 +127,7 @@ class ProtocolNoMethods(LintRule):
     default_severity = Severity.WARNING
     category = "completeness"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -150,6 +157,7 @@ class FeatureNoReferences(LintRule):
     default_severity = Severity.INFO
     category = "completeness"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         features = spec.get("library", {}).get("features", [])
         severity = self.get_severity(config)

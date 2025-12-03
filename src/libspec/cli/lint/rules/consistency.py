@@ -2,6 +2,8 @@
 
 from typing import Any, Iterator
 
+from typing_extensions import override
+
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
 
@@ -58,6 +60,7 @@ class DanglingReference(LintRule):
     default_severity = Severity.ERROR
     category = "consistency"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         valid_refs = collect_valid_refs(spec)
         library = spec.get("library", {})
@@ -101,6 +104,7 @@ class DuplicateTypeName(LintRule):
     default_severity = Severity.ERROR
     category = "consistency"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -131,6 +135,7 @@ class DuplicateFeatureId(LintRule):
     default_severity = Severity.ERROR
     category = "consistency"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         features = spec.get("library", {}).get("features", [])
         severity = self.get_severity(config)
@@ -161,6 +166,7 @@ class InvalidStatusTransition(LintRule):
     default_severity = Severity.WARNING
     category = "consistency"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         features = spec.get("library", {}).get("features", [])
         severity = self.get_severity(config)

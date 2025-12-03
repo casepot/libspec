@@ -2,6 +2,8 @@
 
 from typing import Any, Iterator
 
+from typing_extensions import override
+
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
 
@@ -37,6 +39,7 @@ class InvalidLifecycleState(LintRule):
     default_severity = Severity.ERROR
     category = "lifecycle"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -126,6 +129,7 @@ class MissingRequiredEvidence(LintRule):
     default_severity = Severity.WARNING
     category = "lifecycle"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -197,6 +201,7 @@ class DanglingWorkflowReference(LintRule):
     default_severity = Severity.ERROR
     category = "lifecycle"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -256,6 +261,7 @@ class LifecycleFeatureStatusMismatch(LintRule):
         "removed": "tested",
     }
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -294,6 +300,7 @@ class InvalidWorkflowDefinition(LintRule):
     default_severity = Severity.ERROR
     category = "lifecycle"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -426,6 +433,7 @@ class InvalidEvidenceReference(LintRule):
     default_severity = Severity.WARNING
     category = "lifecycle"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -509,6 +517,7 @@ class UndefinedCustomEvidenceType(LintRule):
     default_severity = Severity.ERROR
     category = "lifecycle"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -544,6 +553,7 @@ class EvidenceMissingRequiredField(LintRule):
     default_severity = Severity.WARNING
     category = "lifecycle"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         if "lifecycle" not in spec.get("extensions", []):
             return
@@ -604,6 +614,7 @@ class InvalidTestPathPattern(LintRule):
         r".*_spec\.rb$",  # Ruby RSpec
     ]
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         import re
 

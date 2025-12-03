@@ -3,6 +3,8 @@
 import re
 from typing import Any, Iterator
 
+from typing_extensions import override
+
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
 
@@ -46,6 +48,7 @@ class FeatureIdFormat(LintRule):
     default_severity = Severity.WARNING
     category = "naming"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         features = spec.get("library", {}).get("features", [])
         severity = self.get_severity(config)
@@ -74,6 +77,7 @@ class PrincipleIdFormat(LintRule):
     default_severity = Severity.WARNING
     category = "naming"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         principles = spec.get("library", {}).get("principles", [])
         severity = self.get_severity(config)
@@ -101,6 +105,7 @@ class TypeNamePascal(LintRule):
     default_severity = Severity.WARNING
     category = "naming"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         types = spec.get("library", {}).get("types", [])
         severity = self.get_severity(config)
@@ -127,6 +132,7 @@ class FunctionNameSnake(LintRule):
     default_severity = Severity.WARNING
     category = "naming"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         functions = spec.get("library", {}).get("functions", [])
         severity = self.get_severity(config)
@@ -154,6 +160,7 @@ class CategoryScreamingSnake(LintRule):
     default_severity = Severity.WARNING
     category = "naming"
 
+    @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         features = spec.get("library", {}).get("features", [])
         severity = self.get_severity(config)
