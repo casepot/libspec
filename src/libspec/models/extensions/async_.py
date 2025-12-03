@@ -11,8 +11,9 @@ This module defines models for async/concurrent system semantics:
 from __future__ import annotations
 
 from enum import Enum
+from typing import Annotated
 
-from pydantic import Field, confloat, conint
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
@@ -33,8 +34,8 @@ class CancellationSpec(ExtensionModel):
     )
 
 
-class StateSpec(ExtensionModel):
-    name: str = Field(..., description='State name')
+class AsyncStateSpec(ExtensionModel):
+    name: str = Field(default=..., description='State name')
     description: str | None = Field(None, description='What this state represents')
     terminal: bool | None = Field(False, description='Whether this is a terminal state')
     on_enter: str | None = Field(
@@ -43,11 +44,11 @@ class StateSpec(ExtensionModel):
     on_exit: str | None = Field(None, description='Action to run on exiting this state')
 
 
-class TransitionSpec(ExtensionModel):
-    from_: str = Field(..., alias='from', description='Source state name')
-    to: str = Field(..., description='Target state name')
+class AsyncTransitionSpec(ExtensionModel):
+    from_: str = Field(default=..., alias='from', description='Source state name')
+    to: str = Field(default=..., description='Target state name')
     trigger: str = Field(
-        ..., description='What causes this transition (method call, event, etc.)'
+        default=..., description='What causes this transition (method call, event, etc.)'
     )
     guard: str | None = Field(
         None, description='Condition that must be true for transition'
@@ -88,8 +89,8 @@ class SyncSpec(ExtensionModel):
     bounded: bool | None = Field(
         None, description='Whether the primitive has a capacity limit'
     )
-    capacity: conint(ge=0) | None = Field(
-        None, description='Maximum capacity (if bounded)'
+    capacity: Annotated[int, Field(ge=0)] | None = Field(
+        default=None, description='Maximum capacity (if bounded)'
     )
     backpressure: SyncBackpressure | None = Field(
         None, description='What happens when capacity is reached'
@@ -119,8 +120,8 @@ class ObservableSpec(ExtensionModel):
     replay: bool | None = Field(
         None, description='Whether late subscribers receive past events'
     )
-    replay_buffer: conint(ge=0) | None = Field(
-        None, description='Number of past events to replay'
+    replay_buffer: Annotated[int, Field(ge=0)] | None = Field(
+        default=None, description='Number of past events to replay'
     )
     multicasting: bool | None = Field(
         None, description='Whether multiple subscribers share the same stream'
@@ -147,8 +148,8 @@ class SchedulingSpec(ExtensionModel):
     preemptible: bool | None = Field(
         None, description='Whether execution can be preempted'
     )
-    timeout_default: confloat(ge=0.0) | None = Field(
-        None, description='Default timeout in seconds'
+    timeout_default: Annotated[float, Field(ge=0.0)] | None = Field(
+        default=None, description='Default timeout in seconds'
     )
 
 
@@ -179,9 +180,9 @@ class AsyncFunctionFields(ExtensionModel):
 
 
 class LifecycleSpec(ExtensionModel):
-    states: list[StateSpec] | None = Field(None, description='All possible states')
+    states: list[AsyncStateSpec] | None = Field(None, description='All possible states')
     initial_state: str | None = Field(None, description='Initial state name')
-    transitions: list[TransitionSpec] | None = Field(
+    transitions: list[AsyncTransitionSpec] | None = Field(
         None, description='Valid state transitions'
     )
 
