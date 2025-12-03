@@ -28,22 +28,6 @@
           "description": "Decorator function (for decorator)",
           "title": "Decorator"
         },
-        "directories": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Directories to scan (for directory_scan)",
-          "title": "Directories"
-        },
         "entry_point_group": {
           "anyOf": [
             {
@@ -70,6 +54,22 @@
           "description": "Package namespace (for namespace_packages)",
           "title": "Namespace"
         },
+        "paths": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Directories to scan (for directory_scan)",
+          "title": "Paths"
+        },
         "pattern": {
           "anyOf": [
             {
@@ -95,6 +95,7 @@
       "type": "object"
     },
     "DiscoveryMechanismType": {
+      "description": "How plugins are discovered and loaded.\n\n- entry_points: Python package entry points (setuptools)\n- namespace_packages: Namespace package scanning\n- directory_scan: Filesystem directory scanning\n- config_file: Configuration file listing\n- explicit: Explicit programmatic registration\n- decorator: Decorator-based registration",
       "enum": [
         "entry_points",
         "namespace_packages",
@@ -171,6 +172,7 @@
       "type": "object"
     },
     "ExecutionOrder": {
+      "description": "How multiple hook handlers are executed.\n\n- sequential: Run handlers one by one in order\n- parallel: Run handlers concurrently\n- pipeline: Each handler output feeds to next\n- first_match: Stop at first handler that returns result",
       "enum": [
         "sequential",
         "parallel",
@@ -260,6 +262,7 @@
         },
         "name": {
           "description": "Extension point name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -421,6 +424,7 @@
         },
         "name": {
           "description": "Hook name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -537,6 +541,7 @@
       "type": "object"
     },
     "HookType": {
+      "description": "Plugin hook mechanism type.\n\n- filter: Transform data as it passes through\n- action: Side effect with no return value\n- event: Notification broadcast to listeners\n- wrapper: Wrap around original function",
       "enum": [
         "filter",
         "action",
@@ -547,6 +552,7 @@
       "type": "string"
     },
     "Lifecycle": {
+      "description": "Plugin/extension instance lifecycle.\n\n- singleton: Single instance for application lifetime\n- per_request: New instance per request/operation\n- transient: New instance on every access",
       "enum": [
         "singleton",
         "per_request",
@@ -556,6 +562,7 @@
       "type": "string"
     },
     "OverridePolicy": {
+      "description": "How duplicate registry entries are handled.\n\n- error: Raise exception on duplicate\n- warn: Log warning and keep original\n- replace: Replace existing with new entry\n- ignore: Silently keep original entry",
       "enum": [
         "error",
         "warn",
@@ -1174,6 +1181,7 @@
       "type": "object"
     },
     "ResultCollection": {
+      "description": "How results from multiple hook handlers are collected.\n\n- none: Discard all results\n- first: Return first non-None result\n- last: Return last result\n- all: Return list of all results\n- merge: Merge results (dicts/lists)",
       "enum": [
         "none",
         "first",
@@ -1185,6 +1193,7 @@
       "type": "string"
     },
     "Validation": {
+      "description": "When registry entries are validated.\n\n- none: No validation\n- on_register: Validate when entry is registered\n- on_access: Validate when entry is retrieved\n- both: Validate on both registration and access",
       "enum": [
         "none",
         "on_register",

@@ -76,6 +76,7 @@
         "removal": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -89,6 +90,7 @@
         "replacement": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -102,6 +104,7 @@
         "since": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -260,6 +263,7 @@
         "breaking_since": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -300,6 +304,7 @@
         "references": {
           "description": "Related types, functions, or features",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "title": "References",
@@ -546,6 +551,7 @@
         "related": {
           "description": "Related types or functions (cross-references)",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "title": "Related",
@@ -776,6 +782,7 @@
         "python_requires": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -879,6 +886,7 @@
         "inherited_from": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -1531,6 +1539,7 @@
         "bases": {
           "description": "Base classes or protocols",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "title": "Bases",
@@ -1650,6 +1659,7 @@
         "related": {
           "description": "Related types or functions (cross-references)",
           "items": {
+            "minLength": 1,
             "type": "string"
           },
           "title": "Related",
@@ -1666,6 +1676,7 @@
         "type_target": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {

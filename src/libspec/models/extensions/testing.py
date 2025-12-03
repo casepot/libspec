@@ -16,6 +16,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import NonEmptyStr, TypeAnnotationStr
 
 # -----------------------------------------------------------------------------
 # Enums
@@ -109,9 +110,9 @@ class CoverageReportFormat(str, Enum):
 class FixtureSpec(ExtensionModel):
     """A pytest fixture definition."""
 
-    name: str = Field(description="Fixture name")
+    name: NonEmptyStr = Field(description="Fixture name")
     scope: FixtureScope | None = Field(default=None, description="Fixture scope")
-    type: str | None = Field(default=None, description="Return type annotation")
+    type: TypeAnnotationStr | None = Field(default=None, description="Return type annotation")
     factory: str | None = Field(
         default=None, description="Factory function reference"
     )
@@ -308,7 +309,7 @@ class MarkerArgSpec(ExtensionModel):
     """A pytest marker argument specification."""
 
     name: str = Field(description="Argument name")
-    type: str | None = Field(default=None, description="Argument type")
+    type: TypeAnnotationStr | None = Field(default=None, description="Argument type")
     required: bool = Field(default=False, description="Whether argument is required")
     description: str | None = Field(default=None, description="What this argument controls")
 
@@ -316,7 +317,7 @@ class MarkerArgSpec(ExtensionModel):
 class MarkerSpec(ExtensionModel):
     """A custom pytest marker definition."""
 
-    name: str = Field(description="Marker name (e.g., 'slow', 'integration')")
+    name: NonEmptyStr = Field(description="Marker name (e.g., 'slow', 'integration')")
     description: str | None = Field(default=None, description="What this marker indicates")
     args: list[MarkerArgSpec] = Field(
         default_factory=list, description="Arguments the marker accepts"

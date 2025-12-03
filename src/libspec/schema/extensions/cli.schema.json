@@ -16,6 +16,8 @@
         "envvar": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z_][A-Z0-9_]*$",
               "type": "string"
             },
             {
@@ -54,6 +56,7 @@
         },
         "name": {
           "description": "Argument name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -100,6 +103,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -207,6 +211,7 @@
       "type": "object"
     },
     "Color": {
+      "description": "Color output mode for CLI help and messages.\n\n- auto: Use color when terminal supports it\n- always: Always use color output\n- never: Never use color output",
       "enum": [
         "auto",
         "always",
@@ -356,6 +361,7 @@
         },
         "name": {
           "description": "Command name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -456,6 +462,7 @@
       "type": "object"
     },
     "CompletionType": {
+      "description": "Type of shell completion for an argument or option.\n\n- path: Complete any filesystem path\n- file: Complete file paths only\n- directory: Complete directory paths only\n- choice: Complete from a fixed set of choices\n- dynamic: Complete using a dynamic callback function\n- none: No completion support",
       "enum": [
         "path",
         "file",
@@ -752,6 +759,8 @@
         "envvar": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z_][A-Z0-9_]*$",
               "type": "string"
             },
             {
@@ -853,6 +862,7 @@
         },
         "name": {
           "description": "Long option name (e.g., '--verbose')",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -938,6 +948,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -956,6 +967,7 @@
       "type": "object"
     },
     "Shell": {
+      "description": "Shell types for command completion.\n\n- bash: Bourne Again Shell\n- zsh: Z Shell\n- fish: Friendly Interactive Shell\n- powershell: PowerShell (Windows/cross-platform)",
       "enum": [
         "bash",
         "zsh",

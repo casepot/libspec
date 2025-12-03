@@ -11,6 +11,7 @@ This module defines all the core entity types:
 from __future__ import annotations
 
 import re
+import warnings
 from typing import Any, Literal
 
 from pydantic import AnyUrl, ConfigDict, Field, ValidationInfo, field_validator, model_validator
@@ -18,6 +19,7 @@ from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
 from .types import (
+    CrossReference,
     ExportOrigin,
     ExtensionName,
     FeatureStatus,
@@ -34,7 +36,9 @@ from .types import (
     SchemaVersion,
     ScreamingSnakeCase,
     SemVer,
+    TypeAnnotationStr,
     TypeKind,
+    VersionConstraintStr,
     Visibility,
 )
 from .utils import ensure_strict_bool
@@ -48,7 +52,7 @@ class Parameter(LibspecModel):
     """A function or method parameter."""
 
     name: NonEmptyStr = Field(description="Parameter name")
-    type: NonEmptyStr | None = Field(
+    type: TypeAnnotationStr | None = Field(
         default=None, description="Parameter type annotation"
     )
     default: str | None = Field(
@@ -69,11 +73,11 @@ class Parameter(LibspecModel):
 class ReturnSpec(LibspecModel):
     """Return value specification."""
 
-    type: NonEmptyStr = Field(description="Return type annotation")
+    type: TypeAnnotationStr = Field(description="Return type annotation")
     description: str | None = Field(
         default=None, description="What the return value represents"
     )
-    narrows_type: NonEmptyStr | None = Field(
+    narrows_type: TypeAnnotationStr | None = Field(
         default=None,
         description="Type that input is narrowed to when True (for TypeGuard/TypeIs)",
     )
@@ -99,7 +103,7 @@ class ReturnSpec(LibspecModel):
 class YieldSpec(LibspecModel):
     """Generator yield specification."""
 
-    type: NonEmptyStr = Field(description="Yielded type annotation")
+    type: TypeAnnotationStr = Field(description="Yielded type annotation")
     description: str | None = Field(
         default=None, description="What each yielded value represents"
     )
@@ -112,7 +116,7 @@ class YieldSpec(LibspecModel):
 class RaisesClause(LibspecModel):
     """An exception that may be raised."""
 
-    type: NonEmptyStr = Field(description="Exception type name")
+    type: TypeAnnotationStr = Field(description="Exception type name")
     when: str | None = Field(
         default=None, description="Condition under which this exception is raised"
     )
@@ -129,13 +133,13 @@ class DeprecationInfo(LibspecModel):
         default=None,
         description="Deprecation message (shown by type checkers and at runtime)",
     )
-    since: str | None = Field(
+    since: VersionConstraintStr | None = Field(
         default=None, description="Version when this was deprecated"
     )
-    removal: str | None = Field(
+    removal: VersionConstraintStr | None = Field(
         default=None, description="Version when this will be/was removed"
     )
-    replacement: str | None = Field(
+    replacement: CrossReference | None = Field(
         default=None, description="Suggested replacement (cross-reference)"
     )
 
@@ -153,18 +157,18 @@ class GenericParam(LibspecModel):
         default=GenericParamKind.TYPE_VAR,
         description="Kind of generic parameter: type_var (default), param_spec, or type_var_tuple",
     )
-    bound: NonEmptyStr | None = Field(
+    bound: TypeAnnotationStr | None = Field(
         default=None, description="Upper bound type constraint (TypeVar only)"
     )
     variance: GenericVariance = Field(
         default=GenericVariance.INVARIANT,
         description="Variance of the parameter (TypeVar only)",
     )
-    default: NonEmptyStr | None = Field(
+    default: TypeAnnotationStr | None = Field(
         default=None,
         description="Default type if not specified (Python 3.13+, PEP 696)",
     )
-    constraints: list[NonEmptyStr] = Field(
+    constraints: list[TypeAnnotationStr] = Field(
         default_factory=list,
         description="Type constraints for TypeVar (e.g., ['int', 'str'] means T can only be int or str)",
     )
@@ -199,7 +203,7 @@ class Property(ExtensibleModel):
     """An instance property or attribute."""
 
     name: NonEmptyStr = Field(description="Property name")
-    type: NonEmptyStr | None = Field(
+    type: TypeAnnotationStr | None = Field(
         default=None, description="Property type annotation"
     )
     readonly: bool = Field(
@@ -312,7 +316,7 @@ class Method(ExtensibleModel):
     raises: list[RaisesClause] = Field(
         default_factory=list, description="Exceptions this method may raise"
     )
-    inherited_from: str | None = Field(
+    inherited_from: CrossReference | None = Field(
         default=None,
         description="Base class this method is inherited from (if any)",
     )
@@ -332,6 +336,18 @@ class Method(ExtensibleModel):
         default=None,
         description="Deprecation information if this method is deprecated (PEP 702)",
     )
+
+    @field_validator("signature")
+    @classmethod
+    def validate_signature_format(cls, v: str) -> str:
+        """Validate signature starts with '(' for parameter list."""
+        if v and not v.strip().startswith("("):
+            warnings.warn(
+                f"Signature should start with '(' for parameter list: {v!r}",
+                UserWarning,
+                stacklevel=2,
+            )
+        return v
 
 
 class Constructor(LibspecModel):
@@ -368,13 +384,13 @@ class TypeDef(ExtensibleModel):
     generic_params: list[GenericParam] = Field(
         default_factory=list, description="Generic type parameters"
     )
-    bases: list[str] = Field(
+    bases: list[CrossReference] = Field(
         default_factory=list, description="Base classes or protocols"
     )
     docstring: str | None = Field(
         default=None, description="What this type represents"
     )
-    type_target: str | None = Field(
+    type_target: TypeAnnotationStr | None = Field(
         default=None, description="For type_alias: the aliased type"
     )
     properties: list[Property] = Field(
@@ -399,7 +415,7 @@ class TypeDef(ExtensibleModel):
     construction: Constructor | None = Field(
         default=None, description="Constructor specification"
     )
-    related: list[str] = Field(
+    related: list[CrossReference] = Field(
         default_factory=list,
         description="Related types or functions (cross-references)",
     )
@@ -450,6 +466,15 @@ class TypeDef(ExtensibleModel):
             if not self.type_target:
                 raise ValueError(
                     f"NewType '{self.name}' must specify type_target (the wrapped type)"
+                )
+
+        # Type aliases should have type_target (the aliased type)
+        if self.kind == TypeKind.TYPE_ALIAS:
+            if not self.type_target:
+                warnings.warn(
+                    f"TypeAlias '{self.name}' should specify type_target (the aliased type)",
+                    UserWarning,
+                    stacklevel=2,
                 )
 
         # Literal types cannot have methods or properties (they're value types)
@@ -526,7 +551,7 @@ class FunctionDef(ExtensibleModel):
     deterministic: bool | None = Field(
         default=None, description="Whether same inputs always produce same outputs"
     )
-    related: list[str] = Field(
+    related: list[CrossReference] = Field(
         default_factory=list,
         description="Related types or functions (cross-references)",
     )
@@ -552,6 +577,18 @@ class FunctionDef(ExtensibleModel):
         # Match lint rule pattern exactly: no trailing/leading/double underscores
         if not re.match(r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$", v):
             raise ValueError(f"Function name '{v}' must be snake_case")
+        return v
+
+    @field_validator("signature")
+    @classmethod
+    def validate_signature_format(cls, v: str) -> str:
+        """Validate signature starts with '(' for parameter list."""
+        if v and not v.strip().startswith("("):
+            warnings.warn(
+                f"Signature should start with '(' for parameter list: {v!r}",
+                UserWarning,
+                stacklevel=2,
+            )
         return v
 
     @field_validator("idempotent", "pure", "deterministic", mode="before")
@@ -594,13 +631,13 @@ class Feature(ExtensibleModel):
         default_factory=list,
         description="Verification/test steps (at least one recommended; enforced by lint rule C001)",
     )
-    references: list[str] = Field(
+    references: list[CrossReference] = Field(
         default_factory=list, description="Related types, functions, or features"
     )
     status: FeatureStatus = Field(
         default=FeatureStatus.PLANNED, description="Implementation status"
     )
-    breaking_since: str | None = Field(
+    breaking_since: VersionConstraintStr | None = Field(
         default=None, description="Version where this became a breaking change"
     )
     v1_planned: bool | None = Field(
@@ -708,7 +745,7 @@ class Library(ExtensibleModel):
         description="Package name (lowercase, underscores allowed)"
     )
     version: SemVer = Field(description="Semantic version string")
-    python_requires: str | None = Field(
+    python_requires: VersionConstraintStr | None = Field(
         default=None, description="Python version requirement (e.g., '>=3.10')"
     )
     tagline: str | None = Field(

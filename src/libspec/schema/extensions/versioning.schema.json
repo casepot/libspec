@@ -6,6 +6,7 @@
           "anyOf": [
             {
               "items": {
+                "minLength": 1,
                 "type": "string"
               },
               "type": "array"
@@ -64,6 +65,7 @@
         },
         "version": {
           "description": "Version containing the breaking change",
+          "minLength": 1,
           "title": "Version",
           "type": "string"
         }
@@ -162,6 +164,7 @@
         "removed_in": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -175,6 +178,7 @@
         "replacement": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -187,11 +191,13 @@
         },
         "since": {
           "description": "Version when deprecated",
+          "minLength": 1,
           "title": "Since",
           "type": "string"
         },
         "target": {
           "description": "What is deprecated (cross-reference)",
+          "minLength": 1,
           "title": "Target",
           "type": "string"
         }
@@ -249,6 +255,7 @@
       "type": "object"
     },
     "Stability": {
+      "description": "API stability level indicating maturity and change likelihood.\n\n- stable: Production-ready, backward-compatible changes only\n- beta: Feature-complete but may have minor changes\n- alpha: Early development, API may change significantly\n- experimental: Highly unstable, may be removed\n- deprecated: Scheduled for removal, use replacement",
       "enum": [
         "stable",
         "beta",
@@ -353,6 +360,7 @@
         "deprecated_since": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -366,6 +374,7 @@
         "removed_in": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -379,6 +388,7 @@
         "since": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -409,6 +419,7 @@
         "deprecated_since": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -422,6 +433,7 @@
         "removed_in": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -435,6 +447,7 @@
         "since": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {

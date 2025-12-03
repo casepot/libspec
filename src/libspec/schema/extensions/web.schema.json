@@ -1,6 +1,7 @@
 {
   "$defs": {
     "AppliesTo": {
+      "description": "Which routes middleware applies to.\n\n- all: Applies to all routes\n- tagged: Applies to routes with matching tags\n- specific: Applies to explicitly listed routes",
       "enum": [
         "all",
         "tagged",
@@ -10,6 +11,7 @@
       "type": "string"
     },
     "Auth": {
+      "description": "Authentication requirement level for a route.\n\n- required: Authentication is mandatory\n- optional: Route works with or without authentication\n- none: No authentication needed",
       "enum": [
         "required",
         "optional",
@@ -118,6 +120,7 @@
       "type": "object"
     },
     "Direction": {
+      "description": "WebSocket message flow direction.\n\n- client_to_server: Client sends to server only\n- server_to_client: Server sends to client only\n- bidirectional: Messages flow both ways",
       "enum": [
         "client_to_server",
         "server_to_client",
@@ -275,6 +278,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -293,6 +297,7 @@
       "type": "object"
     },
     "Method": {
+      "description": "HTTP request methods.\n\nStandard methods plus wildcard for matching any method.",
       "enum": [
         "GET",
         "POST",
@@ -463,6 +468,7 @@
         },
         "type": {
           "description": "Parameter type",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -475,6 +481,7 @@
       "type": "object"
     },
     "Position": {
+      "description": "When middleware runs relative to the request handler.\n\n- before: Runs before the handler\n- after: Runs after the handler\n- wrap: Wraps the handler (runs before and after)",
       "enum": [
         "before",
         "after",
@@ -542,6 +549,7 @@
         },
         "type": {
           "description": "Parameter type",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -970,6 +978,7 @@
       "type": "object"
     },
     "Scope": {
+      "description": "Dependency injection lifetime scope.\n\n- request: New instance per HTTP request\n- session: Shared within a user session\n- app: Shared across the application\n- singleton: Single instance for the app lifetime",
       "enum": [
         "request",
         "session",

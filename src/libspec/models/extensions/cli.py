@@ -15,6 +15,7 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import EnvVarName, NonEmptyStr, TypeAnnotationStr
 
 
 class ExampleSpec(ExtensionModel):
@@ -30,6 +31,14 @@ class ExitCodeSpec(ExtensionModel):
 
 
 class Shell(Enum):
+    """Shell types for command completion.
+
+    - bash: Bourne Again Shell
+    - zsh: Z Shell
+    - fish: Friendly Interactive Shell
+    - powershell: PowerShell (Windows/cross-platform)
+    """
+
     bash = 'bash'
     zsh = 'zsh'
     fish = 'fish'
@@ -47,6 +56,16 @@ class ShellCompletionSpec(ExtensionModel):
 
 
 class CompletionType(Enum):
+    """Type of shell completion for an argument or option.
+
+    - path: Complete any filesystem path
+    - file: Complete file paths only
+    - directory: Complete directory paths only
+    - choice: Complete from a fixed set of choices
+    - dynamic: Complete using a dynamic callback function
+    - none: No completion support
+    """
+
     path = 'path'
     file = 'file'
     directory = 'directory'
@@ -66,6 +85,13 @@ class CompletionSpec(ExtensionModel):
 
 
 class Color(Enum):
+    """Color output mode for CLI help and messages.
+
+    - auto: Use color when terminal supports it
+    - always: Always use color output
+    - never: Never use color output
+    """
+
     auto = 'auto'
     always = 'always'
     never = 'never'
@@ -104,8 +130,8 @@ class ContextSettingsSpec(ExtensionModel):
 
 
 class ArgumentSpec(ExtensionModel):
-    name: str = Field(default=..., description='Argument name')
-    type: str | None = Field(None, description='Argument type')
+    name: NonEmptyStr = Field(default=..., description='Argument name')
+    type: TypeAnnotationStr | None = Field(None, description='Argument type')
     required: bool | None = Field(True, description='Whether argument is required')
     default: Any | None = Field(None, description='Default value')
     nargs: int | str | None = Field(
@@ -113,14 +139,14 @@ class ArgumentSpec(ExtensionModel):
     )
     metavar: str | None = Field(None, description='Display name in help')
     help: str | None = Field(None, description='Help text')
-    envvar: str | None = Field(None, description='Environment variable fallback')
+    envvar: EnvVarName | None = Field(None, description='Environment variable fallback')
     shell_complete: CompletionSpec | None = None
 
 
 class OptionSpec(ExtensionModel):
-    name: str = Field(default=..., description="Long option name (e.g., '--verbose')")
+    name: NonEmptyStr = Field(default=..., description="Long option name (e.g., '--verbose')")
     short: str | None = Field(None, description="Short option name (e.g., '-v')")
-    type: str | None = Field(None, description='Option type')
+    type: TypeAnnotationStr | None = Field(None, description='Option type')
     required: bool | None = Field(False, description='Whether option is required')
     default: Any | None = Field(None, description='Default value')
     is_flag: bool | None = Field(None, description='Whether this is a boolean flag')
@@ -133,7 +159,7 @@ class OptionSpec(ExtensionModel):
     metavar: str | None = Field(None, description='Display name in help')
     help: str | None = Field(None, description='Help text')
     hidden: bool | None = Field(None, description='Whether option is hidden from help')
-    envvar: str | None = Field(None, description='Environment variable name')
+    envvar: EnvVarName | None = Field(None, description='Environment variable name')
     prompt: bool | str | None = Field(
         None, description='Whether to prompt if not provided'
     )
@@ -151,7 +177,7 @@ class OptionSpec(ExtensionModel):
 
 
 class CommandSpec(ExtensionModel):
-    name: str = Field(default=..., description='Command name')
+    name: NonEmptyStr = Field(default=..., description='Command name')
     aliases: list[str] | None = Field(None, description='Command aliases')
     handler: str | None = Field(None, description='Handler function reference')
     arguments: list[ArgumentSpec] | None = Field(

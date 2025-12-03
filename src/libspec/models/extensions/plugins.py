@@ -15,6 +15,7 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import NonEmptyStr
 
 
 class PluginsTypeFields(ExtensionModel):
@@ -30,13 +31,20 @@ class PluginsTypeFields(ExtensionModel):
 
 
 class Lifecycle(Enum):
+    """Plugin/extension instance lifecycle.
+
+    - singleton: Single instance for application lifetime
+    - per_request: New instance per request/operation
+    - transient: New instance on every access
+    """
+
     singleton = 'singleton'
     per_request = 'per_request'
     transient = 'transient'
 
 
 class ExtensionPointSpec(ExtensionModel):
-    name: str = Field(default=..., description='Extension point name')
+    name: NonEmptyStr = Field(default=..., description='Extension point name')
     interface: str | None = Field(None, description='Interface type reference')
     protocol: str | None = Field(None, description='Protocol type reference')
     multiple: bool | None = Field(
@@ -59,6 +67,14 @@ class ExtensionPointSpec(ExtensionModel):
 
 
 class HookType(Enum):
+    """Plugin hook mechanism type.
+
+    - filter: Transform data as it passes through
+    - action: Side effect with no return value
+    - event: Notification broadcast to listeners
+    - wrapper: Wrap around original function
+    """
+
     filter = 'filter'
     action = 'action'
     event = 'event'
@@ -66,6 +82,14 @@ class HookType(Enum):
 
 
 class ExecutionOrder(Enum):
+    """How multiple hook handlers are executed.
+
+    - sequential: Run handlers one by one in order
+    - parallel: Run handlers concurrently
+    - pipeline: Each handler output feeds to next
+    - first_match: Stop at first handler that returns result
+    """
+
     sequential = 'sequential'
     parallel = 'parallel'
     pipeline = 'pipeline'
@@ -73,6 +97,15 @@ class ExecutionOrder(Enum):
 
 
 class ResultCollection(Enum):
+    """How results from multiple hook handlers are collected.
+
+    - none: Discard all results
+    - first: Return first non-None result
+    - last: Return last result
+    - all: Return list of all results
+    - merge: Merge results (dicts/lists)
+    """
+
     none = 'none'
     first = 'first'
     last = 'last'
@@ -88,6 +121,14 @@ class HookParamSpec(ExtensionModel):
 
 
 class Validation(Enum):
+    """When registry entries are validated.
+
+    - none: No validation
+    - on_register: Validate when entry is registered
+    - on_access: Validate when entry is retrieved
+    - both: Validate on both registration and access
+    """
+
     none = 'none'
     on_register = 'on_register'
     on_access = 'on_access'
@@ -95,6 +136,14 @@ class Validation(Enum):
 
 
 class OverridePolicy(Enum):
+    """How duplicate registry entries are handled.
+
+    - error: Raise exception on duplicate
+    - warn: Log warning and keep original
+    - replace: Replace existing with new entry
+    - ignore: Silently keep original entry
+    """
+
     error = 'error'
     warn = 'warn'
     replace = 'replace'
@@ -112,6 +161,16 @@ class RegistryMethodsSpec(ExtensionModel):
 
 
 class DiscoveryMechanismType(Enum):
+    """How plugins are discovered and loaded.
+
+    - entry_points: Python package entry points (setuptools)
+    - namespace_packages: Namespace package scanning
+    - directory_scan: Filesystem directory scanning
+    - config_file: Configuration file listing
+    - explicit: Explicit programmatic registration
+    - decorator: Decorator-based registration
+    """
+
     entry_points = 'entry_points'
     namespace_packages = 'namespace_packages'
     directory_scan = 'directory_scan'
@@ -128,7 +187,7 @@ class DiscoveryMechanismSpec(ExtensionModel):
     namespace: str | None = Field(
         None, description='Package namespace (for namespace_packages)'
     )
-    directories: list[str] | None = Field(
+    paths: list[str] | None = Field(
         None, description='Directories to scan (for directory_scan)'
     )
     pattern: str | None = Field(None, description='File pattern (for directory_scan)')
@@ -159,7 +218,7 @@ class PluginLifecycleSpec(ExtensionModel):
 
 
 class HookSpec(ExtensionModel):
-    name: str = Field(default=..., description='Hook name')
+    name: NonEmptyStr = Field(default=..., description='Hook name')
     type: HookType | None = Field(None, description='Hook type')
     signature: str | None = Field(None, description='Hook callback signature')
     parameters: list[HookParamSpec] | None = Field(None, description='Hook parameters')

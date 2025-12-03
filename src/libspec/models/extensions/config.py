@@ -14,15 +14,16 @@ from typing import Any
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import EnvVarName, NonEmptyStr
 
 
 class SettingSpec(ExtensionModel):
-    name: str = Field(default=..., description='Setting name')
+    name: NonEmptyStr = Field(default=..., description='Setting name')
     type: str = Field(
         default=..., description='Setting type (str, int, float, bool, list, dict)'
     )
     default: Any | None = Field(None, description='Default value')
-    env_var: str | None = Field(None, description='Environment variable name')
+    env_var: EnvVarName | None = Field(None, description='Environment variable name')
     cli_flag: str | None = Field(None, description="CLI flag (e.g., '--timeout')")
     cli_short: str | None = Field(None, description="Short CLI flag (e.g., '-t')")
     validation: str | None = Field(
@@ -45,6 +46,16 @@ class SettingSpec(ExtensionModel):
 
 
 class PriorityEnum(Enum):
+    """Configuration source priority order.
+
+    - cli: Command-line arguments (highest priority)
+    - env: Environment variables
+    - file: Configuration files
+    - defaults: Default values
+    - remote: Remote configuration server
+    - secrets_manager: Secrets management service
+    """
+
     cli = 'cli'
     env = 'env'
     file = 'file'
@@ -54,6 +65,15 @@ class PriorityEnum(Enum):
 
 
 class FileFormat(Enum):
+    """Configuration file format.
+
+    - toml: TOML format (pyproject.toml style)
+    - yaml: YAML format
+    - json: JSON format
+    - ini: INI/ConfigParser format
+    - env: .env file format
+    """
+
     toml = 'toml'
     yaml = 'yaml'
     json = 'json'
@@ -68,7 +88,7 @@ class ConfigSourcesSpec(ExtensionModel):
     file_formats: list[FileFormat] | None = Field(
         None, description='Supported config file formats'
     )
-    file_locations: list[str] | None = Field(
+    paths: list[str] | None = Field(
         None, description='Config file search paths'
     )
     file_name_pattern: str | None = Field(
@@ -83,7 +103,7 @@ class ConfigSourcesSpec(ExtensionModel):
 
 
 class ProfileSpec(ExtensionModel):
-    name: str = Field(
+    name: NonEmptyStr = Field(
         default=..., description="Profile name (e.g., 'development', 'production')"
     )
     description: str | None = Field(None, description='What this profile is for')
@@ -97,6 +117,17 @@ class ProfileSpec(ExtensionModel):
 
 
 class SecretsStorage(Enum):
+    """Where secrets are stored and retrieved from.
+
+    - env: Environment variables
+    - keyring: System keyring (keyring library)
+    - vault: HashiCorp Vault
+    - aws_secrets: AWS Secrets Manager
+    - gcp_secrets: Google Cloud Secret Manager
+    - azure_keyvault: Azure Key Vault
+    - file: Local encrypted file
+    """
+
     env = 'env'
     keyring = 'keyring'
     vault = 'vault'

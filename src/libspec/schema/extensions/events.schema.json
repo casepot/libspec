@@ -1,6 +1,7 @@
 {
   "$defs": {
     "Backoff": {
+      "description": "Retry backoff strategy for failed operations.\n\n- fixed: Same delay between retries\n- exponential: Delay doubles each retry\n- linear: Delay increases by fixed amount\n- fibonacci: Delay follows Fibonacci sequence",
       "enum": [
         "fixed",
         "exponential",
@@ -165,6 +166,7 @@
       "type": "object"
     },
     "EventBusType": {
+      "description": "Event bus/message broker implementation.\n\n- in_memory: Local in-process event bus\n- redis: Redis Pub/Sub or Streams\n- rabbitmq: RabbitMQ/AMQP\n- kafka: Apache Kafka\n- sqs: AWS SQS\n- pubsub: Google Cloud Pub/Sub\n- nats: NATS messaging\n- custom: Custom implementation",
       "enum": [
         "in_memory",
         "redis",
@@ -179,6 +181,7 @@
       "type": "string"
     },
     "EventCategory": {
+      "description": "Category of event for routing and handling.\n\n- domain: Core business domain events\n- integration: Cross-system integration events\n- notification: User-facing notifications\n- system: Infrastructure/operational events\n- command: Request to perform an action\n- query: Request for information",
       "enum": [
         "domain",
         "integration",
@@ -206,6 +209,7 @@
         },
         "name": {
           "description": "Field name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -334,6 +338,7 @@
         },
         "name": {
           "description": "Event type name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -757,6 +762,7 @@
       "type": "object"
     },
     "OnFailure": {
+      "description": "How saga steps handle failures.\n\n- compensate: Run compensation actions\n- retry: Retry the failed step\n- skip: Skip and continue to next step\n- abort: Abort the entire saga",
       "enum": [
         "compensate",
         "retry",
@@ -767,6 +773,7 @@
       "type": "string"
     },
     "Operator": {
+      "description": "Comparison operators for event filtering.\n\nStandard comparison and pattern matching operators.",
       "enum": [
         "eq",
         "neq",
@@ -782,6 +789,7 @@
       "type": "string"
     },
     "Ordering": {
+      "description": "Event ordering guarantee for handlers.\n\n- none: No ordering guarantee\n- fifo: First-in, first-out global ordering\n- partition_fifo: FIFO within partition key",
       "enum": [
         "none",
         "fifo",
@@ -791,6 +799,7 @@
       "type": "string"
     },
     "OrderingGuarantee": {
+      "description": "Message ordering guarantee level.\n\n- none: No ordering guarantees\n- per_partition: Ordering within partition key\n- global_: Total ordering across all messages",
       "enum": [
         "none",
         "per_partition",
@@ -800,6 +809,7 @@
       "type": "string"
     },
     "Persistence": {
+      "description": "Where saga/process state is persisted.\n\n- in_memory: No persistence (lost on restart)\n- database: Traditional database storage\n- event_store: Event sourcing storage",
       "enum": [
         "in_memory",
         "database",
@@ -1111,6 +1121,7 @@
         },
         "name": {
           "description": "Topic name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

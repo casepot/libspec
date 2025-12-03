@@ -13,9 +13,19 @@ from enum import Enum
 from pydantic import AnyUrl, Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import CrossReference, VersionConstraintStr
 
 
 class Stability(Enum):
+    """API stability level indicating maturity and change likelihood.
+
+    - stable: Production-ready, backward-compatible changes only
+    - beta: Feature-complete but may have minor changes
+    - alpha: Early development, API may change significantly
+    - experimental: Highly unstable, may be removed
+    - deprecated: Scheduled for removal, use replacement
+    """
+
     stable = 'stable'
     beta = 'beta'
     alpha = 'alpha'
@@ -24,36 +34,40 @@ class Stability(Enum):
 
 
 class VersioningTypeFields(ExtensionModel):
-    since: str | None = Field(None, description='Version when this type was introduced')
-    deprecated_since: str | None = Field(
+    since: VersionConstraintStr | None = Field(
+        None, description='Version when this type was introduced'
+    )
+    deprecated_since: VersionConstraintStr | None = Field(
         None, description='Version when this type was deprecated'
     )
-    removed_in: str | None = Field(
+    removed_in: VersionConstraintStr | None = Field(
         None, description='Version when this type will be/was removed'
     )
     stability: Stability | None = None
 
 
 class VersioningMethodFields(ExtensionModel):
-    since: str | None = Field(
+    since: VersionConstraintStr | None = Field(
         None, description='Version when this method was introduced'
     )
-    deprecated_since: str | None = Field(
+    deprecated_since: VersionConstraintStr | None = Field(
         None, description='Version when this method was deprecated'
     )
-    removed_in: str | None = Field(
+    removed_in: VersionConstraintStr | None = Field(
         None, description='Version when this method will be/was removed'
     )
     stability: Stability | None = None
 
 
 class DeprecationSpec(ExtensionModel):
-    target: str = Field(default=..., description='What is deprecated (cross-reference)')
-    since: str = Field(default=..., description='Version when deprecated')
-    removed_in: str | None = Field(
+    target: CrossReference = Field(
+        default=..., description='What is deprecated (cross-reference)'
+    )
+    since: VersionConstraintStr = Field(default=..., description='Version when deprecated')
+    removed_in: VersionConstraintStr | None = Field(
         None, description='Version when removed (or planned removal)'
     )
-    replacement: str | None = Field(
+    replacement: CrossReference | None = Field(
         None, description='What to use instead (cross-reference)'
     )
     migration: str | None = Field(None, description='Migration instructions')
@@ -61,9 +75,11 @@ class DeprecationSpec(ExtensionModel):
 
 
 class BreakingChangeSpec(ExtensionModel):
-    version: str = Field(default=..., description='Version containing the breaking change')
+    version: VersionConstraintStr = Field(
+        default=..., description='Version containing the breaking change'
+    )
     change: str = Field(default=..., description='Description of what changed')
-    affected: list[str] | None = Field(
+    affected: list[CrossReference] | None = Field(
         None, description='Affected APIs (cross-references)'
     )
     migration: str | None = Field(None, description='Migration instructions')

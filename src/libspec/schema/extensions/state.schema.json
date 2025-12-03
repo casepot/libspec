@@ -42,6 +42,7 @@
         },
         "name": {
           "description": "Action type name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -108,6 +109,7 @@
         },
         "name": {
           "description": "Guard name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         }
@@ -119,6 +121,7 @@
       "type": "object"
     },
     "Intercept": {
+      "description": "What state middleware intercepts.\n\n- actions: Intercept action dispatches\n- state: Intercept state changes\n- dispatch: Intercept the dispatch function\n- subscribe: Intercept subscriptions",
       "enum": [
         "actions",
         "state",
@@ -157,6 +160,7 @@
         },
         "name": {
           "description": "Action name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -180,6 +184,7 @@
       "type": "object"
     },
     "MachineActionType": {
+      "description": "State machine action type.\n\n- assign: Update context/extended state\n- raise_: Raise an internal event\n- send: Send event to external service\n- log: Log a message\n- custom: Custom action implementation",
       "enum": [
         "assign",
         "raise",
@@ -206,6 +211,7 @@
         },
         "name": {
           "description": "Event name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -322,6 +328,7 @@
         },
         "name": {
           "description": "State name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -377,6 +384,7 @@
       "type": "object"
     },
     "MachineStateType": {
+      "description": "XState-style state machine state type.\n\n- atomic: Simple state with no children\n- compound: State with nested child states\n- parallel: Multiple active child regions\n- final: Terminal state\n- history: Remembers previous child state",
       "enum": [
         "atomic",
         "compound",
@@ -478,6 +486,7 @@
       "type": "object"
     },
     "PersistenceStorage": {
+      "description": "State persistence storage backend.\n\n- localStorage: Browser localStorage\n- sessionStorage: Browser sessionStorage\n- indexedDB: Browser IndexedDB\n- asyncStorage: React Native AsyncStorage\n- custom: Custom storage implementation",
       "enum": [
         "localStorage",
         "sessionStorage",
@@ -533,6 +542,7 @@
         },
         "name": {
           "description": "Reducer name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -614,6 +624,7 @@
         },
         "name": {
           "description": "Selector name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -641,6 +652,7 @@
       "properties": {
         "name": {
           "description": "Service name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -703,6 +715,7 @@
       "type": "object"
     },
     "ServiceType": {
+      "description": "Invoked service type in state machines.\n\n- promise: Promise/async function service\n- callback: Callback-style service\n- observable: Observable/stream service\n- machine: Nested state machine",
       "enum": [
         "promise",
         "callback",
@@ -748,6 +761,7 @@
         },
         "name": {
           "description": "Slice name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -997,6 +1011,7 @@
         },
         "name": {
           "description": "State machine name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1107,6 +1122,7 @@
         },
         "name": {
           "description": "Middleware name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1290,6 +1306,7 @@
         },
         "name": {
           "description": "Store name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1369,6 +1386,7 @@
       "type": "object"
     },
     "StoreType": {
+      "description": "State management library/pattern.\n\n- redux: Redux-style centralized store\n- mobx: MobX observable state\n- zustand: Zustand minimal store\n- recoil: Recoil atom-based state\n- pinia: Vue Pinia store\n- custom: Custom implementation",
       "enum": [
         "redux",
         "mobx",

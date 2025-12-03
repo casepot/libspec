@@ -513,6 +513,7 @@
         },
         "name": {
           "description": "Fixture name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -545,6 +546,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -710,6 +712,7 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -753,6 +756,7 @@
         },
         "name": {
           "description": "Marker name (e.g., 'slow', 'integration')",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

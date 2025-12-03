@@ -15,9 +15,15 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import TypeAnnotationStr
 
 
 class Method(Enum):
+    """HTTP request methods.
+
+    Standard methods plus wildcard for matching any method.
+    """
+
     GET = 'GET'
     POST = 'POST'
     PUT = 'PUT'
@@ -29,6 +35,13 @@ class Method(Enum):
 
 
 class Auth(Enum):
+    """Authentication requirement level for a route.
+
+    - required: Authentication is mandatory
+    - optional: Route works with or without authentication
+    - none: No authentication needed
+    """
+
     required = 'required'
     optional = 'optional'
     none = 'none'
@@ -36,14 +49,14 @@ class Auth(Enum):
 
 class PathParamSpec(ExtensionModel):
     name: str = Field(default=..., description='Parameter name in path')
-    type: str = Field(default=..., description='Parameter type')
+    type: TypeAnnotationStr = Field(default=..., description='Parameter type')
     description: str | None = None
     pattern: str | None = Field(None, description='Regex pattern for validation')
 
 
 class QueryParamSpec(ExtensionModel):
     name: str = Field(default=..., description='Query parameter name')
-    type: str = Field(default=..., description='Parameter type')
+    type: TypeAnnotationStr = Field(default=..., description='Parameter type')
     required: bool | None = False
     default: str | None = Field(None, description='Default value')
     description: str | None = None
@@ -52,7 +65,7 @@ class QueryParamSpec(ExtensionModel):
 
 class HeaderSpec(ExtensionModel):
     name: str = Field(default=..., description='Header name')
-    type: str | None = Field(None, description='Value type')
+    type: TypeAnnotationStr | None = Field(None, description='Value type')
     required: bool | None = False
     description: str | None = None
 
@@ -87,12 +100,26 @@ class ErrorResponseSpec(ExtensionModel):
 
 
 class AppliesTo(Enum):
+    """Which routes middleware applies to.
+
+    - all: Applies to all routes
+    - tagged: Applies to routes with matching tags
+    - specific: Applies to explicitly listed routes
+    """
+
     all = 'all'
     tagged = 'tagged'
     specific = 'specific'
 
 
 class Position(Enum):
+    """When middleware runs relative to the request handler.
+
+    - before: Runs before the handler
+    - after: Runs after the handler
+    - wrap: Wraps the handler (runs before and after)
+    """
+
     before = 'before'
     after = 'after'
     wrap = 'wrap'
@@ -119,6 +146,14 @@ class MiddlewareSpec(ExtensionModel):
 
 
 class Scope(Enum):
+    """Dependency injection lifetime scope.
+
+    - request: New instance per HTTP request
+    - session: Shared within a user session
+    - app: Shared across the application
+    - singleton: Single instance for the app lifetime
+    """
+
     request = 'request'
     session = 'session'
     app = 'app'
@@ -141,6 +176,13 @@ class DependencySpec(ExtensionModel):
 
 
 class Direction(Enum):
+    """WebSocket message flow direction.
+
+    - client_to_server: Client sends to server only
+    - server_to_client: Server sends to client only
+    - bidirectional: Messages flow both ways
+    """
+
     client_to_server = 'client_to_server'
     server_to_client = 'server_to_client'
     bidirectional = 'bidirectional'
@@ -199,6 +241,8 @@ class RouteSpec(ExtensionModel):
     @model_validator(mode='after')
     def validate_path(self) -> 'RouteSpec':
         """Validate path starts with / and has balanced braces."""
+        import warnings
+
         if not self.path.startswith('/'):
             raise ValueError(f"Route path must start with '/': {self.path!r}")
         # Check balanced braces for path parameters
@@ -211,13 +255,24 @@ class RouteSpec(ExtensionModel):
             )
         # Validate path parameter format (alphanumeric + underscore)
         param_pattern = re.compile(r'\{([^}]+)\}')
+        params_in_path: set[str] = set()
         for match in param_pattern.finditer(self.path):
             param_name = match.group(1)
+            params_in_path.add(param_name)
             if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', param_name):
                 raise ValueError(
                     f"Invalid path parameter name {param_name!r} in {self.path!r}: "
                     "must be a valid identifier"
                 )
+        # Warn if path params in path are not defined in path_params
+        defined_params = {p.name for p in (self.path_params or [])}
+        missing = params_in_path - defined_params
+        if missing:
+            warnings.warn(
+                f"Path parameters {missing} in {self.path!r} not defined in path_params",
+                UserWarning,
+                stacklevel=2,
+            )
         return self
 
 

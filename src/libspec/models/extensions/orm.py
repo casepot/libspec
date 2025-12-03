@@ -14,9 +14,19 @@ from typing import Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import LocalPath, NonEmptyStr, TypeAnnotationStr
 
 
 class OnUpdate(Enum):
+    """Foreign key ON UPDATE referential action.
+
+    - CASCADE: Update child rows when parent key changes
+    - SET_NULL: Set child foreign key to NULL
+    - SET_DEFAULT: Set child foreign key to default value
+    - RESTRICT: Prevent update if children exist
+    - NO_ACTION: Defer check until transaction end
+    """
+
     CASCADE = 'CASCADE'
     SET_NULL = 'SET NULL'
     SET_DEFAULT = 'SET DEFAULT'
@@ -25,6 +35,15 @@ class OnUpdate(Enum):
 
 
 class OnDelete(Enum):
+    """Foreign key ON DELETE referential action.
+
+    - CASCADE: Delete child rows when parent is deleted
+    - SET_NULL: Set child foreign key to NULL
+    - SET_DEFAULT: Set child foreign key to default value
+    - RESTRICT: Prevent deletion if children exist
+    - NO_ACTION: Defer check until transaction end
+    """
+
     CASCADE = 'CASCADE'
     SET_NULL = 'SET NULL'
     SET_DEFAULT = 'SET DEFAULT'
@@ -33,8 +52,8 @@ class OnDelete(Enum):
 
 
 class ColumnSpec(ExtensionModel):
-    name: str = Field(default=..., description='Column name')
-    type: str = Field(
+    name: NonEmptyStr = Field(default=..., description='Column name')
+    type: TypeAnnotationStr = Field(
         default=..., description="Column type (e.g., 'Integer', 'String(255)', 'JSON')"
     )
     nullable: bool | None = Field(True, description='Whether column allows NULL')
@@ -55,7 +74,9 @@ class ColumnSpec(ExtensionModel):
     on_delete: OnDelete | None = Field(None, description='ON DELETE action')
     check: str | None = Field(None, description='CHECK constraint expression')
     comment: str | None = Field(None, description='Column comment')
-    python_type: str | None = Field(None, description='Python type for this column')
+    python_type: TypeAnnotationStr | None = Field(
+        None, description='Python type for this column'
+    )
 
     @model_validator(mode='after')
     def validate_column_constraints(self) -> 'ColumnSpec':
@@ -80,6 +101,14 @@ class ColumnSpec(ExtensionModel):
 
 
 class RelationshipType(Enum):
+    """ORM relationship cardinality.
+
+    - one_to_one: Each parent has exactly one child
+    - one_to_many: Each parent has zero or more children
+    - many_to_one: Many children reference one parent (foreign key side)
+    - many_to_many: Many-to-many via association table
+    """
+
     one_to_one = 'one_to_one'
     one_to_many = 'one_to_many'
     many_to_one = 'many_to_one'
@@ -87,6 +116,17 @@ class RelationshipType(Enum):
 
 
 class Lazy(Enum):
+    """SQLAlchemy relationship loading strategy.
+
+    - select: Lazy load with separate SELECT on access
+    - joined: Eager load with JOIN in same query
+    - subquery: Eager load with subquery
+    - selectin: Eager load with SELECT IN clause
+    - raise_: Raise exception if relationship accessed (prevents N+1)
+    - dynamic: Return query object instead of loading
+    - write_only: Write-only relationship (no loading)
+    """
+
     select = 'select'
     joined = 'joined'
     subquery = 'subquery'
@@ -97,7 +137,7 @@ class Lazy(Enum):
 
 
 class RelationshipSpec(ExtensionModel):
-    name: str = Field(default=..., description='Relationship attribute name')
+    name: NonEmptyStr = Field(default=..., description='Relationship attribute name')
     type: RelationshipType = Field(default=..., description='Relationship type')
     target: str = Field(default=..., description='Target model name')
     back_populates: str | None = Field(
@@ -130,6 +170,15 @@ class IndexSpec(ExtensionModel):
 
 
 class ConstraintType(Enum):
+    """Database table constraint type.
+
+    - check: CHECK constraint on column values
+    - unique: UNIQUE constraint
+    - foreign_key: FOREIGN KEY constraint
+    - primary_key: PRIMARY KEY constraint
+    - exclude: PostgreSQL EXCLUDE constraint
+    """
+
     check = 'check'
     unique = 'unique'
     foreign_key = 'foreign_key'
@@ -138,6 +187,12 @@ class ConstraintType(Enum):
 
 
 class Initially(Enum):
+    """When deferrable constraints are checked.
+
+    - IMMEDIATE: Check constraint at statement end
+    - DEFERRED: Check constraint at transaction commit
+    """
+
     IMMEDIATE = 'IMMEDIATE'
     DEFERRED = 'DEFERRED'
 
@@ -154,6 +209,13 @@ class ConstraintSpec(ExtensionModel):
 
 
 class InheritanceType(Enum):
+    """SQLAlchemy model inheritance strategy.
+
+    - single_table: All classes in one table with discriminator
+    - joined: Each class has its own table, joined on primary key
+    - concrete: Each concrete class has its own complete table
+    """
+
     single_table = 'single_table'
     joined = 'joined'
     concrete = 'concrete'
@@ -194,6 +256,15 @@ class SessionManagementSpec(ExtensionModel):
 
 
 class Pattern(Enum):
+    """Database query/persistence pattern.
+
+    - repository: Repository pattern (abstraction over data access)
+    - active_record: Objects know how to persist themselves
+    - data_mapper: Separate mapper handles persistence
+    - query_builder: Fluent query construction
+    - raw_sql: Direct SQL execution
+    """
+
     repository = 'repository'
     active_record = 'active_record'
     data_mapper = 'data_mapper'
@@ -210,6 +281,14 @@ class QueryPatternSpec(ExtensionModel):
 
 
 class Tool(Enum):
+    """Database migration tool.
+
+    - alembic: SQLAlchemy's Alembic
+    - flyway: Flyway (Java/general)
+    - django: Django's built-in migrations
+    - custom: Custom migration implementation
+    """
+
     alembic = 'alembic'
     flyway = 'flyway'
     django = 'django'
@@ -218,7 +297,7 @@ class Tool(Enum):
 
 class MigrationSpec(ExtensionModel):
     tool: Tool | None = Field(None, description='Migration tool')
-    directory: str | None = Field(None, description='Migration directory')
+    directory: LocalPath | None = Field(None, description='Migration directory')
     auto_generate: bool | None = Field(
         None, description='Whether auto-generation is supported'
     )
@@ -229,6 +308,17 @@ class MigrationSpec(ExtensionModel):
 
 
 class Name(Enum):
+    """Supported database system.
+
+    - postgresql: PostgreSQL
+    - mysql: MySQL
+    - sqlite: SQLite
+    - oracle: Oracle Database
+    - mssql: Microsoft SQL Server
+    - mariadb: MariaDB
+    - cockroachdb: CockroachDB
+    """
+
     postgresql = 'postgresql'
     mysql = 'mysql'
     sqlite = 'sqlite'
@@ -249,7 +339,7 @@ class DatabaseSupportSpec(ExtensionModel):
 
 
 class ModelSpec(ExtensionModel):
-    name: str = Field(default=..., description='Model class name')
+    name: NonEmptyStr = Field(default=..., description='Model class name')
     table: str | None = Field(None, description='Database table name')
     schema_: str | None = Field(
         None, alias='schema', description='Database schema (if applicable)'

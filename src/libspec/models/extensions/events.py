@@ -11,9 +11,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Any
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import NonEmptyStr
 
 
 class EventsTypeFields(ExtensionModel):
@@ -32,6 +33,16 @@ class EventsMethodFields(ExtensionModel):
 
 
 class EventCategory(Enum):
+    """Category of event for routing and handling.
+
+    - domain: Core business domain events
+    - integration: Cross-system integration events
+    - notification: User-facing notifications
+    - system: Infrastructure/operational events
+    - command: Request to perform an action
+    - query: Request for information
+    """
+
     domain = 'domain'
     integration = 'integration'
     notification = 'notification'
@@ -41,19 +52,34 @@ class EventCategory(Enum):
 
 
 class EventFieldSpec(ExtensionModel):
-    name: str = Field(default=..., description='Field name')
+    name: NonEmptyStr = Field(default=..., description='Field name')
     type: str = Field(default=..., description='Field type')
     required: bool | None = Field(True, description='Whether field is required')
     description: str | None = None
 
 
 class Ordering(Enum):
+    """Event ordering guarantee for handlers.
+
+    - none: No ordering guarantee
+    - fifo: First-in, first-out global ordering
+    - partition_fifo: FIFO within partition key
+    """
+
     none = 'none'
     fifo = 'fifo'
     partition_fifo = 'partition_fifo'
 
 
 class Backoff(Enum):
+    """Retry backoff strategy for failed operations.
+
+    - fixed: Same delay between retries
+    - exponential: Delay doubles each retry
+    - linear: Delay increases by fixed amount
+    - fibonacci: Delay follows Fibonacci sequence
+    """
+
     fixed = 'fixed'
     exponential = 'exponential'
     linear = 'linear'
@@ -76,8 +102,26 @@ class RetrySpec(ExtensionModel):
         None, description='Exceptions that trigger retry'
     )
 
+    @model_validator(mode='after')
+    def validate_retry_config(self) -> 'RetrySpec':
+        """Validate retry configuration completeness."""
+        import warnings
+
+        if self.backoff is not None and self.initial_delay is None:
+            warnings.warn(
+                "backoff strategy specified without initial_delay",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self
+
 
 class Operator(Enum):
+    """Comparison operators for event filtering.
+
+    Standard comparison and pattern matching operators.
+    """
+
     eq = 'eq'
     neq = 'neq'
     gt = 'gt'
@@ -96,6 +140,18 @@ class EventFilterSpec(ExtensionModel):
 
 
 class EventBusType(Enum):
+    """Event bus/message broker implementation.
+
+    - in_memory: Local in-process event bus
+    - redis: Redis Pub/Sub or Streams
+    - rabbitmq: RabbitMQ/AMQP
+    - kafka: Apache Kafka
+    - sqs: AWS SQS
+    - pubsub: Google Cloud Pub/Sub
+    - nats: NATS messaging
+    - custom: Custom implementation
+    """
+
     in_memory = 'in_memory'
     redis = 'redis'
     rabbitmq = 'rabbitmq'
@@ -107,6 +163,13 @@ class EventBusType(Enum):
 
 
 class OrderingGuarantee(Enum):
+    """Message ordering guarantee level.
+
+    - none: No ordering guarantees
+    - per_partition: Ordering within partition key
+    - global_: Total ordering across all messages
+    """
+
     none = 'none'
     per_partition = 'per_partition'
     global_ = 'global'
@@ -133,7 +196,7 @@ class EventBusSpec(ExtensionModel):
 
 
 class TopicSpec(ExtensionModel):
-    name: str = Field(default=..., description='Topic name')
+    name: NonEmptyStr = Field(default=..., description='Topic name')
     pattern: str | None = Field(None, description='Topic pattern (for wildcards)')
     partitions: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Number of partitions')
     retention: str | None = Field(None, description='Message retention period')
@@ -145,12 +208,27 @@ class TopicSpec(ExtensionModel):
 
 
 class Persistence(Enum):
+    """Where saga/process state is persisted.
+
+    - in_memory: No persistence (lost on restart)
+    - database: Traditional database storage
+    - event_store: Event sourcing storage
+    """
+
     in_memory = 'in_memory'
     database = 'database'
     event_store = 'event_store'
 
 
 class OnFailure(Enum):
+    """How saga steps handle failures.
+
+    - compensate: Run compensation actions
+    - retry: Retry the failed step
+    - skip: Skip and continue to next step
+    - abort: Abort the entire saga
+    """
+
     compensate = 'compensate'
     retry = 'retry'
     skip = 'skip'
@@ -176,7 +254,7 @@ class CompensationSpec(ExtensionModel):
 
 
 class EventSpec(ExtensionModel):
-    name: str = Field(default=..., description='Event type name')
+    name: NonEmptyStr = Field(default=..., description='Event type name')
     type: str | None = Field(None, description='Event class reference')
     category: EventCategory | None = Field(None, description='Event category')
     payload: list[EventFieldSpec] | None = Field(

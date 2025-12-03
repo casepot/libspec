@@ -91,22 +91,6 @@
           "description": "Supported config file formats",
           "title": "File Formats"
         },
-        "file_locations": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Config file search paths",
-          "title": "File Locations"
-        },
         "file_name_pattern": {
           "anyOf": [
             {
@@ -133,6 +117,22 @@
           "description": "Delimiter for nested settings in env vars",
           "title": "Nested Delimiter"
         },
+        "paths": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Config file search paths",
+          "title": "Paths"
+        },
         "priority": {
           "anyOf": [
             {
@@ -154,6 +154,7 @@
       "type": "object"
     },
     "FileFormat": {
+      "description": "Configuration file format.\n\n- toml: TOML format (pyproject.toml style)\n- yaml: YAML format\n- json: JSON format\n- ini: INI/ConfigParser format\n- env: .env file format",
       "enum": [
         "toml",
         "yaml",
@@ -165,6 +166,7 @@
       "type": "string"
     },
     "PriorityEnum": {
+      "description": "Configuration source priority order.\n\n- cli: Command-line arguments (highest priority)\n- env: Environment variables\n- file: Configuration files\n- defaults: Default values\n- remote: Remote configuration server\n- secrets_manager: Secrets management service",
       "enum": [
         "cli",
         "env",
@@ -219,6 +221,7 @@
         },
         "name": {
           "description": "Profile name (e.g., 'development', 'production')",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -304,6 +307,7 @@
       "type": "object"
     },
     "SecretsStorage": {
+      "description": "Where secrets are stored and retrieved from.\n\n- env: Environment variables\n- keyring: System keyring (keyring library)\n- vault: HashiCorp Vault\n- aws_secrets: AWS Secrets Manager\n- gcp_secrets: Google Cloud Secret Manager\n- azure_keyvault: Azure Key Vault\n- file: Local encrypted file",
       "enum": [
         "env",
         "keyring",
@@ -411,6 +415,8 @@
         "env_var": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z_][A-Z0-9_]*$",
               "type": "string"
             },
             {
@@ -423,6 +429,7 @@
         },
         "name": {
           "description": "Setting name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

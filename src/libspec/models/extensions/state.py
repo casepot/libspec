@@ -14,9 +14,20 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import NonEmptyStr
 
 
 class StoreType(Enum):
+    """State management library/pattern.
+
+    - redux: Redux-style centralized store
+    - mobx: MobX observable state
+    - zustand: Zustand minimal store
+    - recoil: Recoil atom-based state
+    - pinia: Vue Pinia store
+    - custom: Custom implementation
+    """
+
     redux = 'redux'
     mobx = 'mobx'
     zustand = 'zustand'
@@ -26,7 +37,7 @@ class StoreType(Enum):
 
 
 class ReducerSpec(ExtensionModel):
-    name: str = Field(default=..., description='Reducer name')
+    name: NonEmptyStr = Field(default=..., description='Reducer name')
     function: str | None = Field(None, description='Reducer function reference')
     handles: list[str] | None = Field(
         None, description='Action types this reducer handles'
@@ -36,7 +47,7 @@ class ReducerSpec(ExtensionModel):
 
 
 class SliceSpec(ExtensionModel):
-    name: str = Field(default=..., description='Slice name')
+    name: NonEmptyStr = Field(default=..., description='Slice name')
     path: str | None = Field(None, description='Path in state tree')
     state_type: str | None = Field(None, description='Slice state type')
     reducers: list[ReducerSpec] | None = Field(None, description='Slice reducers')
@@ -48,6 +59,15 @@ class SliceSpec(ExtensionModel):
 
 
 class MachineStateType(Enum):
+    """XState-style state machine state type.
+
+    - atomic: Simple state with no children
+    - compound: State with nested child states
+    - parallel: Multiple active child regions
+    - final: Terminal state
+    - history: Remembers previous child state
+    """
+
     atomic = 'atomic'
     compound = 'compound'
     parallel = 'parallel'
@@ -56,7 +76,7 @@ class MachineStateType(Enum):
 
 
 class MachineStateSpec(ExtensionModel):
-    name: str = Field(default=..., description='State name')
+    name: NonEmptyStr = Field(default=..., description='State name')
     type: MachineStateType | None = Field(None, description='State type')
     entry: list[str] | None = Field(None, description='Entry actions')
     exit: list[str] | None = Field(None, description='Exit actions')
@@ -73,7 +93,7 @@ class MachineStateSpec(ExtensionModel):
 
 
 class MachineEventSpec(ExtensionModel):
-    name: str = Field(default=..., description='Event name')
+    name: NonEmptyStr = Field(default=..., description='Event name')
     payload_type: str | None = Field(None, description='Event payload type')
     description: str | None = None
 
@@ -91,12 +111,21 @@ class TransitionSpec(ExtensionModel):
 
 
 class GuardSpec(ExtensionModel):
-    name: str = Field(default=..., description='Guard name')
+    name: NonEmptyStr = Field(default=..., description='Guard name')
     function: str | None = Field(None, description='Guard function reference')
     condition: str | None = Field(None, description='Condition description')
 
 
 class MachineActionType(Enum):
+    """State machine action type.
+
+    - assign: Update context/extended state
+    - raise_: Raise an internal event
+    - send: Send event to external service
+    - log: Log a message
+    - custom: Custom action implementation
+    """
+
     assign = 'assign'
     raise_ = 'raise'
     send = 'send'
@@ -105,13 +134,21 @@ class MachineActionType(Enum):
 
 
 class MachineActionSpec(ExtensionModel):
-    name: str = Field(default=..., description='Action name')
+    name: NonEmptyStr = Field(default=..., description='Action name')
     function: str | None = Field(None, description='Action function reference')
     type: MachineActionType | None = Field(None, description='Action type')
     description: str | None = None
 
 
 class ServiceType(Enum):
+    """Invoked service type in state machines.
+
+    - promise: Promise/async function service
+    - callback: Callback-style service
+    - observable: Observable/stream service
+    - machine: Nested state machine
+    """
+
     promise = 'promise'
     callback = 'callback'
     observable = 'observable'
@@ -119,7 +156,7 @@ class ServiceType(Enum):
 
 
 class ServiceSpec(ExtensionModel):
-    name: str = Field(default=..., description='Service name')
+    name: NonEmptyStr = Field(default=..., description='Service name')
     type: ServiceType | None = Field(None, description='Service type')
     src: str | None = Field(None, description='Service source/function reference')
     on_done: str | None = Field(None, description='Transition on success')
@@ -127,7 +164,7 @@ class ServiceSpec(ExtensionModel):
 
 
 class ActionSpec(ExtensionModel):
-    name: str = Field(default=..., description='Action type name')
+    name: NonEmptyStr = Field(default=..., description='Action type name')
     type: str | None = Field(None, description='Action creator type reference')
     payload_type: str | None = Field(None, description='Payload type')
     creator: str | None = Field(None, description='Action creator function reference')
@@ -138,7 +175,7 @@ class ActionSpec(ExtensionModel):
 
 
 class SelectorSpec(ExtensionModel):
-    name: str = Field(default=..., description='Selector name')
+    name: NonEmptyStr = Field(default=..., description='Selector name')
     function: str | None = Field(None, description='Selector function reference')
     input_selectors: list[str] | None = Field(
         None, description='Input selectors (for memoization)'
@@ -149,6 +186,14 @@ class SelectorSpec(ExtensionModel):
 
 
 class Intercept(Enum):
+    """What state middleware intercepts.
+
+    - actions: Intercept action dispatches
+    - state: Intercept state changes
+    - dispatch: Intercept the dispatch function
+    - subscribe: Intercept subscriptions
+    """
+
     actions = 'actions'
     state = 'state'
     dispatch = 'dispatch'
@@ -156,7 +201,7 @@ class Intercept(Enum):
 
 
 class StateMiddlewareSpec(ExtensionModel):
-    name: str = Field(default=..., description='Middleware name')
+    name: NonEmptyStr = Field(default=..., description='Middleware name')
     type: str | None = Field(None, description='Middleware type reference')
     order: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Execution order')
     intercepts: list[Intercept] | None = Field(
@@ -173,6 +218,15 @@ class StateShapeSpec(ExtensionModel):
 
 
 class PersistenceStorage(Enum):
+    """State persistence storage backend.
+
+    - localStorage: Browser localStorage
+    - sessionStorage: Browser sessionStorage
+    - indexedDB: Browser IndexedDB
+    - asyncStorage: React Native AsyncStorage
+    - custom: Custom storage implementation
+    """
+
     localStorage = 'localStorage'
     sessionStorage = 'sessionStorage'
     indexedDB = 'indexedDB'
@@ -196,7 +250,7 @@ class StateTypeFields(ExtensionModel):
 
 
 class StoreSpec(ExtensionModel):
-    name: str = Field(default=..., description='Store name')
+    name: NonEmptyStr = Field(default=..., description='Store name')
     type: StoreType | None = Field(None, description='Store implementation type')
     state_type: str | None = Field(None, description='State type reference')
     initial_state: str | None = Field(
@@ -212,7 +266,7 @@ class StoreSpec(ExtensionModel):
 
 
 class StateMachineSpec(ExtensionModel):
-    name: str = Field(default=..., description='State machine name')
+    name: NonEmptyStr = Field(default=..., description='State machine name')
     type: str | None = Field(default=None, description='State machine class reference')
     states: list[MachineStateSpec] = Field(default=..., description='State definitions')
     initial: str = Field(default=..., description='Initial state name')

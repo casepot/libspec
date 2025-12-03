@@ -129,6 +129,7 @@
         },
         "name": {
           "description": "State name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -182,6 +183,7 @@
       "properties": {
         "from": {
           "description": "Source state name",
+          "minLength": 1,
           "title": "From",
           "type": "string"
         },
@@ -216,6 +218,7 @@
         },
         "to": {
           "description": "Target state name",
+          "minLength": 1,
           "title": "To",
           "type": "string"
         },
@@ -284,6 +287,7 @@
       "type": "object"
     },
     "CancellationMode": {
+      "description": "How async operations handle cancellation requests.\n\n- cooperative: Operation checks for cancellation explicitly\n- immediate: Cancellation interrupts operation immediately\n- none: No cancellation support",
       "enum": [
         "cooperative",
         "immediate",
@@ -337,6 +341,7 @@
       "type": "object"
     },
     "Executor": {
+      "description": "Where async operations are executed.\n\n- event_loop: Single-threaded asyncio event loop\n- thread_pool: ThreadPoolExecutor for I/O-bound work\n- process_pool: ProcessPoolExecutor for CPU-bound work\n- custom: Custom executor implementation",
       "enum": [
         "event_loop",
         "thread_pool",
@@ -347,6 +352,7 @@
       "type": "string"
     },
     "Kind": {
+      "description": "Observable stream temperature (hot vs cold).\n\n- hot: Emits regardless of subscribers; late subscribers miss events\n- cold: Waits for subscription; each subscriber gets all events",
       "enum": [
         "hot",
         "cold"
@@ -406,6 +412,7 @@
       "type": "object"
     },
     "ObservableBackpressure": {
+      "description": "How observables handle slow consumers.\n\n- buffer: Buffer items until consumer catches up\n- drop: Drop new items when buffer is full\n- block: Block producer until consumer catches up\n- error: Signal error when buffer overflows\n- latest: Keep only the latest item, dropping older ones",
       "enum": [
         "buffer",
         "drop",
@@ -487,6 +494,7 @@
       "type": "object"
     },
     "Primitive": {
+      "description": "Type of synchronization primitive for concurrent access.\n\n- mailbox: Actor-style message passing\n- channel: Go-style typed communication channel\n- lock: Mutual exclusion lock\n- semaphore: Counting semaphore for resource limits\n- event: One-shot or multi-shot signaling\n- barrier: Synchronization point for multiple tasks\n- condition: Wait/notify coordination",
       "enum": [
         "mailbox",
         "channel",
@@ -500,6 +508,7 @@
       "type": "string"
     },
     "Priority": {
+      "description": "Task scheduling priority levels.\n\n- low: Background tasks, can be delayed\n- normal: Standard priority for most operations\n- high: Time-sensitive operations\n- realtime: Critical operations requiring immediate execution",
       "enum": [
         "low",
         "normal",
@@ -548,7 +557,7 @@
           "default": null,
           "description": "Scheduling priority"
         },
-        "timeout_default": {
+        "timeout": {
           "anyOf": [
             {
               "minimum": 0.0,
@@ -560,13 +569,14 @@
           ],
           "default": null,
           "description": "Default timeout in seconds",
-          "title": "Timeout Default"
+          "title": "Timeout"
         }
       },
       "title": "SchedulingSpec",
       "type": "object"
     },
     "Semantics": {
+      "description": "Ordering and delivery semantics for message passing.\n\n- fifo: First-in, first-out ordering\n- priority: Priority-based ordering\n- broadcast: Message delivered to all subscribers\n- lifo: Last-in, first-out (stack) ordering",
       "enum": [
         "fifo",
         "priority",
@@ -577,6 +587,7 @@
       "type": "string"
     },
     "SyncBackpressure": {
+      "description": "How synchronization primitives handle capacity limits.\n\n- block: Block sender until space available\n- drop: Silently discard new items\n- error: Raise an error when full",
       "enum": [
         "block",
         "drop",

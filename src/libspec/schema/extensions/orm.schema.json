@@ -80,6 +80,7 @@
         },
         "name": {
           "description": "Column name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -136,6 +137,7 @@
         "python_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -161,6 +163,7 @@
         },
         "type": {
           "description": "Column type (e.g., 'Integer', 'String(255)', 'JSON')",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         },
@@ -266,6 +269,7 @@
       "type": "object"
     },
     "ConstraintType": {
+      "description": "Database table constraint type.\n\n- check: CHECK constraint on column values\n- unique: UNIQUE constraint\n- foreign_key: FOREIGN KEY constraint\n- primary_key: PRIMARY KEY constraint\n- exclude: PostgreSQL EXCLUDE constraint",
       "enum": [
         "check",
         "unique",
@@ -430,6 +434,7 @@
       "type": "object"
     },
     "InheritanceType": {
+      "description": "SQLAlchemy model inheritance strategy.\n\n- single_table: All classes in one table with discriminator\n- joined: Each class has its own table, joined on primary key\n- concrete: Each concrete class has its own complete table",
       "enum": [
         "single_table",
         "joined",
@@ -439,6 +444,7 @@
       "type": "string"
     },
     "Initially": {
+      "description": "When deferrable constraints are checked.\n\n- IMMEDIATE: Check constraint at statement end\n- DEFERRED: Check constraint at transaction commit",
       "enum": [
         "IMMEDIATE",
         "DEFERRED"
@@ -447,6 +453,7 @@
       "type": "string"
     },
     "Lazy": {
+      "description": "SQLAlchemy relationship loading strategy.\n\n- select: Lazy load with separate SELECT on access\n- joined: Eager load with JOIN in same query\n- subquery: Eager load with subquery\n- selectin: Eager load with SELECT IN clause\n- raise_: Raise exception if relationship accessed (prevents N+1)\n- dynamic: Return query object instead of loading\n- write_only: Write-only relationship (no loading)",
       "enum": [
         "select",
         "joined",
@@ -490,6 +497,7 @@
         "directory": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -609,6 +617,7 @@
         },
         "name": {
           "description": "Model class name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -713,6 +722,7 @@
       "type": "object"
     },
     "Name": {
+      "description": "Supported database system.\n\n- postgresql: PostgreSQL\n- mysql: MySQL\n- sqlite: SQLite\n- oracle: Oracle Database\n- mssql: Microsoft SQL Server\n- mariadb: MariaDB\n- cockroachdb: CockroachDB",
       "enum": [
         "postgresql",
         "mysql",
@@ -802,6 +812,7 @@
       "type": "object"
     },
     "OnDelete": {
+      "description": "Foreign key ON DELETE referential action.\n\n- CASCADE: Delete child rows when parent is deleted\n- SET_NULL: Set child foreign key to NULL\n- SET_DEFAULT: Set child foreign key to default value\n- RESTRICT: Prevent deletion if children exist\n- NO_ACTION: Defer check until transaction end",
       "enum": [
         "CASCADE",
         "SET NULL",
@@ -813,6 +824,7 @@
       "type": "string"
     },
     "OnUpdate": {
+      "description": "Foreign key ON UPDATE referential action.\n\n- CASCADE: Update child rows when parent key changes\n- SET_NULL: Set child foreign key to NULL\n- SET_DEFAULT: Set child foreign key to default value\n- RESTRICT: Prevent update if children exist\n- NO_ACTION: Defer check until transaction end",
       "enum": [
         "CASCADE",
         "SET NULL",
@@ -824,6 +836,7 @@
       "type": "string"
     },
     "Pattern": {
+      "description": "Database query/persistence pattern.\n\n- repository: Repository pattern (abstraction over data access)\n- active_record: Objects know how to persist themselves\n- data_mapper: Separate mapper handles persistence\n- query_builder: Fluent query construction\n- raw_sql: Direct SQL execution",
       "enum": [
         "repository",
         "active_record",
@@ -1001,6 +1014,7 @@
         },
         "name": {
           "description": "Relationship attribute name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1075,6 +1089,7 @@
       "type": "object"
     },
     "RelationshipType": {
+      "description": "ORM relationship cardinality.\n\n- one_to_one: Each parent has exactly one child\n- one_to_many: Each parent has zero or more children\n- many_to_one: Many children reference one parent (foreign key side)\n- many_to_many: Many-to-many via association table",
       "enum": [
         "one_to_one",
         "one_to_many",
@@ -1227,6 +1242,7 @@
       "type": "object"
     },
     "Tool": {
+      "description": "Database migration tool.\n\n- alembic: SQLAlchemy's Alembic\n- flyway: Flyway (Java/general)\n- django: Django's built-in migrations\n- custom: Custom migration implementation",
       "enum": [
         "alembic",
         "flyway",

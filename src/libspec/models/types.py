@@ -56,6 +56,26 @@ ModulePath = Annotated[
 NonEmptyStr = Annotated[str, StringConstraints(min_length=1)]
 """Generic non-empty string for required text fields."""
 
+# Cross-reference format (relaxed initially - allows most formats)
+CrossReference = Annotated[str, StringConstraints(min_length=1)]
+"""Reference to another entity: #/types/X, #/functions/Y, or external lib#/types/Z."""
+
+# Type annotation strings (Python type expressions)
+TypeAnnotationStr = Annotated[str, StringConstraints(min_length=1)]
+"""Python type annotation: int, List[str], Dict[str, Any], Optional[T], etc."""
+
+# Version constraint strings
+VersionConstraintStr = Annotated[str, StringConstraints(min_length=1)]
+"""Version constraint: >=3.10, 1.2.0, ~=2.0, etc."""
+
+# Environment variable names
+EnvVarName = Annotated[str, StringConstraints(pattern=r"^[A-Z_][A-Z0-9_]*$", min_length=1)]
+"""Environment variable name in SCREAMING_SNAKE_CASE (e.g., MY_VAR, PYTHONPATH)."""
+
+# Local file/directory path
+LocalPath = Annotated[str, StringConstraints(min_length=1)]
+"""Local filesystem path, validated in strict mode."""
+
 
 # -----------------------------------------------------------------------------
 # Core Enums

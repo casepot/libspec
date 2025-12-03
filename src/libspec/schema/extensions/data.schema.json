@@ -1,6 +1,7 @@
 {
   "$defs": {
     "Backend": {
+      "description": "Parallelism execution backend.\n\n- threads: ThreadPoolExecutor\n- processes: ProcessPoolExecutor\n- dask: Dask distributed computing\n- ray: Ray distributed computing\n- spark: Apache Spark\n- none: No parallelism",
       "enum": [
         "threads",
         "processes",
@@ -13,6 +14,7 @@
       "type": "string"
     },
     "Behavior": {
+      "description": "Type coercion behavior.\n\n- implicit: Automatically convert types\n- explicit: Require explicit cast call\n- error: Raise error on type mismatch\n- warning: Warn but allow conversion",
       "enum": [
         "implicit",
         "explicit",
@@ -125,6 +127,7 @@
       "type": "object"
     },
     "CopySemantics": {
+      "description": "Data copy behavior for operations.\n\n- copy: Always create a deep copy\n- view: Return a view (shares underlying data)\n- copy_on_write: Copy only when modified\n- configurable: User can choose per-operation",
       "enum": [
         "copy",
         "view",
@@ -212,6 +215,7 @@
       "type": "object"
     },
     "DTypeCategory": {
+      "description": "Data type category for classification.\n\n- numeric: Integer, float, decimal types\n- string: Text/string types\n- temporal: Date, time, datetime types\n- boolean: True/false type\n- categorical: Enum-like categorical type\n- nested: Struct, list, map types\n- binary: Raw binary/bytes type\n- null: Null/missing value type\n- custom: Custom user-defined type",
       "enum": [
         "numeric",
         "string",
@@ -356,6 +360,7 @@
         "python_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -610,6 +615,7 @@
       "type": "object"
     },
     "Default": {
+      "description": "Default evaluation strategy.\n\n- eager: Evaluate operations immediately\n- lazy: Defer evaluation until needed\n- configurable: User can choose",
       "enum": [
         "eager",
         "lazy",
@@ -619,6 +625,7 @@
       "type": "string"
     },
     "ErrorHandling": {
+      "description": "Pipeline error handling strategy.\n\n- fail_fast: Stop on first error\n- collect: Collect all errors, report at end\n- skip: Skip failed records, continue\n- retry: Retry failed operations",
       "enum": [
         "fail_fast",
         "collect",
@@ -826,6 +833,7 @@
       "type": "object"
     },
     "Layout": {
+      "description": "Memory layout for data storage.\n\n- row_major: Row-contiguous (C-style)\n- column_major: Column-contiguous (Fortran-style)\n- chunked: Data stored in chunks\n- arrow: Apache Arrow format\n- custom: Custom layout",
       "enum": [
         "row_major",
         "column_major",
@@ -970,6 +978,7 @@
       "type": "object"
     },
     "OverflowBehavior": {
+      "description": "Numeric overflow handling behavior.\n\n- wrap: Wrap around (modular arithmetic)\n- saturate: Clamp to min/max value\n- error: Raise exception on overflow\n- promote: Promote to larger type",
       "enum": [
         "wrap",
         "saturate",
@@ -1203,6 +1212,7 @@
       "type": "object"
     },
     "PipelineType": {
+      "description": "Data pipeline execution model.\n\n- sequential: Linear step-by-step execution\n- dag: Directed acyclic graph (parallel branches)\n- streaming: Continuous data flow\n- batch: Batch processing",
       "enum": [
         "sequential",
         "dag",
@@ -1213,6 +1223,7 @@
       "type": "string"
     },
     "Rules": {
+      "description": "Type promotion rule set.\n\n- numpy: NumPy-style type promotion\n- pandas: Pandas-style type promotion\n- strict: No automatic promotion\n- custom: Custom promotion rules",
       "enum": [
         "numpy",
         "pandas",
@@ -1223,6 +1234,7 @@
       "type": "string"
     },
     "StringStorage": {
+      "description": "String data storage strategy.\n\n- utf8: Standard UTF-8 encoding\n- large_utf8: Large string type (64-bit offsets)\n- dictionary: Dictionary-encoded strings\n- fixed_size: Fixed-size string buffer",
       "enum": [
         "utf8",
         "large_utf8",
@@ -1233,6 +1245,7 @@
       "type": "string"
     },
     "TransformCategory": {
+      "description": "Data transformation operation category.\n\n- select: Column/field selection\n- filter: Row/record filtering\n- aggregate: Grouping and aggregation\n- join: Combining datasets\n- reshape: Pivot, melt, stack operations\n- sort: Ordering records\n- window: Window/rolling operations\n- fill: Missing value handling\n- cast: Type conversion\n- custom: Custom transformation",
       "enum": [
         "select",
         "filter",

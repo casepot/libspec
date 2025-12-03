@@ -12,12 +12,14 @@ from enum import Enum
 
 from typing import Annotated
 
-from pydantic import Field, PositiveFloat
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
 
-class LevelsUsedEnum(Enum):
+class LogLevel(Enum):
+    """Standard Python logging levels."""
+
     DEBUG = 'DEBUG'
     INFO = 'INFO'
     WARNING = 'WARNING'
@@ -27,7 +29,7 @@ class LevelsUsedEnum(Enum):
 
 class LoggingSpec(ExtensionModel):
     logger_name: str | None = Field(None, description="Logger name (e.g., 'mylib')")
-    levels_used: list[LevelsUsedEnum] | None = Field(
+    levels_used: list[LogLevel] | None = Field(
         None, description='Log levels used'
     )
     structured: bool | None = Field(
@@ -46,6 +48,15 @@ class LoggingSpec(ExtensionModel):
 
 
 class MetricType(Enum):
+    """Prometheus-style metric types.
+
+    - counter: Monotonically increasing value (e.g., request count)
+    - gauge: Value that can go up or down (e.g., temperature)
+    - histogram: Distribution of values in buckets (e.g., latencies)
+    - summary: Distribution with quantiles (e.g., latency percentiles)
+    - info: Informational metric with labels only
+    """
+
     counter = 'counter'
     gauge = 'gauge'
     histogram = 'histogram'
@@ -67,6 +78,16 @@ class MetricSpec(ExtensionModel):
 
 
 class Propagation(Enum):
+    """Distributed tracing context propagation format.
+
+    - w3c: W3C Trace Context (standard)
+    - b3: Zipkin B3 format
+    - jaeger: Jaeger native format
+    - xray: AWS X-Ray format
+    - datadog: Datadog APM format
+    - custom: Custom propagation implementation
+    """
+
     w3c = 'w3c'
     b3 = 'b3'
     jaeger = 'jaeger'
@@ -76,6 +97,15 @@ class Propagation(Enum):
 
 
 class Sampling(Enum):
+    """Trace sampling strategy.
+
+    - always: Sample every trace
+    - never: Never sample (disable tracing)
+    - probabilistic: Sample based on probability (e.g., 10%)
+    - rate_limited: Sample up to N traces per second
+    - parent_based: Follow parent span's sampling decision
+    """
+
     always = 'always'
     never = 'never'
     probabilistic = 'probabilistic'
@@ -98,6 +128,13 @@ class TracingSpec(ExtensionModel):
 
 
 class HealthCheckType(Enum):
+    """Kubernetes-style health check type.
+
+    - liveness: Is the application alive? Failure triggers restart
+    - readiness: Can the application handle traffic? Failure removes from LB
+    - startup: Has the application started? Protects slow-starting apps
+    """
+
     liveness = 'liveness'
     readiness = 'readiness'
     startup = 'startup'
@@ -108,14 +145,24 @@ class HealthCheckSpec(ExtensionModel):
     type: HealthCheckType = Field(default=..., description='Health check type')
     endpoint: str | None = Field(None, description='HTTP endpoint path')
     method: str | None = Field(None, description='Method to call for health check')
-    timeout: PositiveFloat | None = Field(None, description='Timeout in seconds')
-    interval: PositiveFloat | None = Field(
-        None, description='Check interval in seconds'
+    timeout: Annotated[float, Field(gt=0)] | None = Field(
+        default=None, description='Timeout in seconds'
+    )
+    interval: Annotated[float, Field(gt=0)] | None = Field(
+        default=None, description='Check interval in seconds'
     )
     dependencies: list[str] | None = Field(None, description='Dependencies checked')
 
 
 class TraceFormat(Enum):
+    """Debug trace output format.
+
+    - json: Machine-readable JSON format
+    - text: Plain text format
+    - compact: Minimal output format
+    - pretty: Human-readable formatted output
+    """
+
     json = 'json'
     text = 'text'
     compact = 'compact'

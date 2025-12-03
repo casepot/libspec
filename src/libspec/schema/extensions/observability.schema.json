@@ -177,6 +177,7 @@
       "type": "object"
     },
     "HealthCheckType": {
+      "description": "Kubernetes-style health check type.\n\n- liveness: Is the application alive? Failure triggers restart\n- readiness: Can the application handle traffic? Failure removes from LB\n- startup: Has the application started? Protects slow-starting apps",
       "enum": [
         "liveness",
         "readiness",
@@ -185,7 +186,8 @@
       "title": "HealthCheckType",
       "type": "string"
     },
-    "LevelsUsedEnum": {
+    "LogLevel": {
+      "description": "Standard Python logging levels.",
       "enum": [
         "DEBUG",
         "INFO",
@@ -193,7 +195,7 @@
         "ERROR",
         "CRITICAL"
       ],
-      "title": "LevelsUsedEnum",
+      "title": "LogLevel",
       "type": "string"
     },
     "LoggingSpec": {
@@ -218,7 +220,7 @@
           "anyOf": [
             {
               "items": {
-                "$ref": "#/$defs/LevelsUsedEnum"
+                "$ref": "#/$defs/LogLevel"
               },
               "type": "array"
             },
@@ -381,6 +383,7 @@
       "type": "object"
     },
     "MetricType": {
+      "description": "Prometheus-style metric types.\n\n- counter: Monotonically increasing value (e.g., request count)\n- gauge: Value that can go up or down (e.g., temperature)\n- histogram: Distribution of values in buckets (e.g., latencies)\n- summary: Distribution with quantiles (e.g., latency percentiles)\n- info: Informational metric with labels only",
       "enum": [
         "counter",
         "gauge",
@@ -463,6 +466,7 @@
       "type": "object"
     },
     "Propagation": {
+      "description": "Distributed tracing context propagation format.\n\n- w3c: W3C Trace Context (standard)\n- b3: Zipkin B3 format\n- jaeger: Jaeger native format\n- xray: AWS X-Ray format\n- datadog: Datadog APM format\n- custom: Custom propagation implementation",
       "enum": [
         "w3c",
         "b3",
@@ -475,6 +479,7 @@
       "type": "string"
     },
     "Sampling": {
+      "description": "Trace sampling strategy.\n\n- always: Sample every trace\n- never: Never sample (disable tracing)\n- probabilistic: Sample based on probability (e.g., 10%)\n- rate_limited: Sample up to N traces per second\n- parent_based: Follow parent span's sampling decision",
       "enum": [
         "always",
         "never",
@@ -486,6 +491,7 @@
       "type": "string"
     },
     "TraceFormat": {
+      "description": "Debug trace output format.\n\n- json: Machine-readable JSON format\n- text: Plain text format\n- compact: Minimal output format\n- pretty: Human-readable formatted output",
       "enum": [
         "json",
         "text",

@@ -14,9 +14,18 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import TypeAnnotationStr
 
 
 class CopySemantics(Enum):
+    """Data copy behavior for operations.
+
+    - copy: Always create a deep copy
+    - view: Return a view (shares underlying data)
+    - copy_on_write: Copy only when modified
+    - configurable: User can choose per-operation
+    """
+
     copy = 'copy'
     view = 'view'
     copy_on_write = 'copy_on_write'
@@ -24,6 +33,19 @@ class CopySemantics(Enum):
 
 
 class DTypeCategory(Enum):
+    """Data type category for classification.
+
+    - numeric: Integer, float, decimal types
+    - string: Text/string types
+    - temporal: Date, time, datetime types
+    - boolean: True/false type
+    - categorical: Enum-like categorical type
+    - nested: Struct, list, map types
+    - binary: Raw binary/bytes type
+    - null: Null/missing value type
+    - custom: Custom user-defined type
+    """
+
     numeric = 'numeric'
     string = 'string'
     temporal = 'temporal'
@@ -39,7 +61,9 @@ class DTypeSpec(ExtensionModel):
     name: str = Field(default=..., description='Data type name')
     category: DTypeCategory | None = Field(None, description='Type category')
     numpy_equivalent: str | None = Field(None, description='Equivalent NumPy dtype')
-    python_type: str | None = Field(None, description='Python type for scalar values')
+    python_type: TypeAnnotationStr | None = Field(
+        None, description='Python type for scalar values'
+    )
     nullable: bool | None = Field(None, description='Whether null values are supported')
     bit_width: Annotated[int, Field(ge=1)] | None = Field(
         default=None, description='Bit width (for numeric types)'
@@ -52,6 +76,14 @@ class DTypeSpec(ExtensionModel):
 
 
 class Behavior(Enum):
+    """Type coercion behavior.
+
+    - implicit: Automatically convert types
+    - explicit: Require explicit cast call
+    - error: Raise error on type mismatch
+    - warning: Warn but allow conversion
+    """
+
     implicit = 'implicit'
     explicit = 'explicit'
     error = 'error'
@@ -68,6 +100,20 @@ class CoercionRule(ExtensionModel):
 
 
 class TransformCategory(Enum):
+    """Data transformation operation category.
+
+    - select: Column/field selection
+    - filter: Row/record filtering
+    - aggregate: Grouping and aggregation
+    - join: Combining datasets
+    - reshape: Pivot, melt, stack operations
+    - sort: Ordering records
+    - window: Window/rolling operations
+    - fill: Missing value handling
+    - cast: Type conversion
+    - custom: Custom transformation
+    """
+
     select = 'select'
     filter = 'filter'
     aggregate = 'aggregate'
@@ -111,6 +157,14 @@ class MethodChainingSpec(ExtensionModel):
 
 
 class PipelineType(Enum):
+    """Data pipeline execution model.
+
+    - sequential: Linear step-by-step execution
+    - dag: Directed acyclic graph (parallel branches)
+    - streaming: Continuous data flow
+    - batch: Batch processing
+    """
+
     sequential = 'sequential'
     dag = 'dag'
     streaming = 'streaming'
@@ -118,6 +172,14 @@ class PipelineType(Enum):
 
 
 class ErrorHandling(Enum):
+    """Pipeline error handling strategy.
+
+    - fail_fast: Stop on first error
+    - collect: Collect all errors, report at end
+    - skip: Skip failed records, continue
+    - retry: Retry failed operations
+    """
+
     fail_fast = 'fail_fast'
     collect = 'collect'
     skip = 'skip'
@@ -151,6 +213,13 @@ class IOFormatSpec(ExtensionModel):
 
 
 class Default(Enum):
+    """Default evaluation strategy.
+
+    - eager: Evaluate operations immediately
+    - lazy: Defer evaluation until needed
+    - configurable: User can choose
+    """
+
     eager = 'eager'
     lazy = 'lazy'
     configurable = 'configurable'
@@ -177,6 +246,15 @@ class EvaluationStrategySpec(ExtensionModel):
 
 
 class Layout(Enum):
+    """Memory layout for data storage.
+
+    - row_major: Row-contiguous (C-style)
+    - column_major: Column-contiguous (Fortran-style)
+    - chunked: Data stored in chunks
+    - arrow: Apache Arrow format
+    - custom: Custom layout
+    """
+
     row_major = 'row_major'
     column_major = 'column_major'
     chunked = 'chunked'
@@ -185,6 +263,14 @@ class Layout(Enum):
 
 
 class StringStorage(Enum):
+    """String data storage strategy.
+
+    - utf8: Standard UTF-8 encoding
+    - large_utf8: Large string type (64-bit offsets)
+    - dictionary: Dictionary-encoded strings
+    - fixed_size: Fixed-size string buffer
+    """
+
     utf8 = 'utf8'
     large_utf8 = 'large_utf8'
     dictionary = 'dictionary'
@@ -208,6 +294,16 @@ class MemoryLayoutSpec(ExtensionModel):
 
 
 class Backend(Enum):
+    """Parallelism execution backend.
+
+    - threads: ThreadPoolExecutor
+    - processes: ProcessPoolExecutor
+    - dask: Dask distributed computing
+    - ray: Ray distributed computing
+    - spark: Apache Spark
+    - none: No parallelism
+    """
+
     threads = 'threads'
     processes = 'processes'
     dask = 'dask'
@@ -245,6 +341,14 @@ class BroadcastingSpec(ExtensionModel):
 
 
 class Rules(Enum):
+    """Type promotion rule set.
+
+    - numpy: NumPy-style type promotion
+    - pandas: Pandas-style type promotion
+    - strict: No automatic promotion
+    - custom: Custom promotion rules
+    """
+
     numpy = 'numpy'
     pandas = 'pandas'
     strict = 'strict'
@@ -252,6 +356,14 @@ class Rules(Enum):
 
 
 class OverflowBehavior(Enum):
+    """Numeric overflow handling behavior.
+
+    - wrap: Wrap around (modular arithmetic)
+    - saturate: Clamp to min/max value
+    - error: Raise exception on overflow
+    - promote: Promote to larger type
+    """
+
     wrap = 'wrap'
     saturate = 'saturate'
     error = 'error'

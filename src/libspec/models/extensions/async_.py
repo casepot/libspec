@@ -16,9 +16,17 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import NonEmptyStr
 
 
 class CancellationMode(Enum):
+    """How async operations handle cancellation requests.
+
+    - cooperative: Operation checks for cancellation explicitly
+    - immediate: Cancellation interrupts operation immediately
+    - none: No cancellation support
+    """
+
     cooperative = 'cooperative'
     immediate = 'immediate'
     none = 'none'
@@ -35,7 +43,7 @@ class CancellationSpec(ExtensionModel):
 
 
 class AsyncStateSpec(ExtensionModel):
-    name: str = Field(default=..., description='State name')
+    name: NonEmptyStr = Field(default=..., description='State name')
     description: str | None = Field(None, description='What this state represents')
     terminal: bool | None = Field(False, description='Whether this is a terminal state')
     on_enter: str | None = Field(
@@ -45,8 +53,8 @@ class AsyncStateSpec(ExtensionModel):
 
 
 class AsyncTransitionSpec(ExtensionModel):
-    from_: str = Field(default=..., alias='from', description='Source state name')
-    to: str = Field(default=..., description='Target state name')
+    from_: NonEmptyStr = Field(default=..., alias='from', description='Source state name')
+    to: NonEmptyStr = Field(default=..., description='Target state name')
     trigger: str = Field(
         default=..., description='What causes this transition (method call, event, etc.)'
     )
@@ -59,6 +67,17 @@ class AsyncTransitionSpec(ExtensionModel):
 
 
 class Primitive(Enum):
+    """Type of synchronization primitive for concurrent access.
+
+    - mailbox: Actor-style message passing
+    - channel: Go-style typed communication channel
+    - lock: Mutual exclusion lock
+    - semaphore: Counting semaphore for resource limits
+    - event: One-shot or multi-shot signaling
+    - barrier: Synchronization point for multiple tasks
+    - condition: Wait/notify coordination
+    """
+
     mailbox = 'mailbox'
     channel = 'channel'
     lock = 'lock'
@@ -69,6 +88,14 @@ class Primitive(Enum):
 
 
 class Semantics(Enum):
+    """Ordering and delivery semantics for message passing.
+
+    - fifo: First-in, first-out ordering
+    - priority: Priority-based ordering
+    - broadcast: Message delivered to all subscribers
+    - lifo: Last-in, first-out (stack) ordering
+    """
+
     fifo = 'fifo'
     priority = 'priority'
     broadcast = 'broadcast'
@@ -76,6 +103,13 @@ class Semantics(Enum):
 
 
 class SyncBackpressure(Enum):
+    """How synchronization primitives handle capacity limits.
+
+    - block: Block sender until space available
+    - drop: Silently discard new items
+    - error: Raise an error when full
+    """
+
     block = 'block'
     drop = 'drop'
     error = 'error'
@@ -98,11 +132,26 @@ class SyncSpec(ExtensionModel):
 
 
 class Kind(Enum):
+    """Observable stream temperature (hot vs cold).
+
+    - hot: Emits regardless of subscribers; late subscribers miss events
+    - cold: Waits for subscription; each subscriber gets all events
+    """
+
     hot = 'hot'
     cold = 'cold'
 
 
 class ObservableBackpressure(Enum):
+    """How observables handle slow consumers.
+
+    - buffer: Buffer items until consumer catches up
+    - drop: Drop new items when buffer is full
+    - block: Block producer until consumer catches up
+    - error: Signal error when buffer overflows
+    - latest: Keep only the latest item, dropping older ones
+    """
+
     buffer = 'buffer'
     drop = 'drop'
     block = 'block'
@@ -129,6 +178,14 @@ class ObservableSpec(ExtensionModel):
 
 
 class Executor(Enum):
+    """Where async operations are executed.
+
+    - event_loop: Single-threaded asyncio event loop
+    - thread_pool: ThreadPoolExecutor for I/O-bound work
+    - process_pool: ProcessPoolExecutor for CPU-bound work
+    - custom: Custom executor implementation
+    """
+
     event_loop = 'event_loop'
     thread_pool = 'thread_pool'
     process_pool = 'process_pool'
@@ -136,6 +193,14 @@ class Executor(Enum):
 
 
 class Priority(Enum):
+    """Task scheduling priority levels.
+
+    - low: Background tasks, can be delayed
+    - normal: Standard priority for most operations
+    - high: Time-sensitive operations
+    - realtime: Critical operations requiring immediate execution
+    """
+
     low = 'low'
     normal = 'normal'
     high = 'high'
@@ -148,7 +213,7 @@ class SchedulingSpec(ExtensionModel):
     preemptible: bool | None = Field(
         None, description='Whether execution can be preempted'
     )
-    timeout_default: Annotated[float, Field(ge=0.0)] | None = Field(
+    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
         default=None, description='Default timeout in seconds'
     )
 
