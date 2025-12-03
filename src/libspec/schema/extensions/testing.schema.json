@@ -134,7 +134,7 @@
         },
         "path": {
           "description": "Path to conftest.py relative to project root",
-          "minLength": 1,
+          "format": "path",
           "title": "Path",
           "type": "string"
         },
@@ -247,7 +247,7 @@
         "path": {
           "anyOf": [
             {
-              "minLength": 1,
+              "format": "path",
               "type": "string"
             },
             {

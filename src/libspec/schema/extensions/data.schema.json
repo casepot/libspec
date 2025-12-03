@@ -762,6 +762,9 @@
         },
         "format": {
           "description": "Format name (e.g., 'csv', 'parquet', 'json')",
+          "maxLength": 32,
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
           "title": "Format",
           "type": "string"
         },

@@ -16,6 +16,7 @@ from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import (
+    CommandName,
     EnvVarName,
     FunctionReference,
     NonEmptyStr,
@@ -148,7 +149,9 @@ class ArgumentSpec(ExtensionModel):
     metavar: str | None = Field(None, description='Display name in help')
     description: str | None = Field(None, description='Help text')
     envvar: EnvVarName | None = Field(None, description='Environment variable fallback')
-    shell_complete: CompletionSpec | None = None
+    shell_complete: CompletionSpec | None = Field(
+        default=None, description='Shell completion configuration'
+    )
 
     @model_validator(mode='after')
     def validate_required_consistency(self) -> 'ArgumentSpec':
@@ -195,7 +198,9 @@ class OptionSpec(ExtensionModel):
         None, description='Whether to show default in help'
     )
     show_envvar: bool | None = Field(None, description='Whether to show envvar in help')
-    shell_complete: CompletionSpec | None = None
+    shell_complete: CompletionSpec | None = Field(
+        default=None, description='Shell completion configuration'
+    )
 
     @model_validator(mode='after')
     def validate_flag_consistency(self) -> 'OptionSpec':
@@ -209,7 +214,7 @@ class OptionSpec(ExtensionModel):
 
 
 class CommandSpec(ExtensionModel):
-    name: NonEmptyStr = Field(default=..., description='Command name')
+    name: CommandName = Field(default=..., description='Command name (kebab-case)')
     aliases: list[str] | None = Field(None, description='Command aliases')
     handler: FunctionReference | None = Field(None, description='Handler function reference')
     arguments: list[ArgumentSpec] | None = Field(
@@ -229,15 +234,8 @@ class CommandSpec(ExtensionModel):
     context_settings: ContextSettingsSpec | None = None
 
     @model_validator(mode='after')
-    def validate_command_name(self) -> 'CommandSpec':
-        """Validate command name is lowercase alphanumeric with hyphens."""
-        # CLI command names should be lowercase with hyphens (kebab-case)
-        if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', self.name):
-            raise ValueError(
-                f"Command name {self.name!r} must be lowercase alphanumeric with hyphens "
-                "(e.g., 'my-command', 'init', 'list-all')"
-            )
-        # Validate aliases follow same pattern
+    def validate_aliases(self) -> 'CommandSpec':
+        """Validate command aliases follow naming convention."""
         if self.aliases:
             for alias in self.aliases:
                 if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', alias):
@@ -248,7 +246,7 @@ class CommandSpec(ExtensionModel):
 
 
 class CLILibraryFields(ExtensionModel):
-    cli_name: str | None = Field(None, description='CLI executable name')
+    cli_name: CommandName | None = Field(None, description='CLI executable name (kebab-case)')
     commands: list[CommandSpec] | None = Field(None, description='CLI commands')
     global_options: list[OptionSpec] | None = Field(
         None, description='Options available to all commands'

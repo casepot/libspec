@@ -497,7 +497,7 @@
         "directory": {
           "anyOf": [
             {
-              "minLength": 1,
+              "format": "path",
               "type": "string"
             },
             {

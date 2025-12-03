@@ -64,7 +64,7 @@
           "anyOf": [
             {
               "items": {
-                "minLength": 1,
+                "format": "path",
                 "type": "string"
               },
               "type": "array"

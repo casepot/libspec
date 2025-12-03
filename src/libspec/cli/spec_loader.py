@@ -79,7 +79,7 @@ class LoadedSpec(BaseModel):
         if self._raw_data is not None:
             return self._raw_data
         # Serialize spec back to dict if raw data wasn't saved
-        return self.spec.model_dump(by_alias=True, exclude_none=True)
+        return self.spec.model_dump(by_alias=True, exclude_none=True, mode="json")
 
     @property
     def library(self) -> Library:
@@ -614,8 +614,19 @@ def load_spec(path: Path, *, validate: bool = True, strict: bool = False) -> Loa
                 errors.append(f"  {loc}: {msg}")
             raise SpecLoadError("Invalid spec:\n" + "\n".join(errors))
     else:
-        # Minimal validation - just wrap the data
-        spec = LibspecSpec.model_construct(**data)
+        # Lenient validation - validate structure but allow coercion
+        # Note: model_construct() would bypass ALL validation, making errors
+        # appear at access time. Using model_validate with strict=False
+        # is safer while still being permissive.
+        try:
+            spec = LibspecSpec.model_validate(
+                data,
+                strict=False,
+                context={STRICT_CONTEXT_KEY: False, SPEC_DIR_CONTEXT_KEY: path.parent},
+            )
+        except ValidationError:
+            # Fall back to construct for backward compatibility with malformed specs
+            spec = LibspecSpec.model_construct(**data)
 
     loaded = LoadedSpec(path=path, spec=spec)
     # Store raw data for backward compatibility

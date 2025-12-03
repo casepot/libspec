@@ -15,6 +15,7 @@ from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import (
+    ExceptionTypeName,
     FunctionReference,
     MethodName,
     NonEmptyStr,
@@ -321,8 +322,8 @@ class SchemaSpec(ExtensionModel):
     type: TypeAnnotationStr | None = Field(None, description="Python type this schema represents")
     version: str | None = Field(None, description="Schema version")
     fields: list[SchemaFieldSpec] | None = Field(None, description="Schema fields")
-    generator: str | None = Field(None, description="Schema generator function")
-    validator: str | None = Field(None, description="Schema validator function")
+    generator: FunctionReference | None = Field(None, description="Schema generator function")
+    validator: FunctionReference | None = Field(None, description="Schema validator function")
     strict: bool | None = Field(
         None, description="Whether unknown fields cause errors"
     )
@@ -383,7 +384,7 @@ class SerializationErrorSpec(ExtensionModel):
     """Serialization error specification."""
 
     kind: SerializationErrorKind = Field(default=..., description="Error kind")
-    exception: str | None = Field(None, description="Exception class raised")
+    exception: ExceptionTypeName | None = Field(None, description="Exception class raised")
     message_template: str | None = Field(None, description="Error message template")
     recoverable: bool | None = Field(
         None, description="Whether error is recoverable"
@@ -422,13 +423,13 @@ class SerializationTypeFields(ExtensionModel):
     serializable: bool | None = Field(
         None, description="Whether this type is serializable"
     )
-    serialize_as: str | None = Field(
+    serialize_as: TypeAnnotationStr | None = Field(
         None, description="Type to serialize as"
     )
-    custom_encoder: str | None = Field(
+    custom_encoder: FunctionReference | None = Field(
         None, description="Custom encoder for this type"
     )
-    custom_decoder: str | None = Field(
+    custom_decoder: FunctionReference | None = Field(
         None, description="Custom decoder for this type"
     )
     schema_spec: SchemaSpec | None = Field(

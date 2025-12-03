@@ -12,10 +12,11 @@ import re
 from enum import Enum
 from typing import Annotated, Any
 
-from pydantic import Field, model_validator
+from pydantic import Field, computed_field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import (
+    ExceptionTypeName,
     FunctionReference,
     MimeType,
     NonEmptyStr,
@@ -59,16 +60,16 @@ class Auth(str, Enum):
 class PathParamSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Parameter name in path')
     type: TypeAnnotationStr = Field(default=..., description='Parameter type')
-    description: str | None = None
+    description: str | None = Field(None, description='What this parameter represents')
     pattern: RegexPattern | None = Field(None, description='Regex pattern for validation')
 
 
 class QueryParamSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Query parameter name')
     type: TypeAnnotationStr = Field(default=..., description='Parameter type')
-    required: bool | None = False
+    required: bool | None = Field(False, description='Whether this parameter is required')
     default: str | None = Field(None, description='Default value')
-    description: str | None = None
+    description: str | None = Field(None, description='What this parameter controls')
     multiple: bool | None = Field(False, description='Whether multiple values allowed')
 
     @model_validator(mode='after')
@@ -84,8 +85,8 @@ class QueryParamSpec(ExtensionModel):
 class HeaderSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Header name')
     type: TypeAnnotationStr | None = Field(None, description='Value type')
-    required: bool | None = False
-    description: str | None = None
+    required: bool | None = Field(False, description='Whether this header is required')
+    description: str | None = Field(None, description='What this header is used for')
 
 
 class RequestBodySpec(ExtensionModel):
@@ -93,8 +94,8 @@ class RequestBodySpec(ExtensionModel):
     content_type: MimeType | None = Field(
         'application/json', description='Expected content type'
     )
-    required: bool | None = True
-    description: str | None = None
+    required: bool | None = Field(True, description='Whether request body is required')
+    description: str | None = Field(None, description='What the request body contains')
 
 
 class ResponseSpec(ExtensionModel):
@@ -104,17 +105,17 @@ class ResponseSpec(ExtensionModel):
         'application/json', description='Response content type'
     )
     headers: list[HeaderSpec] | None = Field(None, description='Response headers')
-    description: str | None = None
+    description: str | None = Field(None, description='What this response represents')
 
 
 class ErrorResponseSpec(ExtensionModel):
     status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
     type: TypeAnnotationStr | None = Field(None, description='Error response model type')
-    exception: str | None = Field(
+    exception: ExceptionTypeName | None = Field(
         None, description='Exception type that triggers this response'
     )
     when: str | None = Field(None, description='When this error occurs')
-    description: str | None = None
+    description: str | None = Field(None, description='Human-readable error description')
 
 
 class AppliesTo(str, Enum):
@@ -160,7 +161,7 @@ class MiddlewareSpec(ExtensionModel):
     )
     position: Position | None = Field(None, description='When middleware runs')
     config: dict[str, Any] | None = Field(None, description='Middleware configuration')
-    description: str | None = None
+    description: str | None = Field(None, description='What this middleware does')
 
     @model_validator(mode='after')
     def validate_middleware_config(self) -> 'MiddlewareSpec':
@@ -199,7 +200,7 @@ class DependencySpec(ExtensionModel):
     dependencies: list[str] | None = Field(
         None, description='Other dependencies this requires'
     )
-    description: str | None = None
+    description: str | None = Field(None, description='What this dependency provides')
 
     @model_validator(mode='after')
     def validate_cacheable_scope(self) -> 'DependencySpec':
@@ -231,17 +232,17 @@ class Direction(str, Enum):
 
 class WSMessageSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Message type name')
-    direction: Direction
+    direction: Direction = Field(default=..., description='Message flow direction')
     type: TypeAnnotationStr | None = Field(None, description='Message payload type')
-    description: str | None = None
+    description: str | None = Field(None, description='What this message type represents')
 
 
 class ErrorHandlerSpec(ExtensionModel):
-    exception: str = Field(default=..., description='Exception type to handle')
+    exception: ExceptionTypeName = Field(default=..., description='Exception type to handle')
     status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
     response_type: TypeAnnotationStr | None = Field(None, description='Response model type')
     handler: FunctionReference | None = Field(None, description='Custom handler function')
-    description: str | None = None
+    description: str | None = Field(None, description='When this error handler applies')
 
 
 class RateLimitSpec(ExtensionModel):
@@ -251,7 +252,7 @@ class RateLimitSpec(ExtensionModel):
     window: TimeWindow | None = Field(None, description="Time window (e.g., '1m', '1h')")
     key: str | None = Field(None, description="Rate limit key (e.g., 'ip', 'user')")
     burst: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Burst allowance')
-    description: str | None = None
+    description: str | None = Field(None, description='Rate limit policy description')
 
     @model_validator(mode='after')
     def validate_rate_limit_config(self) -> 'RateLimitSpec':
@@ -275,18 +276,25 @@ class RouteSpec(ExtensionModel):
     headers: list[HeaderSpec] | None = Field(
         None, description='Required/optional header definitions'
     )
-    request_body: RequestBodySpec | None = None
-    response: ResponseSpec | None = None
+    request_body: RequestBodySpec | None = Field(None, description='Request body specification')
+    response: ResponseSpec | None = Field(None, description='Success response specification')
     errors: list[ErrorResponseSpec] | None = Field(None, description='Error responses')
     auth: Auth | None = Field(None, description='Authentication requirement')
     permissions: list[str] | None = Field(None, description='Required permissions')
-    rate_limit: RateLimitSpec | None = None
+    rate_limit: RateLimitSpec | None = Field(None, description='Rate limiting configuration')
     tags: list[str] | None = Field(None, description='OpenAPI tags')
     deprecated: bool | None = Field(
         None, description='Whether this route is deprecated'
     )
     summary: str | None = Field(None, description='Short summary for OpenAPI')
     description: str | None = Field(None, description='Detailed description')
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def extracted_param_names(self) -> set[str]:
+        """Parameter names extracted from the path pattern."""
+        pattern = re.compile(r'\{([^}]+)\}')
+        return {m.group(1) for m in pattern.finditer(self.path)}
 
     @model_validator(mode='after')
     def validate_path(self) -> 'RouteSpec':
@@ -304,11 +312,7 @@ class RouteSpec(ExtensionModel):
                 f"{open_braces} open, {close_braces} close"
             )
         # Validate path parameter format (alphanumeric + underscore)
-        param_pattern = re.compile(r'\{([^}]+)\}')
-        params_in_path: set[str] = set()
-        for match in param_pattern.finditer(self.path):
-            param_name = match.group(1)
-            params_in_path.add(param_name)
+        for param_name in self.extracted_param_names:
             if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', param_name):
                 raise ValueError(
                     f"Invalid path parameter name {param_name!r} in {self.path!r}: "
@@ -316,7 +320,7 @@ class RouteSpec(ExtensionModel):
                 )
         # Warn if path params in path are not defined in path_params
         defined_params = {p.name for p in (self.path_params or [])}
-        missing = params_in_path - defined_params
+        missing = self.extracted_param_names - defined_params
         if missing:
             warnings.warn(
                 f"Path parameters {missing} in {self.path!r} not defined in path_params",
@@ -330,11 +334,11 @@ class WebSocketSpec(ExtensionModel):
     path: RoutePath = Field(default=..., description='WebSocket endpoint path')
     handler: FunctionReference | None = Field(None, description='Handler function reference')
     subprotocols: list[str] | None = Field(None, description='Supported subprotocols')
-    auth: Auth | None = None
+    auth: Auth | None = Field(None, description='Authentication requirement')
     message_types: list[WSMessageSpec] | None = Field(
         None, description='Message type definitions'
     )
-    description: str | None = None
+    description: str | None = Field(None, description='What this WebSocket endpoint does')
 
 
 class WebLibraryFields(ExtensionModel):

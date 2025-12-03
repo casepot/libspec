@@ -1,9 +1,10 @@
 """Type definitions, enums, and constrained types for libspec models."""
 
 from enum import Enum
-from typing import Annotated
+from pathlib import Path as PathlibPath
+from typing import Annotated, Any
 
-from pydantic import StringConstraints
+from pydantic import BeforeValidator, Field, StringConstraints, ValidationInfo
 
 # -----------------------------------------------------------------------------
 # Constrained String Types
@@ -79,8 +80,8 @@ EnvVarName = Annotated[str, StringConstraints(pattern=r"^[A-Z_][A-Z0-9_]*$", min
 """Environment variable name in SCREAMING_SNAKE_CASE (e.g., MY_VAR, PYTHONPATH)."""
 
 # Local file/directory path
-LocalPath = Annotated[str, StringConstraints(min_length=1)]
-"""Local filesystem path, validated in strict mode."""
+LocalPath = PathlibPath
+"""Local filesystem path. Pydantic auto-serializes to string in JSON."""
 
 # -----------------------------------------------------------------------------
 # Pattern-Based Constrained Types
@@ -183,8 +184,8 @@ EntryPointGroup = Annotated[
 """Python entry point group name (e.g., 'console_scripts', 'pytest11')."""
 
 # Path or URL (for mixed fields that accept either)
-PathOrUrl = Annotated[str, StringConstraints(min_length=1)]
-"""Either a local file path or URL (validated contextually in strict mode)."""
+PathOrUrl = PathlibPath | str
+"""Local path or URL string. URLs (http://, https://, file://) pass through as strings."""
 
 # Environment variable prefix (e.g., 'MYLIB_', 'APP_')
 EnvVarPrefix = Annotated[
@@ -214,6 +215,114 @@ CompressionStr = Annotated[
     str, StringConstraints(pattern=r"^[a-z0-9-]+$", min_length=1)
 ]
 """Compression algorithm name (e.g., 'gzip', 'zstd', 'snappy', 'lz4')."""
+
+
+# -----------------------------------------------------------------------------
+# Numeric Constrained Types
+# -----------------------------------------------------------------------------
+
+# HTTP status codes
+HttpStatusCode = Annotated[int, Field(ge=100, le=599)]
+"""HTTP status code (100-599)."""
+
+# Execution and ordering
+ExecutionOrder = Annotated[int, Field(ge=0)]
+"""Non-negative execution order (lower = earlier)."""
+
+Priority = Annotated[int, Field(ge=0, le=100)]
+"""Priority level (0-100, higher = more important)."""
+
+# Sampling and percentages
+SamplingRate = Annotated[float, Field(ge=0.0, le=1.0)]
+"""Sampling rate probability (0.0-1.0)."""
+
+Percentage = Annotated[float, Field(ge=0.0, le=100.0)]
+"""Percentage value (0-100)."""
+
+# Time durations (numeric)
+TimeoutSeconds = Annotated[float, Field(gt=0)]
+"""Timeout duration in seconds (must be positive)."""
+
+IntervalSeconds = Annotated[float, Field(gt=0)]
+"""Interval in seconds (must be positive)."""
+
+# Counts and sizes
+PositiveInt = Annotated[int, Field(gt=0)]
+"""Positive integer (greater than 0)."""
+
+NonNegativeInt = Annotated[int, Field(ge=0)]
+"""Non-negative integer (0 or greater)."""
+
+ByteSize = Annotated[int, Field(ge=0)]
+"""Size in bytes (non-negative)."""
+
+
+# -----------------------------------------------------------------------------
+# Strict Validation Types
+# -----------------------------------------------------------------------------
+
+STRICT_CONTEXT_KEY = "strict_models"
+
+
+def _ensure_strict_bool(value: Any, info: ValidationInfo) -> Any:
+    """Enforce boolean type when strict_models context is enabled.
+
+    In non-strict mode, allows Pydantic's default coercion (e.g., 1 -> True).
+    In strict mode, rejects non-boolean values.
+    """
+    if value is None:
+        return value
+    # Check if strict mode is enabled via validation context
+    if info.context and info.context.get(STRICT_CONTEXT_KEY):
+        if not isinstance(value, bool):
+            raise TypeError(
+                f"{info.field_name or 'field'} must be a boolean when strict models are enabled"
+            )
+    return value
+
+
+StrictBool = Annotated[bool | None, BeforeValidator(_ensure_strict_bool)]
+"""Boolean field with strict type checking when strict_models context is enabled."""
+
+
+# -----------------------------------------------------------------------------
+# Additional Semantic String Types
+# -----------------------------------------------------------------------------
+
+# State machine identifiers
+StateName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z_][a-z0-9_]*$", min_length=1, max_length=64),
+]
+"""State machine state name in snake_case (e.g., 'idle', 'processing', 'error_state')."""
+
+# CLI command names
+CommandName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$", min_length=1, max_length=64),
+]
+"""CLI command name in kebab-case (e.g., 'run', 'list-files', 'generate-report')."""
+
+# Data format identifiers
+FormatName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$", min_length=1, max_length=32),
+]
+"""Data format name in lowercase (e.g., 'json', 'msgpack', 'parquet', 'arrow-ipc')."""
+
+# Configuration keys
+ConfigKey = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z][a-z0-9._]*$", min_length=1, max_length=128),
+]
+"""Configuration key in dotted notation (e.g., 'database.host', 'logging.level')."""
+
+# Exception type names
+ExceptionTypeName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[A-Z][a-zA-Z0-9]*$", min_length=1),
+]
+"""Exception type name in PascalCase (e.g., 'ValueError', 'ConnectionError')."""
 
 
 # -----------------------------------------------------------------------------

@@ -98,7 +98,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Shell completion configuration"
         },
         "type": {
           "anyOf": [
@@ -126,6 +127,9 @@
         "cli_name": {
           "anyOf": [
             {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
               "type": "string"
             },
             {
@@ -133,7 +137,7 @@
             }
           ],
           "default": null,
-          "description": "CLI executable name",
+          "description": "CLI executable name (kebab-case)",
           "title": "Cli Name"
         },
         "commands": {
@@ -362,8 +366,10 @@
           "title": "Hidden"
         },
         "name": {
-          "description": "Command name",
+          "description": "Command name (kebab-case)",
+          "maxLength": 64,
           "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
           "title": "Name",
           "type": "string"
         },
@@ -911,7 +917,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Shell completion configuration"
         },
         "short": {
           "anyOf": [

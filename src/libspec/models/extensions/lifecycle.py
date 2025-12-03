@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from datetime import date as date_type
+from pathlib import Path
 from typing import Annotated, Literal, Union
 
 from pydantic import (
@@ -54,9 +55,10 @@ class TestsEvidence(EvidenceBase):
 
     @field_validator("path")
     @classmethod
-    def validate_test_path(cls, v: str, info: ValidationInfo) -> str:
+    def validate_test_path(cls, v: str | Path, info: ValidationInfo) -> str | Path:
         """L009: Validate test path looks like a test file."""
         # Common test file patterns
+        path_str = str(v)
         patterns = [
             r"test_.*\.py$",
             r".*_test\.py$",
@@ -65,7 +67,7 @@ class TestsEvidence(EvidenceBase):
             r".*\.spec\.(ts|js)$",
             r".*\.test\.(ts|js)$",
         ]
-        if not any(re.search(p, v) for p in patterns):
+        if not any(re.search(p, path_str) for p in patterns):
             raise ValueError(f"Path does not look like a test file: {v}")
         return validate_local_path(v, info, "path")
 
@@ -79,7 +81,7 @@ class DesignDocEvidence(EvidenceBase):
 
     @field_validator("reference")
     @classmethod
-    def validate_reference(cls, v: str, info: ValidationInfo) -> str:
+    def validate_reference(cls, v: str | Path, info: ValidationInfo) -> str | Path:
         return validate_path_or_url(v, info, "reference")
 
 
@@ -108,7 +110,7 @@ class BenchmarkEvidence(EvidenceBase):
 
     @field_validator("reference")
     @classmethod
-    def validate_reference(cls, v: str, info: ValidationInfo) -> str:
+    def validate_reference(cls, v: str | Path, info: ValidationInfo) -> str | Path:
         return validate_path_or_url(v, info, "reference")
 
 
@@ -120,7 +122,7 @@ class MigrationGuideEvidence(EvidenceBase):
 
     @field_validator("reference")
     @classmethod
-    def validate_reference(cls, v: str, info: ValidationInfo) -> str:
+    def validate_reference(cls, v: str | Path, info: ValidationInfo) -> str | Path:
         return validate_path_or_url(v, info, "reference")
 
 
@@ -145,14 +147,14 @@ class CustomEvidence(EvidenceBase):
 
     @field_validator("path")
     @classmethod
-    def validate_optional_path(cls, v: str | None, info: ValidationInfo) -> str | None:
+    def validate_optional_path(cls, v: str | Path | None, info: ValidationInfo) -> str | Path | None:
         if v is None:
             return None
         return validate_local_path(v, info, "path")
 
     @field_validator("reference")
     @classmethod
-    def validate_optional_reference(cls, v: str | None, info: ValidationInfo) -> str | None:
+    def validate_optional_reference(cls, v: str | Path | None, info: ValidationInfo) -> str | Path | None:
         if v is None:
             return None
         return validate_path_or_url(v, info, "reference")
@@ -250,6 +252,7 @@ class WorkflowSpec(ExtensionModel):
     def validate_workflow(self) -> Self:
         """L005: Validate workflow internal consistency."""
         state_names = {s.name for s in self.states}
+        terminal_states = {s.name for s in self.states if s.terminal}
 
         # Initial state must be in states
         if self.initial_state not in state_names:
@@ -267,6 +270,34 @@ class WorkflowSpec(ExtensionModel):
                 raise ValueError(
                     f"Transition to_state '{t.to_state}' not in defined states"
                 )
+
+        # Check for cycles that don't reach terminal states (potential infinite loops)
+        # Build adjacency list
+        graph: dict[str, set[str]] = {s.name: set() for s in self.states}
+        for t in self.transitions:
+            graph[t.from_state].add(t.to_state)
+
+        # Check reachability to terminal states using DFS
+        def can_reach_terminal(state: str, visited: set[str]) -> bool:
+            if state in terminal_states:
+                return True
+            if state in visited:
+                return False  # Cycle detected without reaching terminal
+            visited.add(state)
+            for next_state in graph[state]:
+                if can_reach_terminal(next_state, visited.copy()):
+                    return True
+            return False
+
+        # Warn if initial state cannot reach any terminal state
+        if terminal_states and not can_reach_terminal(self.initial_state, set()):
+            import warnings
+            warnings.warn(
+                f"Workflow '{self.name}': initial state '{self.initial_state}' "
+                "cannot reach any terminal state",
+                UserWarning,
+                stacklevel=2,
+            )
 
         return self
 

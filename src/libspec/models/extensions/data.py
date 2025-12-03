@@ -11,10 +11,16 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated
 
-from pydantic import Field, model_validator
+from pydantic import Field, computed_field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, MethodName, NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import (
+    FormatName,
+    FunctionReference,
+    MethodName,
+    NonEmptyStr,
+    TypeAnnotationStr,
+)
 
 
 class CopySemantics(str, Enum):
@@ -195,7 +201,7 @@ class PipelineStage(ExtensionModel):
 
 
 class IOFormatSpec(ExtensionModel):
-    format: str = Field(default=..., description="Format name (e.g., 'csv', 'parquet', 'json')")
+    format: FormatName = Field(default=..., description="Format name (e.g., 'csv', 'parquet', 'json')")
     read_method: MethodName | None = Field(None, description='Method for reading this format')
     write_method: MethodName | None = Field(None, description='Method for writing this format')
     streaming: bool | None = Field(
@@ -444,9 +450,20 @@ class PipelineSpec(ExtensionModel):
     )
     description: str | None = None
 
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def stage_names(self) -> list[str]:
+        """Names of all pipeline stages."""
+        return [s.name for s in (self.stages or [])]
+
     @model_validator(mode='after')
     def validate_dag_stage_inputs(self) -> 'PipelineSpec':
         """Validate DAG pipeline stages have proper input references."""
+        # Empty stages for DAG makes no sense
+        if self.type == PipelineType.dag and not self.stages:
+            raise ValueError(
+                f"Pipeline '{self.name}' has type 'dag' but no stages defined"
+            )
         if self.type == PipelineType.dag and self.stages:
             stage_names = {s.name for s in self.stages}
             for idx, stage in enumerate(self.stages):

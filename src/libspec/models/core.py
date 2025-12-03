@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import re
 import warnings
-from typing import Any, Literal
+from typing import Literal
 
-from pydantic import ConfigDict, Field, HttpUrl, ValidationInfo, field_validator, model_validator
+from pydantic import ConfigDict, Field, HttpUrl, field_validator, model_validator
 from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
@@ -36,12 +36,12 @@ from .types import (
     SchemaVersion,
     ScreamingSnakeCase,
     SemVer,
+    StrictBool,
     TypeAnnotationStr,
     TypeKind,
     VersionConstraintStr,
     Visibility,
 )
-from .utils import ensure_strict_bool
 
 
 def _compare_versions(v1: str, v2: str) -> int:
@@ -87,9 +87,14 @@ def _compare_versions(v1: str, v2: str) -> int:
 class Parameter(LibspecModel):
     """A function or method parameter."""
 
-    name: NonEmptyStr = Field(description="Parameter name")
+    name: NonEmptyStr = Field(
+        description="Parameter name",
+        examples=["data", "timeout", "callback"],
+    )
     type: TypeAnnotationStr | None = Field(
-        default=None, description="Parameter type annotation"
+        default=None,
+        description="Parameter type annotation",
+        examples=["str", "int", "list[str]", "Callable[[int], bool]"],
     )
     default: str | None = Field(
         default=None, description="Default value (string 'REQUIRED' means no default)"
@@ -346,9 +351,13 @@ class OverloadSpec(LibspecModel):
 class Method(ExtensibleModel):
     """A method definition."""
 
-    name: NonEmptyStr = Field(description="Method name")
+    name: NonEmptyStr = Field(
+        description="Method name",
+        examples=["read", "write", "connect", "__init__"],
+    )
     signature: NonEmptyStr = Field(
-        description="Full signature including parameters and return type"
+        description="Full signature including parameters and return type",
+        examples=["(self, data: bytes) -> int", "(self) -> None"],
     )
     description: str | None = Field(
         default=None, description="What this method does"
@@ -459,9 +468,36 @@ class Constructor(LibspecModel):
 class TypeDef(ExtensibleModel):
     """A type definition (class, protocol, enum, etc.)."""
 
-    name: PascalCaseName = Field(description="Type name")
-    kind: TypeKind = Field(description="Kind of type")
-    module: ModulePath = Field(description="Module where this type is defined")
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Type Definition",
+            "examples": [
+                {
+                    "name": "Point",
+                    "kind": "class",
+                    "module": "geometry.core",
+                    "docstring": "A 2D point in Cartesian space.",
+                    "properties": [
+                        {"name": "x", "type": "float"},
+                        {"name": "y", "type": "float"},
+                    ],
+                }
+            ],
+        }
+    )
+
+    name: PascalCaseName = Field(
+        description="Type name",
+        examples=["Point", "Connection", "UserData"],
+    )
+    kind: TypeKind = Field(
+        description="Kind of type",
+        examples=["class", "protocol", "enum", "dataclass"],
+    )
+    module: ModulePath = Field(
+        description="Module where this type is defined",
+        examples=["mylib.core", "mylib.models.user"],
+    )
     generic_params: list[GenericParam] = Field(
         default_factory=list, description="Generic type parameters"
     )
@@ -578,13 +614,43 @@ class TypeDef(ExtensibleModel):
 class FunctionDef(ExtensibleModel):
     """A top-level function definition."""
 
-    name: str = Field(description="Function name")
-    kind: FunctionKind = Field(
-        default=FunctionKind.FUNCTION, description="Kind of callable"
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Function Definition",
+            "examples": [
+                {
+                    "name": "calculate_distance",
+                    "kind": "function",
+                    "module": "geometry.utils",
+                    "signature": "(p1: Point, p2: Point) -> float",
+                    "description": "Calculate Euclidean distance between two points.",
+                    "parameters": [
+                        {"name": "p1", "type": "Point", "description": "First point"},
+                        {"name": "p2", "type": "Point", "description": "Second point"},
+                    ],
+                    "returns": {"type": "float", "description": "Distance between points"},
+                    "pure": True,
+                }
+            ],
+        }
     )
-    module: ModulePath = Field(description="Module where this function is defined")
+
+    name: str = Field(
+        description="Function name",
+        examples=["read_csv", "calculate_hash", "send_request"],
+    )
+    kind: FunctionKind = Field(
+        default=FunctionKind.FUNCTION,
+        description="Kind of callable",
+        examples=["function", "decorator", "context_manager"],
+    )
+    module: ModulePath = Field(
+        description="Module where this function is defined",
+        examples=["mylib.io", "mylib.utils"],
+    )
     signature: NonEmptyStr = Field(
-        description="Full signature including parameters and return type"
+        description="Full signature including parameters and return type",
+        examples=["(path: str, encoding: str = 'utf-8') -> DataFrame"],
     )
     generic_params: list[GenericParam] = Field(
         default_factory=list, description="Generic type parameters"
@@ -623,13 +689,13 @@ class FunctionDef(ExtensibleModel):
     raises: list[RaisesClause] = Field(
         default_factory=list, description="Exceptions this function may raise"
     )
-    idempotent: bool | None = Field(
+    idempotent: StrictBool = Field(
         default=None, description="Whether calling multiple times has same effect as once"
     )
-    pure: bool | None = Field(
+    pure: StrictBool = Field(
         default=None, description="Whether function has no side effects"
     )
-    deterministic: bool | None = Field(
+    deterministic: StrictBool = Field(
         default=None, description="Whether same inputs always produce same outputs"
     )
     related: list[CrossReference] = Field(
@@ -672,10 +738,6 @@ class FunctionDef(ExtensibleModel):
             )
         return v
 
-    @field_validator("idempotent", "pure", "deterministic", mode="before")
-    @classmethod
-    def enforce_strict_flags(cls, value: Any, info: ValidationInfo) -> Any:
-        return ensure_strict_bool(value, info, info.field_name or "flag")
 
     @model_validator(mode="after")
     def validate_yield_consistency(self) -> Self:
@@ -705,6 +767,25 @@ class FunctionDef(ExtensibleModel):
 
 class Feature(ExtensibleModel):
     """A behavioral specification with test steps."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Feature Specification",
+            "examples": [
+                {
+                    "id": "user-authentication",
+                    "category": "SECURITY",
+                    "summary": "Users can authenticate with email and password",
+                    "steps": [
+                        "Given a registered user",
+                        "When they submit valid credentials",
+                        "Then they receive an auth token",
+                    ],
+                    "status": "implemented",
+                }
+            ],
+        }
+    )
 
     id: KebabCaseId = Field(description="Unique identifier for this feature")
     category: ScreamingSnakeCase = Field(
@@ -788,6 +869,20 @@ class Export(LibspecModel):
 class Module(LibspecModel):
     """A Python module or package."""
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Module Definition",
+            "examples": [
+                {
+                    "path": "mylib.core",
+                    "description": "Core functionality for the library",
+                    "exports": ["main_function", "MainClass"],
+                    "depends_on": ["mylib.utils"],
+                }
+            ],
+        }
+    )
+
     path: ModulePath = Field(description="Dotted module path (e.g., 'mylib.submodule')")
     description: str | None = Field(
         default=None, description="What this module provides"
@@ -809,6 +904,20 @@ class Module(LibspecModel):
 
 class Principle(LibspecModel):
     """A design principle that guides library decisions."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Design Principle",
+            "examples": [
+                {
+                    "id": "explicit-over-implicit",
+                    "statement": "Prefer explicit configuration over magic behavior",
+                    "rationale": "Makes code easier to understand and debug",
+                    "implications": ["No auto-discovery", "Required arguments over defaults"],
+                }
+            ],
+        }
+    )
 
     id: KebabCaseId = Field(description="Unique identifier for this principle")
     statement: NonEmptyStr = Field(description="Brief principle statement")

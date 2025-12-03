@@ -34,9 +34,16 @@
           "title": "Description"
         },
         "reference": {
-          "minLength": 1,
-          "title": "Reference",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "path",
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Reference"
         },
         "type": {
           "const": "approval",
@@ -110,9 +117,16 @@
           "type": "object"
         },
         "reference": {
-          "minLength": 1,
-          "title": "Reference",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "path",
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Reference"
         },
         "type": {
           "const": "benchmark",
@@ -170,7 +184,7 @@
         "path": {
           "anyOf": [
             {
-              "minLength": 1,
+              "format": "path",
               "type": "string"
             },
             {
@@ -306,9 +320,16 @@
           "title": "Description"
         },
         "reference": {
-          "minLength": 1,
-          "title": "Reference",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "path",
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Reference"
         },
         "type": {
           "const": "design_doc",
@@ -715,9 +736,16 @@
           "title": "Description"
         },
         "reference": {
-          "minLength": 1,
-          "title": "Reference",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "path",
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Reference"
         },
         "type": {
           "const": "migration_guide",
@@ -821,7 +849,7 @@
           "title": "Description"
         },
         "path": {
-          "minLength": 1,
+          "format": "path",
           "title": "Path",
           "type": "string"
         },

@@ -11,12 +11,13 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated
 
-from pydantic import Field, model_validator
+from pydantic import Field, computed_field, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import (
     FunctionReference,
     NonEmptyStr,
+    StateName,
     StatePath,
     TypeAnnotationStr,
 )
@@ -48,7 +49,7 @@ class ReducerSpec(ExtensionModel):
         None, description='Action types this reducer handles'
     )
     pure: bool | None = Field(None, description='Whether reducer is pure')
-    description: str | None = None
+    description: str | None = Field(None, description='What this reducer does')
 
 
 class SliceSpec(ExtensionModel):
@@ -92,9 +93,21 @@ class MachineStateSpec(ExtensionModel):
     children: list[MachineStateSpec] | None = Field(
         None, description='Child states (for compound/parallel)'
     )
-    initial: str | None = Field(None, description='Initial child state')
+    initial: StateName | None = Field(None, description='Initial child state')
     tags: list[str] | None = Field(None, description='State tags for querying')
-    description: str | None = None
+    description: str | None = Field(None, description='What this state represents')
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def is_compound(self) -> bool:
+        """Whether this state has child states."""
+        return self.children is not None and len(self.children) > 0
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def is_terminal(self) -> bool:
+        """Whether this is a terminal (final) state."""
+        return self.type == MachineStateType.final
 
     @model_validator(mode='after')
     def validate_type_consistency(self) -> 'MachineStateSpec':
@@ -142,7 +155,7 @@ class MachineStateSpec(ExtensionModel):
 class MachineEventSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Event name')
     payload_type: TypeAnnotationStr | None = Field(None, description='Event payload type')
-    description: str | None = None
+    description: str | None = Field(None, description='When this event is triggered')
 
 
 class TransitionSpec(ExtensionModel):
@@ -154,7 +167,7 @@ class TransitionSpec(ExtensionModel):
     internal: bool | None = Field(
         None, description='Whether transition is internal (no exit/entry)'
     )
-    description: str | None = None
+    description: str | None = Field(None, description='What this transition represents')
 
 
 class GuardSpec(ExtensionModel):
@@ -184,7 +197,7 @@ class MachineActionSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Action name')
     function: FunctionReference | None = Field(None, description='Action function reference')
     type: MachineActionType | None = Field(None, description='Action type')
-    description: str | None = None
+    description: str | None = Field(None, description='What this action does')
 
 
 class ServiceType(str, Enum):
@@ -218,7 +231,7 @@ class ActionSpec(ExtensionModel):
     async_: bool | None = Field(
         None, alias='async', description='Whether this is an async action/thunk'
     )
-    description: str | None = None
+    description: str | None = Field(None, description='What this action does')
 
 
 class SelectorSpec(ExtensionModel):
@@ -229,7 +242,7 @@ class SelectorSpec(ExtensionModel):
     )
     return_type: TypeAnnotationStr | None = Field(None, description='Return type')
     memoized: bool | None = Field(None, description='Whether selector is memoized')
-    description: str | None = None
+    description: str | None = Field(None, description='What this selector returns')
 
 
 class Intercept(str, Enum):
@@ -249,12 +262,12 @@ class Intercept(str, Enum):
 
 class StateMiddlewareSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Middleware name')
-    type: str | None = Field(None, description='Middleware type reference')
+    type: FunctionReference | None = Field(None, description='Middleware type reference')
     order: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Execution order')
     intercepts: list[Intercept] | None = Field(
         None, description='What this middleware intercepts'
     )
-    description: str | None = None
+    description: str | None = Field(None, description='What this middleware does')
 
 
 class StateShapeSpec(ExtensionModel):
@@ -297,7 +310,7 @@ class PersistenceSpec(ExtensionModel):
 
 
 class StateTypeFields(ExtensionModel):
-    state_shape: StateShapeSpec | None = None
+    state_shape: StateShapeSpec | None = Field(None, description='State shape specification')
     immutable: bool | None = Field(None, description='Whether state is immutable')
     serializable: bool | None = Field(None, description='Whether state is serializable')
 
@@ -311,18 +324,18 @@ class StoreSpec(ExtensionModel):
     )
     reducers: list[ReducerSpec] | None = Field(None, description='Reducer functions')
     slices: list[SliceSpec] | None = Field(None, description='State slices')
-    persistence: PersistenceSpec | None = None
+    persistence: PersistenceSpec | None = Field(None, description='Persistence configuration')
     devtools: bool | None = Field(
         None, description='Whether devtools integration is supported'
     )
-    description: str | None = None
+    description: str | None = Field(None, description='What this store manages')
 
 
 class StateMachineSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='State machine name')
-    type: str | None = Field(default=None, description='State machine class reference')
+    type: FunctionReference | None = Field(default=None, description='State machine class reference')
     states: list[MachineStateSpec] = Field(default=..., description='State definitions')
-    initial: str = Field(default=..., description='Initial state name')
+    initial: StateName = Field(default=..., description='Initial state name')
     context_type: TypeAnnotationStr | None = Field(None, description='Context/extended state type')
     events: list[MachineEventSpec] | None = Field(None, description='Event definitions')
     transitions: list[TransitionSpec] | None = Field(
@@ -339,7 +352,7 @@ class StateMachineSpec(ExtensionModel):
     parallel: bool | None = Field(
         None, description='Whether machine has parallel states'
     )
-    description: str | None = None
+    description: str | None = Field(None, description='What this state machine models')
 
     @model_validator(mode='after')
     def validate_initial_state_exists(self) -> 'StateMachineSpec':

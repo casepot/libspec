@@ -260,6 +260,19 @@
     },
     "Feature": {
       "description": "A behavioral specification with test steps.",
+      "examples": [
+        {
+          "category": "SECURITY",
+          "id": "user-authentication",
+          "status": "implemented",
+          "steps": [
+            "Given a registered user",
+            "When they submit valid credentials",
+            "Then they receive an auth token"
+          ],
+          "summary": "Users can authenticate with email and password"
+        }
+      ],
       "properties": {
         "breaking_since": {
           "anyOf": [
@@ -357,7 +370,7 @@
         "id",
         "category"
       ],
-      "title": "Feature",
+      "title": "Feature Specification",
       "type": "object"
     },
     "FeatureStatus": {
@@ -372,6 +385,32 @@
     },
     "FunctionDef": {
       "description": "A top-level function definition.",
+      "examples": [
+        {
+          "description": "Calculate Euclidean distance between two points.",
+          "kind": "function",
+          "module": "geometry.utils",
+          "name": "calculate_distance",
+          "parameters": [
+            {
+              "description": "First point",
+              "name": "p1",
+              "type": "Point"
+            },
+            {
+              "description": "Second point",
+              "name": "p2",
+              "type": "Point"
+            }
+          ],
+          "pure": true,
+          "returns": {
+            "description": "Distance between points",
+            "type": "float"
+          },
+          "signature": "(p1: Point, p2: Point) -> float"
+        }
+      ],
       "properties": {
         "async_yields": {
           "anyOf": [
@@ -468,10 +507,19 @@
         "kind": {
           "$ref": "#/$defs/FunctionKind",
           "default": "function",
-          "description": "Kind of callable"
+          "description": "Kind of callable",
+          "examples": [
+            "function",
+            "decorator",
+            "context_manager"
+          ]
         },
         "module": {
           "description": "Module where this function is defined",
+          "examples": [
+            "mylib.io",
+            "mylib.utils"
+          ],
           "minLength": 1,
           "pattern": "^[a-z_][a-z0-9_.]*$",
           "title": "Module",
@@ -479,6 +527,11 @@
         },
         "name": {
           "description": "Function name",
+          "examples": [
+            "read_csv",
+            "calculate_hash",
+            "send_request"
+          ],
           "title": "Name",
           "type": "string"
         },
@@ -574,6 +627,9 @@
         },
         "signature": {
           "description": "Full signature including parameters and return type",
+          "examples": [
+            "(path: str, encoding: str = 'utf-8') -> DataFrame"
+          ],
           "minLength": 1,
           "title": "Signature",
           "type": "string"
@@ -596,7 +652,7 @@
         "module",
         "signature"
       ],
-      "title": "FunctionDef",
+      "title": "Function Definition",
       "type": "object"
     },
     "FunctionKind": {
@@ -922,6 +978,12 @@
         },
         "name": {
           "description": "Method name",
+          "examples": [
+            "read",
+            "write",
+            "connect",
+            "__init__"
+          ],
           "minLength": 1,
           "title": "Name",
           "type": "string"
@@ -995,6 +1057,10 @@
         },
         "signature": {
           "description": "Full signature including parameters and return type",
+          "examples": [
+            "(self, data: bytes) -> int",
+            "(self) -> None"
+          ],
           "minLength": 1,
           "title": "Signature",
           "type": "string"
@@ -1034,6 +1100,19 @@
     "Module": {
       "additionalProperties": false,
       "description": "A Python module or package.",
+      "examples": [
+        {
+          "depends_on": [
+            "mylib.utils"
+          ],
+          "description": "Core functionality for the library",
+          "exports": [
+            "main_function",
+            "MainClass"
+          ],
+          "path": "mylib.core"
+        }
+      ],
       "properties": {
         "depends_on": {
           "description": "Internal module dependencies",
@@ -1096,7 +1175,7 @@
       "required": [
         "path"
       ],
-      "title": "Module",
+      "title": "Module Definition",
       "type": "object"
     },
     "OverloadSpec": {
@@ -1201,6 +1280,11 @@
         },
         "name": {
           "description": "Parameter name",
+          "examples": [
+            "data",
+            "timeout",
+            "callback"
+          ],
           "minLength": 1,
           "title": "Name",
           "type": "string"
@@ -1232,6 +1316,12 @@
           ],
           "default": null,
           "description": "Parameter type annotation",
+          "examples": [
+            "str",
+            "int",
+            "list[str]",
+            "Callable[[int], bool]"
+          ],
           "title": "Type"
         }
       },
@@ -1256,6 +1346,17 @@
     "Principle": {
       "additionalProperties": false,
       "description": "A design principle that guides library decisions.",
+      "examples": [
+        {
+          "id": "explicit-over-implicit",
+          "implications": [
+            "No auto-discovery",
+            "Required arguments over defaults"
+          ],
+          "rationale": "Makes code easier to understand and debug",
+          "statement": "Prefer explicit configuration over magic behavior"
+        }
+      ],
       "properties": {
         "anti_patterns": {
           "description": "What this principle forbids",
@@ -1304,7 +1405,7 @@
         "id",
         "statement"
       ],
-      "title": "Principle",
+      "title": "Design Principle",
       "type": "object"
     },
     "Property": {
@@ -1545,6 +1646,24 @@
     },
     "TypeDef": {
       "description": "A type definition (class, protocol, enum, etc.).",
+      "examples": [
+        {
+          "docstring": "A 2D point in Cartesian space.",
+          "kind": "class",
+          "module": "geometry.core",
+          "name": "Point",
+          "properties": [
+            {
+              "name": "x",
+              "type": "float"
+            },
+            {
+              "name": "y",
+              "type": "float"
+            }
+          ]
+        }
+      ],
       "properties": {
         "bases": {
           "description": "Base classes or protocols",
@@ -1620,7 +1739,13 @@
         },
         "kind": {
           "$ref": "#/$defs/TypeKind",
-          "description": "Kind of type"
+          "description": "Kind of type",
+          "examples": [
+            "class",
+            "protocol",
+            "enum",
+            "dataclass"
+          ]
         },
         "methods": {
           "description": "Instance methods",
@@ -1632,6 +1757,10 @@
         },
         "module": {
           "description": "Module where this type is defined",
+          "examples": [
+            "mylib.core",
+            "mylib.models.user"
+          ],
           "minLength": 1,
           "pattern": "^[a-z_][a-z0-9_.]*$",
           "title": "Module",
@@ -1639,6 +1768,11 @@
         },
         "name": {
           "description": "Type name",
+          "examples": [
+            "Point",
+            "Connection",
+            "UserData"
+          ],
           "minLength": 1,
           "pattern": "^[A-Z][a-zA-Z0-9]*$",
           "title": "Name",
@@ -1739,7 +1873,7 @@
         "kind",
         "module"
       ],
-      "title": "TypeDef",
+      "title": "Type Definition",
       "type": "object"
     },
     "TypeKind": {

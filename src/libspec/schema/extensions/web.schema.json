@@ -74,6 +74,7 @@
             }
           ],
           "default": null,
+          "description": "What this dependency provides",
           "title": "Description"
         },
         "factory": {
@@ -145,10 +146,13 @@
             }
           ],
           "default": null,
+          "description": "When this error handler applies",
           "title": "Description"
         },
         "exception": {
           "description": "Exception type to handle",
+          "minLength": 1,
+          "pattern": "^[A-Z][a-zA-Z0-9]*$",
           "title": "Exception",
           "type": "string"
         },
@@ -208,11 +212,14 @@
             }
           ],
           "default": null,
+          "description": "Human-readable error description",
           "title": "Description"
         },
         "exception": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z][a-zA-Z0-9]*$",
               "type": "string"
             },
             {
@@ -276,6 +283,7 @@
             }
           ],
           "default": null,
+          "description": "What this header is used for",
           "title": "Description"
         },
         "name": {
@@ -294,6 +302,7 @@
             }
           ],
           "default": false,
+          "description": "Whether this header is required",
           "title": "Required"
         },
         "type": {
@@ -370,6 +379,7 @@
             }
           ],
           "default": null,
+          "description": "What this middleware does",
           "title": "Description"
         },
         "name": {
@@ -470,6 +480,7 @@
             }
           ],
           "default": null,
+          "description": "What this parameter represents",
           "title": "Description"
         },
         "name": {
@@ -541,6 +552,7 @@
             }
           ],
           "default": null,
+          "description": "What this parameter controls",
           "title": "Description"
         },
         "multiple": {
@@ -572,6 +584,7 @@
             }
           ],
           "default": false,
+          "description": "Whether this parameter is required",
           "title": "Required"
         },
         "type": {
@@ -614,6 +627,7 @@
             }
           ],
           "default": null,
+          "description": "Rate limit policy description",
           "title": "Description"
         },
         "key": {
@@ -689,6 +703,7 @@
             }
           ],
           "default": null,
+          "description": "What the request body contains",
           "title": "Description"
         },
         "required": {
@@ -701,6 +716,7 @@
             }
           ],
           "default": true,
+          "description": "Whether request body is required",
           "title": "Required"
         },
         "type": {
@@ -748,6 +764,7 @@
             }
           ],
           "default": null,
+          "description": "What this response represents",
           "title": "Description"
         },
         "headers": {
@@ -967,7 +984,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Rate limiting configuration"
         },
         "request_body": {
           "anyOf": [
@@ -978,7 +996,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Request body specification"
         },
         "response": {
           "anyOf": [
@@ -989,7 +1008,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Success response specification"
         },
         "summary": {
           "anyOf": [
@@ -1051,10 +1071,12 @@
             }
           ],
           "default": null,
+          "description": "What this message type represents",
           "title": "Description"
         },
         "direction": {
-          "$ref": "#/$defs/Direction"
+          "$ref": "#/$defs/Direction",
+          "description": "Message flow direction"
         },
         "name": {
           "description": "Message type name",
@@ -1181,7 +1203,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Authentication requirement"
         },
         "description": {
           "anyOf": [
@@ -1193,6 +1216,7 @@
             }
           ],
           "default": null,
+          "description": "What this WebSocket endpoint does",
           "title": "Description"
         },
         "handler": {

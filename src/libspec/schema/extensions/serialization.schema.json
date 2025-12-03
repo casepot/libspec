@@ -564,6 +564,8 @@
         "generator": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -610,6 +612,8 @@
         "validator": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -662,6 +666,8 @@
         "exception": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z][a-zA-Z0-9]*$",
               "type": "string"
             },
             {
@@ -1245,6 +1251,8 @@
         "custom_decoder": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1258,6 +1266,8 @@
         "custom_encoder": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1344,6 +1354,7 @@
         "serialize_as": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {

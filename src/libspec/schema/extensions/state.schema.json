@@ -40,6 +40,7 @@
             }
           ],
           "default": null,
+          "description": "What this action does",
           "title": "Description"
         },
         "name": {
@@ -149,6 +150,7 @@
             }
           ],
           "default": null,
+          "description": "What this action does",
           "title": "Description"
         },
         "function": {
@@ -215,6 +217,7 @@
             }
           ],
           "default": null,
+          "description": "When this event is triggered",
           "title": "Description"
         },
         "name": {
@@ -272,6 +275,7 @@
             }
           ],
           "default": null,
+          "description": "What this state represents",
           "title": "Description"
         },
         "entry": {
@@ -309,6 +313,9 @@
         "initial": {
           "anyOf": [
             {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_]*$",
               "type": "string"
             },
             {
@@ -520,6 +527,7 @@
             }
           ],
           "default": null,
+          "description": "What this reducer does",
           "title": "Description"
         },
         "function": {
@@ -591,6 +599,7 @@
             }
           ],
           "default": null,
+          "description": "What this selector returns",
           "title": "Description"
         },
         "function": {
@@ -979,6 +988,7 @@
             }
           ],
           "default": null,
+          "description": "What this state machine models",
           "title": "Description"
         },
         "events": {
@@ -1028,6 +1038,9 @@
         },
         "initial": {
           "description": "Initial state name",
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_]*$",
           "title": "Initial",
           "type": "string"
         },
@@ -1093,6 +1106,8 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1124,6 +1139,7 @@
             }
           ],
           "default": null,
+          "description": "What this middleware does",
           "title": "Description"
         },
         "intercepts": {
@@ -1165,6 +1181,8 @@
         "type": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1280,7 +1298,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "State shape specification"
         }
       },
       "title": "StateTypeFields",
@@ -1298,6 +1317,7 @@
             }
           ],
           "default": null,
+          "description": "What this store manages",
           "title": "Description"
         },
         "devtools": {
@@ -1341,7 +1361,8 @@
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "description": "Persistence configuration"
         },
         "reducers": {
           "anyOf": [
@@ -1449,6 +1470,7 @@
             }
           ],
           "default": null,
+          "description": "What this transition represents",
           "title": "Description"
         },
         "event": {
