@@ -141,7 +141,7 @@ class MachineStateSpec(ExtensionModel):
 
 class MachineEventSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Event name')
-    payload_type: str | None = Field(None, description='Event payload type')
+    payload_type: TypeAnnotationStr | None = Field(None, description='Event payload type')
     description: str | None = None
 
 
@@ -212,8 +212,8 @@ class ServiceSpec(ExtensionModel):
 
 class ActionSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Action type name')
-    type: str | None = Field(None, description='Action creator type reference')
-    payload_type: str | None = Field(None, description='Payload type')
+    type: TypeAnnotationStr | None = Field(None, description='Action creator type reference')
+    payload_type: TypeAnnotationStr | None = Field(None, description='Payload type')
     creator: FunctionReference | None = Field(None, description='Action creator function reference')
     async_: bool | None = Field(
         None, alias='async', description='Whether this is an async action/thunk'
@@ -267,17 +267,14 @@ class StateShapeSpec(ExtensionModel):
 class PersistenceStorage(str, Enum):
     """State persistence storage backend.
 
-    - localStorage: Browser localStorage
-    - sessionStorage: Browser sessionStorage
-    - indexedDB: Browser IndexedDB
-    - asyncStorage: React Native AsyncStorage
-    - custom: Custom storage implementation
+    Member names use snake_case for consistency with other enums.
+    Values retain camelCase for JavaScript compatibility.
     """
 
-    localStorage = 'localStorage'
-    sessionStorage = 'sessionStorage'
-    indexedDB = 'indexedDB'
-    asyncStorage = 'asyncStorage'
+    local_storage = 'localStorage'
+    session_storage = 'sessionStorage'
+    indexed_db = 'indexedDB'
+    async_storage = 'asyncStorage'
     custom = 'custom'
 
 
@@ -326,7 +323,7 @@ class StateMachineSpec(ExtensionModel):
     type: str | None = Field(default=None, description='State machine class reference')
     states: list[MachineStateSpec] = Field(default=..., description='State definitions')
     initial: str = Field(default=..., description='Initial state name')
-    context_type: str | None = Field(None, description='Context/extended state type')
+    context_type: TypeAnnotationStr | None = Field(None, description='Context/extended state type')
     events: list[MachineEventSpec] | None = Field(None, description='Event definitions')
     transitions: list[TransitionSpec] | None = Field(
         None, description='Transition definitions'

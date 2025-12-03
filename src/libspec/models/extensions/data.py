@@ -11,10 +11,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import FunctionReference, MethodName, NonEmptyStr, TypeAnnotationStr
 
 
 class CopySemantics(str, Enum):
@@ -148,10 +148,10 @@ class MethodChainingSpec(ExtensionModel):
     immutable_chain: bool | None = Field(
         None, description='Whether each chain step creates new instance'
     )
-    chainable_methods: list[str] | None = Field(
+    chainable_methods: list[MethodName] | None = Field(
         None, description='Methods that support chaining'
     )
-    terminal_methods: list[str] | None = Field(
+    terminal_methods: list[MethodName] | None = Field(
         None, description='Methods that break the chain (return different type)'
     )
 
@@ -196,8 +196,8 @@ class PipelineStage(ExtensionModel):
 
 class IOFormatSpec(ExtensionModel):
     format: str = Field(default=..., description="Format name (e.g., 'csv', 'parquet', 'json')")
-    read_method: str | None = Field(None, description='Method for reading this format')
-    write_method: str | None = Field(None, description='Method for writing this format')
+    read_method: MethodName | None = Field(None, description='Method for reading this format')
+    write_method: MethodName | None = Field(None, description='Method for writing this format')
     streaming: bool | None = Field(
         None, description='Whether streaming read/write is supported'
     )
@@ -233,7 +233,7 @@ class EvaluationStrategySpec(ExtensionModel):
     eager_triggers: list[str] | None = Field(
         None, description='Operations that trigger evaluation'
     )
-    collect_method: str | None = Field(
+    collect_method: MethodName | None = Field(
         None, description='Method to trigger full evaluation'
     )
     streaming_collect: bool | None = Field(
@@ -242,7 +242,7 @@ class EvaluationStrategySpec(ExtensionModel):
     query_optimization: bool | None = Field(
         None, description='Whether query optimization is performed'
     )
-    explain_method: str | None = Field(None, description='Method to explain query plan')
+    explain_method: MethodName | None = Field(None, description='Method to explain query plan')
 
 
 class Layout(str, Enum):
@@ -291,6 +291,13 @@ class MemoryLayoutSpec(ExtensionModel):
     string_storage: StringStorage | None = Field(
         None, description='String storage strategy'
     )
+
+    @model_validator(mode='after')
+    def validate_zero_copy_contiguous(self) -> 'MemoryLayoutSpec':
+        """Validate zero_copy requires contiguous memory."""
+        if self.zero_copy is True and self.contiguous is False:
+            raise ValueError("zero_copy=True requires contiguous=True")
+        return self
 
 
 class Backend(str, Enum):
@@ -425,6 +432,26 @@ class PipelineSpec(ExtensionModel):
         None, description='Whether checkpointing is supported'
     )
     description: str | None = None
+
+    @model_validator(mode='after')
+    def validate_dag_stage_inputs(self) -> 'PipelineSpec':
+        """Validate DAG pipeline stages have proper input references."""
+        if self.type == PipelineType.dag and self.stages:
+            stage_names = {s.name for s in self.stages}
+            for idx, stage in enumerate(self.stages):
+                # Non-first stages in a DAG should specify inputs
+                if idx > 0 and not stage.inputs:
+                    raise ValueError(
+                        f"DAG stage '{stage.name}' must specify 'inputs'"
+                    )
+                # Check that input references exist
+                if stage.inputs:
+                    invalid = set(stage.inputs) - stage_names
+                    if invalid:
+                        raise ValueError(
+                            f"Stage '{stage.name}' references undefined inputs: {invalid}"
+                        )
+        return self
 
 
 class DataLibraryFields(ExtensionModel):

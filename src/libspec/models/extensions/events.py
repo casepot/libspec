@@ -16,11 +16,13 @@ from pydantic import Field, model_validator
 from libspec.models.base import ExtensionModel
 from libspec.models.types import (
     FunctionReference,
+    MethodName,
     NonEmptyStr,
     RegexPattern,
     SemVer,
     TimeWindow,
     TopicName,
+    TypeAnnotationStr,
 )
 
 
@@ -60,7 +62,7 @@ class EventCategory(str, Enum):
 
 class EventFieldSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Field name')
-    type: str = Field(default=..., description='Field type')
+    type: TypeAnnotationStr = Field(default=..., description='Field type')
     required: bool | None = Field(True, description='Whether field is required')
     description: str | None = None
 
@@ -265,7 +267,7 @@ class OnFailure(str, Enum):
 
 class SagaStepSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Step name')
-    action: str | None = Field(None, description='Action to perform (command/event)')
+    action: MethodName | None = Field(None, description='Action to perform (command/event)')
     wait_for: list[str] | None = Field(None, description='Events to wait for')
     timeout: Annotated[float, Field(ge=0.0)] | None = Field(
         default=None, description='Step timeout in seconds'
@@ -275,7 +277,7 @@ class SagaStepSpec(ExtensionModel):
 
 class CompensationSpec(ExtensionModel):
     step: str = Field(default=..., description='Step to compensate')
-    action: str = Field(default=..., description='Compensation action')
+    action: MethodName = Field(default=..., description='Compensation action')
     idempotent: bool | None = Field(
         None, description='Whether compensation is idempotent'
     )
@@ -283,7 +285,7 @@ class CompensationSpec(ExtensionModel):
 
 class EventSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Event type name')
-    type: str | None = Field(None, description='Event class reference')
+    type: TypeAnnotationStr | None = Field(None, description='Event class reference')
     category: EventCategory | None = Field(None, description='Event category')
     payload: list[EventFieldSpec] | None = Field(
         None, description='Event payload fields'

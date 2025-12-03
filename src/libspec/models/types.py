@@ -93,6 +93,14 @@ FunctionReference = Annotated[
 ]
 """Python function/method reference path (e.g., 'module.submodule.function_name')."""
 
+# Simple method/attribute name (no dots, allows dunders)
+MethodName = Annotated[
+    str,
+    StringConstraints(pattern=r"^_{0,2}[a-z][a-z0-9_]*_{0,2}$", min_length=1),
+]
+"""Simple Python method/attribute name (e.g., 'read_csv', 'on_enter', '__init__').
+Snake_case identifiers including dunder methods, no dots."""
+
 # HTTP route path
 RoutePath = Annotated[
     str,

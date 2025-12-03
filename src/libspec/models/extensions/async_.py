@@ -16,7 +16,7 @@ from typing import Annotated
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr
+from libspec.models.types import MethodName, NonEmptyStr
 
 
 class CancellationMode(str, Enum):
@@ -46,10 +46,10 @@ class AsyncStateSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='State name')
     description: str | None = Field(None, description='What this state represents')
     terminal: bool | None = Field(False, description='Whether this is a terminal state')
-    on_enter: str | None = Field(
+    on_enter: MethodName | None = Field(
         None, description='Action to run on entering this state'
     )
-    on_exit: str | None = Field(None, description='Action to run on exiting this state')
+    on_exit: MethodName | None = Field(None, description='Action to run on exiting this state')
 
 
 class AsyncTransitionSpec(ExtensionModel):
@@ -264,6 +264,28 @@ class LifecycleSpec(ExtensionModel):
     transitions: list[AsyncTransitionSpec] | None = Field(
         None, description='Valid state transitions'
     )
+
+    @model_validator(mode='after')
+    def validate_lifecycle_states_consistency(self) -> 'LifecycleSpec':
+        """Validate state references in transitions and initial_state."""
+        if self.states and self.transitions:
+            state_names = {s.name for s in self.states}
+            for t in self.transitions:
+                if t.from_ not in state_names:
+                    raise ValueError(
+                        f"Transition source '{t.from_}' not in defined states"
+                    )
+                if t.to not in state_names:
+                    raise ValueError(
+                        f"Transition target '{t.to}' not in defined states"
+                    )
+        if self.initial_state is not None and self.states:
+            state_names = {s.name for s in self.states}
+            if self.initial_state not in state_names:
+                raise ValueError(
+                    f"initial_state '{self.initial_state}' not defined in states"
+                )
+        return self
 
 
 class AsyncTypeFields(ExtensionModel):

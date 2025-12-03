@@ -24,7 +24,7 @@ from pydantic import (
 from typing_extensions import Self
 
 from ..base import ExtensionModel
-from ..types import KebabCaseId, NonEmptyStr
+from ..types import KebabCaseId, LocalPath, NonEmptyStr, PathOrUrl
 from ..utils import ensure_strict_bool, validate_local_path, validate_path_or_url
 
 # -----------------------------------------------------------------------------
@@ -43,7 +43,7 @@ class PrEvidence(EvidenceBase):
     """Pull/merge request evidence."""
 
     type: Literal["pr"]
-    url: HttpUrl | None  # URL to the PR
+    url: HttpUrl  # Required URL to the PR
     author: str | None = None
 
 
@@ -51,7 +51,7 @@ class TestsEvidence(EvidenceBase):
     """Test file/directory evidence."""
 
     type: Literal["tests"]
-    path: NonEmptyStr
+    path: LocalPath
 
     @field_validator("path")
     @classmethod
@@ -75,7 +75,7 @@ class DesignDocEvidence(EvidenceBase):
     """Design document evidence."""
 
     type: Literal["design_doc"]
-    reference: NonEmptyStr  # URL or path to design doc
+    reference: PathOrUrl  # URL or path to design doc
     author: str | None = None
 
     @field_validator("reference")
@@ -95,7 +95,7 @@ class ApprovalEvidence(EvidenceBase):
     """Approval evidence - requires author."""
 
     type: Literal["approval"]
-    reference: NonEmptyStr
+    reference: PathOrUrl
     author: NonEmptyStr  # Required for approvals
 
 
@@ -103,7 +103,7 @@ class BenchmarkEvidence(EvidenceBase):
     """Benchmark results evidence."""
 
     type: Literal["benchmark"]
-    reference: NonEmptyStr
+    reference: PathOrUrl
     metrics: dict[str, int | float | str] = Field(default_factory=dict)
     author: str | None = None
 
@@ -117,7 +117,7 @@ class MigrationGuideEvidence(EvidenceBase):
     """Migration guide evidence."""
 
     type: Literal["migration_guide"]
-    reference: NonEmptyStr
+    reference: PathOrUrl
 
     @field_validator("reference")
     @classmethod
@@ -139,8 +139,8 @@ class CustomEvidence(EvidenceBase):
     type: Literal["custom"]
     type_name: NonEmptyStr  # References workflow evidence_types
     reference: str | None = None
-    url: AnyUrl | None = None
-    path: str | None = None
+    url: HttpUrl | None = None
+    path: LocalPath | None = None
     author: str | None = None
 
     @field_validator("path")

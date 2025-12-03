@@ -17,7 +17,7 @@ from libspec.models.types import NonEmptyStr, TypeAnnotationStr
 
 
 class ErrorHierarchyNode(ExtensionModel):
-    type: NonEmptyStr = Field(default=..., description='Exception class name')
+    type: TypeAnnotationStr = Field(default=..., description='Exception class name')
     base: str | None = Field(
         None, description="Base class (e.g., 'Exception', 'RuntimeError')"
     )
@@ -50,7 +50,7 @@ class Severity(str, Enum):
 
 class ErrorCode(ExtensionModel):
     code: str = Field(default=..., description="Error code (e.g., 'E001', 'AUTH_FAILED')")
-    type: str | None = Field(default=None, description='Associated exception type')
+    type: TypeAnnotationStr | None = Field(default=None, description='Associated exception type')
     category: str | None = Field(default=None, description='Error category for grouping')
     description: str = Field(default=..., description='Human-readable description')
     docs_url: HttpUrl | None = Field(None, description='URL to detailed documentation')
@@ -58,7 +58,7 @@ class ErrorCode(ExtensionModel):
 
 
 class ExceptionSpec(ExtensionModel):
-    type: NonEmptyStr = Field(default=..., description='Exception class name')
+    type: TypeAnnotationStr = Field(default=..., description='Exception class name')
     module: NonEmptyStr = Field(default=..., description='Module where exception is defined')
     base: str | None = Field(None, description='Base exception class')
     description: str | None = Field(None, description='When this exception is raised')

@@ -30,16 +30,17 @@ class Method(str, Enum):
     """HTTP request methods.
 
     Standard methods plus wildcard for matching any method.
+    Member names use lowercase for consistency with other enums.
     """
 
-    GET = 'get'
-    POST = 'post'
-    PUT = 'put'
-    DELETE = 'delete'
-    PATCH = 'patch'
-    HEAD = 'head'
-    OPTIONS = 'options'
-    WILDCARD = '*'
+    get = 'get'
+    post = 'post'
+    put = 'put'
+    delete = 'delete'
+    patch = 'patch'
+    head = 'head'
+    options = 'options'
+    wildcard = '*'
 
 
 class Auth(str, Enum):
@@ -88,7 +89,7 @@ class HeaderSpec(ExtensionModel):
 
 
 class RequestBodySpec(ExtensionModel):
-    type: str | None = Field(None, description='Request body model type')
+    type: TypeAnnotationStr | None = Field(None, description='Request body model type')
     content_type: MimeType | None = Field(
         'application/json', description='Expected content type'
     )
@@ -97,7 +98,7 @@ class RequestBodySpec(ExtensionModel):
 
 
 class ResponseSpec(ExtensionModel):
-    type: str | None = Field(None, description='Response model type')
+    type: TypeAnnotationStr | None = Field(None, description='Response model type')
     status: Annotated[int, Field(ge=100, le=599)] | None = Field(default=200, description='HTTP status code')
     content_type: MimeType | None = Field(
         'application/json', description='Response content type'
@@ -108,7 +109,7 @@ class ResponseSpec(ExtensionModel):
 
 class ErrorResponseSpec(ExtensionModel):
     status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
-    type: str | None = Field(None, description='Error response model type')
+    type: TypeAnnotationStr | None = Field(None, description='Error response model type')
     exception: str | None = Field(
         None, description='Exception type that triggers this response'
     )
@@ -188,7 +189,7 @@ class Scope(str, Enum):
 
 class DependencySpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Dependency name')
-    type: str = Field(default=..., description='Dependency type')
+    type: TypeAnnotationStr = Field(default=..., description='Dependency type')
     factory: FunctionReference | None = Field(None, description='Factory function reference')
     scope: Scope | None = Field(None, description='Dependency lifetime')
     cacheable: bool | None = Field(True, description='Whether result can be cached')
@@ -231,14 +232,14 @@ class Direction(str, Enum):
 class WSMessageSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Message type name')
     direction: Direction
-    type: str | None = Field(None, description='Message payload type')
+    type: TypeAnnotationStr | None = Field(None, description='Message payload type')
     description: str | None = None
 
 
 class ErrorHandlerSpec(ExtensionModel):
     exception: str = Field(default=..., description='Exception type to handle')
     status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
-    response_type: str | None = Field(None, description='Response model type')
+    response_type: TypeAnnotationStr | None = Field(None, description='Response model type')
     handler: FunctionReference | None = Field(None, description='Custom handler function')
     description: str | None = None
 

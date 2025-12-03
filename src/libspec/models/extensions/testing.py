@@ -13,10 +13,10 @@ from __future__ import annotations
 from enum import Enum
 from typing import Annotated, Any
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, LocalPath, NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import FunctionReference, LocalPath, MethodName, NonEmptyStr, TypeAnnotationStr
 
 # -----------------------------------------------------------------------------
 # Enums
@@ -163,7 +163,7 @@ class TestDoubleSpec(ExtensionModel):
     provided: bool | None = Field(
         default=None, description="Whether library provides a test double"
     )
-    type: str | None = Field(default=None, description="Test double type reference")
+    type: TypeAnnotationStr | None = Field(default=None, description="Test double type reference")
     builder: FunctionReference | None = Field(default=None, description="Builder function reference")
     configurable_behaviors: list[str] = Field(
         default_factory=list, description="Behaviors that can be configured"
@@ -190,6 +190,15 @@ class FactoryFieldSpec(ExtensionModel):
         default=None, description="Whether value is lazily evaluated"
     )
     subfactory: str | None = Field(default=None, description="Subfactory reference")
+
+    @model_validator(mode='after')
+    def validate_faker_sequence_exclusivity(self) -> 'FactoryFieldSpec':
+        """Validate faker and sequence are mutually exclusive."""
+        if self.faker is not None and self.sequence is True:
+            raise ValueError(
+                f"Field '{self.name}' cannot use both 'faker' and 'sequence'"
+            )
+        return self
 
 
 class TraitSpec(ExtensionModel):
@@ -279,7 +288,7 @@ class TestPatternSpec(ExtensionModel):
 class CoverageTargetSpec(ExtensionModel):
     """A coverage target definition."""
 
-    path: str | None = Field(default=None, description="Path or module")
+    path: LocalPath | None = Field(default=None, description="Path or module")
     minimum: Annotated[float, Field(ge=0.0, le=100.0)] | None = Field(
         default=None, description="Minimum coverage percentage"
     )
@@ -403,7 +412,7 @@ class SpyPatternSpec(ExtensionModel):
     """A pytest-mock spy pattern."""
 
     target: str | None = Field(default=None, description="Target object/module")
-    method: str | None = Field(default=None, description="Method to spy on")
+    method: MethodName | None = Field(default=None, description="Method to spy on")
     purpose: str | None = Field(default=None, description="Why this spy is used")
 
 

@@ -18,10 +18,13 @@ from libspec.models.base import ExtensionModel
 from libspec.models.types import (
     EntryPointGroup,
     FunctionReference,
+    LocalPath,
+    MethodName,
     NonEmptyStr,
     PythonNamespaceStr,
     RegexPattern,
     SemVer,
+    TypeAnnotationStr,
 )
 
 
@@ -52,8 +55,8 @@ class Lifecycle(str, Enum):
 
 class ExtensionPointSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Extension point name')
-    interface: str | None = Field(None, description='Interface type reference')
-    protocol: str | None = Field(None, description='Protocol type reference')
+    interface: TypeAnnotationStr | None = Field(None, description='Interface type reference')
+    protocol: TypeAnnotationStr | None = Field(None, description='Protocol type reference')
     multiple: bool | None = Field(
         None, description='Whether multiple implementations allowed'
     )
@@ -122,7 +125,7 @@ class ResultCollection(str, Enum):
 
 class HookParamSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Parameter name')
-    type: str = Field(default=..., description='Parameter type')
+    type: TypeAnnotationStr = Field(default=..., description='Parameter type')
     mutable: bool | None = Field(None, description='Whether parameter can be modified')
     description: str | None = None
 
@@ -158,13 +161,13 @@ class OverridePolicy(str, Enum):
 
 
 class RegistryMethodsSpec(ExtensionModel):
-    register_: str | None = Field(
+    register_: MethodName | None = Field(
         None, alias='register', description='Registration method name'
     )
-    unregister: str | None = Field(None, description='Unregistration method name')
-    get: str | None = Field(None, description='Retrieval method name')
-    list: str | None = Field(None, description='List all method name')
-    has: str | None = Field(None, description='Check existence method name')
+    unregister: MethodName | None = Field(None, description='Unregistration method name')
+    get: MethodName | None = Field(None, description='Retrieval method name')
+    list: MethodName | None = Field(None, description='List all method name')
+    has: MethodName | None = Field(None, description='Check existence method name')
 
 
 class DiscoveryMechanismType(str, Enum):
@@ -194,7 +197,7 @@ class DiscoveryMechanismSpec(ExtensionModel):
     namespace: PythonNamespaceStr | None = Field(
         None, description='Package namespace (for namespace_packages)'
     )
-    paths: list[str] | None = Field(
+    paths: list[LocalPath] | None = Field(
         None, description='Directories to scan (for directory_scan)'
     )
     pattern: RegexPattern | None = Field(None, description='File pattern (for directory_scan)')
@@ -222,7 +225,7 @@ class DiscoveryMechanismSpec(ExtensionModel):
 
 
 class PluginHookRegistration(ExtensionModel):
-    hook: str = Field(default=..., description='Hook name')
+    hook: MethodName = Field(default=..., description='Hook name')
     handler: FunctionReference = Field(default=..., description='Handler method reference')
     priority: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Handler priority')
 
@@ -268,9 +271,9 @@ class HookSpec(ExtensionModel):
 
 class RegistrySpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Registry name')
-    type: str | None = Field(None, description='Registry class reference')
-    key_type: str | None = Field(None, description='Registration key type')
-    value_type: str | None = Field(None, description='Registered value type')
+    type: TypeAnnotationStr | None = Field(None, description='Registry class reference')
+    key_type: TypeAnnotationStr | None = Field(None, description='Registration key type')
+    value_type: TypeAnnotationStr | None = Field(None, description='Registered value type')
     singleton: bool | None = Field(None, description='Whether registry is a singleton')
     thread_safe: bool | None = Field(
         None, description='Whether registry is thread-safe'
@@ -302,7 +305,7 @@ class DiscoverySpec(ExtensionModel):
 class PluginSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Plugin name')
     version: SemVer | None = Field(None, description='Plugin version')
-    type: str | None = Field(None, description='Plugin class reference')
+    type: TypeAnnotationStr | None = Field(None, description='Plugin class reference')
     implements: list[str] | None = Field(
         None, description='Extension points implemented'
     )

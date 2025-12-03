@@ -14,7 +14,7 @@ from typing import Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import CliFlag, EnvVarName, EnvVarPrefix, NonEmptyStr, ShortFlag
+from libspec.models.types import CliFlag, EnvVarName, EnvVarPrefix, LocalPath, NonEmptyStr, ShortFlag
 
 
 class SettingSpec(ExtensionModel):
@@ -105,7 +105,7 @@ class ConfigSourcesSpec(ExtensionModel):
     file_formats: list[FileFormat] | None = Field(
         None, description='Supported config file formats'
     )
-    paths: list[str] | None = Field(
+    paths: list[LocalPath] | None = Field(
         None, description='Config file search paths'
     )
     file_name_pattern: str | None = Field(

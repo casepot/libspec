@@ -11,21 +11,21 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import FunctionReference, LocalPath, NonEmptyStr, TypeAnnotationStr
 
 
-class OnUpdate(str, Enum):
-    """Foreign key ON UPDATE referential action.
+class ReferentialAction(str, Enum):
+    """Foreign key referential action (ON UPDATE / ON DELETE).
 
-    Values use lowercase with underscores, mapping to SQL keywords:
-    - cascade: Update child rows when parent key changes (SQL: CASCADE)
-    - set_null: Set child foreign key to NULL (SQL: SET NULL)
-    - set_default: Set child foreign key to default value (SQL: SET DEFAULT)
-    - restrict: Prevent update if children exist (SQL: RESTRICT)
-    - no_action: Defer check until transaction end (SQL: NO ACTION)
+    Actions taken when a referenced row is updated or deleted:
+    - cascade: Propagate change to child rows (CASCADE)
+    - set_null: Set foreign key to NULL (SET NULL)
+    - set_default: Set foreign key to default value (SET DEFAULT)
+    - restrict: Prevent change if children exist (RESTRICT)
+    - no_action: Defer check until transaction end (NO ACTION)
     """
 
     cascade = 'cascade'
@@ -35,22 +35,9 @@ class OnUpdate(str, Enum):
     no_action = 'no_action'
 
 
-class OnDelete(str, Enum):
-    """Foreign key ON DELETE referential action.
-
-    Values use lowercase with underscores, mapping to SQL keywords:
-    - cascade: Delete child rows when parent is deleted (SQL: CASCADE)
-    - set_null: Set child foreign key to NULL (SQL: SET NULL)
-    - set_default: Set child foreign key to default value (SQL: SET DEFAULT)
-    - restrict: Prevent deletion if children exist (SQL: RESTRICT)
-    - no_action: Defer check until transaction end (SQL: NO ACTION)
-    """
-
-    cascade = 'cascade'
-    set_null = 'set_null'
-    set_default = 'set_default'
-    restrict = 'restrict'
-    no_action = 'no_action'
+# Backwards compatibility aliases
+OnUpdate = ReferentialAction
+OnDelete = ReferentialAction
 
 
 class ColumnSpec(ExtensionModel):
@@ -80,6 +67,19 @@ class ColumnSpec(ExtensionModel):
         None, description='Python type for this column'
     )
 
+    @field_validator("foreign_key")
+    @classmethod
+    def validate_foreign_key_format(cls, v: str | None) -> str | None:
+        """Validate foreign key is in 'table.column' format."""
+        if v is None:
+            return v
+        if '.' not in v or len(v.split('.')) != 2:
+            raise ValueError(f"foreign_key must be 'table.column' format, got: {v!r}")
+        table, column = v.split('.')
+        if not table or not column:
+            raise ValueError(f"Invalid foreign key {v!r}: table and column required")
+        return v
+
     @model_validator(mode='after')
     def validate_column_constraints(self) -> 'ColumnSpec':
         """Validate column constraint consistency."""
@@ -98,6 +98,11 @@ class ColumnSpec(ExtensionModel):
         if (self.on_update or self.on_delete) and not self.foreign_key:
             raise ValueError(
                 f"Column {self.name!r} has on_update/on_delete without foreign_key"
+            )
+        # Cannot have both default and server_default
+        if self.default is not None and self.server_default is not None:
+            raise ValueError(
+                f"Column {self.name!r} cannot specify both 'default' and 'server_default'"
             )
         return self
 
@@ -370,6 +375,18 @@ class ModelSpec(ExtensionModel):
     soft_delete: bool | None = Field(None, description='Whether soft delete is enabled')
     timestamps: TimestampSpec | None = None
     description: str | None = None
+
+    @model_validator(mode='after')
+    def validate_primary_key_columns_exist(self) -> 'ModelSpec':
+        """Validate that primary_key references defined columns."""
+        if self.primary_key and self.columns:
+            column_names = {c.name for c in self.columns}
+            invalid = set(self.primary_key) - column_names
+            if invalid:
+                raise ValueError(
+                    f"Model '{self.name}' primary_key references undefined columns: {invalid}"
+                )
+        return self
 
 
 class ORMLibraryFields(ExtensionModel):

@@ -15,21 +15,21 @@ from typing import Annotated
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import LoggerName, MetricName, NonEmptyStr, RoutePath
+from libspec.models.types import LoggerName, MethodName, MetricName, NonEmptyStr, RoutePath
 
 
 class LogLevel(str, Enum):
     """Standard Python logging levels.
 
-    Note: Values are lowercase for consistency with other enums in libspec,
-    though Python's logging module uses uppercase level names.
+    Member names and values are lowercase for consistency with other enums
+    in libspec. Python's logging module uses uppercase level names internally.
     """
 
-    DEBUG = 'debug'
-    INFO = 'info'
-    WARNING = 'warning'
-    ERROR = 'error'
-    CRITICAL = 'critical'
+    debug = 'debug'
+    info = 'info'
+    warning = 'warning'
+    error = 'error'
+    critical = 'critical'
 
 
 class LoggingSpec(ExtensionModel):
@@ -172,7 +172,7 @@ class HealthCheckSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Health check name')
     type: HealthCheckType = Field(default=..., description='Health check type')
     endpoint: RoutePath | None = Field(None, description='HTTP endpoint path')
-    method: str | None = Field(None, description='Method to call for health check')
+    method: MethodName | None = Field(None, description='Method to call for health check')
     timeout: Annotated[float, Field(gt=0)] | None = Field(
         default=None, description='Timeout in seconds'
     )

@@ -16,6 +16,7 @@ from pydantic import Field, model_validator
 from libspec.models.base import ExtensionModel
 from libspec.models.types import (
     FunctionReference,
+    MethodName,
     NonEmptyStr,
     TextEncodingStr,
     TypeAnnotationStr,
@@ -168,7 +169,7 @@ class EncoderSpec(ExtensionModel):
     """Custom encoder specification."""
 
     name: NonEmptyStr = Field(default=..., description="Encoder name")
-    type: str = Field(default=..., description="Type this encoder handles")
+    type: TypeAnnotationStr = Field(default=..., description="Type this encoder handles")
     function: FunctionReference | None = Field(None, description="Encoder function reference")
     method: FunctionReference | None = Field(None, description="Encoder method on the type")
     priority: int | None = Field(
@@ -190,7 +191,7 @@ class DecoderSpec(ExtensionModel):
     """Custom decoder specification."""
 
     name: NonEmptyStr = Field(default=..., description="Decoder name")
-    type: str = Field(default=..., description="Type this decoder produces")
+    type: TypeAnnotationStr = Field(default=..., description="Type this decoder produces")
     function: FunctionReference | None = Field(None, description="Decoder function reference")
     factory: FunctionReference | None = Field(None, description="Factory method on the type")
     priority: int | None = Field(
@@ -211,7 +212,7 @@ class DecoderSpec(ExtensionModel):
 class TypeHandlerSpec(ExtensionModel):
     """Combined encoder/decoder for a type."""
 
-    type: str = Field(default=..., description="Type this handler manages")
+    type: TypeAnnotationStr = Field(default=..., description="Type this handler manages")
     encoder: EncoderSpec | None = None
     decoder: DecoderSpec | None = None
     strategy: EncodingStrategy | None = Field(None, description="Encoding strategy")
@@ -246,7 +247,7 @@ class SerializerOptionSpec(ExtensionModel):
     """Configuration option for a serializer."""
 
     name: NonEmptyStr = Field(default=..., description="Option name")
-    type: str = Field(default=..., description="Option type")
+    type: TypeAnnotationStr = Field(default=..., description="Option type")
     default: str | None = Field(None, description="Default value (as string)")
     description: str | None = Field(None, description="What this option controls")
     choices: list[str] | None = Field(None, description="Valid choices")
@@ -257,11 +258,11 @@ class SerializerSpec(ExtensionModel):
 
     name: NonEmptyStr = Field(default=..., description="Serializer name")
     format: SerializationFormat = Field(default=..., description="Output format")
-    type: str | None = Field(None, description="Serializer class reference")
-    serialize_method: str | None = Field(
+    type: TypeAnnotationStr | None = Field(None, description="Serializer class reference")
+    serialize_method: MethodName | None = Field(
         None, description="Method to serialize objects"
     )
-    deserialize_method: str | None = Field(
+    deserialize_method: MethodName | None = Field(
         None, description="Method to deserialize data"
     )
     options: list[SerializerOptionSpec] | None = Field(
@@ -317,7 +318,7 @@ class SchemaSpec(ExtensionModel):
 
     name: NonEmptyStr = Field(default=..., description="Schema name")
     format: SchemaFormat = Field(default=..., description="Schema format")
-    type: str | None = Field(None, description="Python type this schema represents")
+    type: TypeAnnotationStr | None = Field(None, description="Python type this schema represents")
     version: str | None = Field(None, description="Schema version")
     fields: list[SchemaFieldSpec] | None = Field(None, description="Schema fields")
     generator: str | None = Field(None, description="Schema generator function")
