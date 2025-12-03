@@ -19,7 +19,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^[a-z_][a-z0-9_.]*$",
+              "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -333,7 +333,7 @@
         "version": {
           "anyOf": [
             {
-              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+.*$",
+              "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
               "type": "string"
             },
             {
@@ -592,14 +592,14 @@
         "handler": {
           "description": "Handler method reference",
           "minLength": 1,
-          "pattern": "^[a-z_][a-z0-9_.]*$",
+          "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
           "title": "Handler",
           "type": "string"
         },
         "hook": {
           "description": "Hook name",
           "minLength": 1,
-          "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+          "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
           "title": "Hook",
           "type": "string"
         },
@@ -644,7 +644,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^[a-z_][a-z0-9_.]*$",
+              "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -659,7 +659,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^[a-z_][a-z0-9_.]*$",
+              "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -674,7 +674,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^[a-z_][a-z0-9_.]*$",
+              "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -689,7 +689,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^[a-z_][a-z0-9_.]*$",
+              "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -856,7 +856,7 @@
         "version": {
           "anyOf": [
             {
-              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+.*$",
+              "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
               "type": "string"
             },
             {
@@ -1006,7 +1006,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -1021,7 +1021,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -1036,7 +1036,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -1051,7 +1051,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -1066,7 +1066,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {

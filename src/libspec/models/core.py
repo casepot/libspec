@@ -36,13 +36,14 @@ from .types import (
     SchemaVersion,
     ScreamingSnakeCase,
     SemVer,
+    SnakeCaseOrDunderName,
     StrictBool,
     TypeAnnotationStr,
     TypeKind,
     VersionConstraintStr,
     Visibility,
 )
-from .utils import compare_versions
+from .utils import validate_version_timeline
 
 # -----------------------------------------------------------------------------
 # Function/Method Components (Leaf Types)
@@ -192,22 +193,12 @@ class DeprecationInfo(LibspecModel):
     @model_validator(mode="after")
     def validate_deprecation_timeline(self) -> "DeprecationInfo":
         """Warn if removal is specified without since, or if since >= removal."""
-        if self.removal is not None and self.since is None:
-            warnings.warn(
-                "Deprecation specifies 'removal' version without 'since' version; "
-                "consider adding when deprecation was introduced",
-                UserWarning,
-                stacklevel=2,
-            )
-        # Warn if since >= removal (deprecated version should be before removal)
-        if self.since is not None and self.removal is not None:
-            if compare_versions(self.since, self.removal) >= 0:
-                warnings.warn(
-                    f"Deprecation 'since' ({self.since}) should be earlier than "
-                    f"'removal' ({self.removal})",
-                    UserWarning,
-                    stacklevel=2,
-                )
+        validate_version_timeline(
+            since=self.since,
+            deprecated_since=None,
+            removed_in=self.removal,
+            context="deprecation"
+        )
         return self
 
 
@@ -713,7 +704,7 @@ class FunctionDef(ExtensibleModel):
         }
     )
 
-    name: str = Field(
+    name: SnakeCaseOrDunderName = Field(
         description="Function name",
         examples=["read_csv", "calculate_hash", "send_request"],
     )
@@ -791,18 +782,6 @@ class FunctionDef(ExtensibleModel):
         default=None,
         description="Deprecation information if this function is deprecated (PEP 702)",
     )
-
-    @field_validator("name")
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        """N004: Function names must be snake_case (dunder methods allowed)."""
-        # Allow dunder methods like __init__, __str__, etc.
-        if v.startswith("__") and v.endswith("__"):
-            return v
-        # Match lint rule pattern exactly: no trailing/leading/double underscores
-        if not re.match(r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$", v):
-            raise ValueError(f"Function name '{v}' must be snake_case")
-        return v
 
     @field_validator("signature")
     @classmethod

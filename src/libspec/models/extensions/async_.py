@@ -16,7 +16,7 @@ from typing import Annotated
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import MethodName, NonEmptyStr
+from libspec.models.types import MethodName, NonEmptyStr, PositiveFloat
 
 
 class CancellationMode(str, Enum):
@@ -240,7 +240,7 @@ class SchedulingSpec(ExtensionModel):
     preemptible: bool | None = Field(
         None, description='Whether execution can be preempted'
     )
-    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
+    timeout: PositiveFloat | None = Field(
         default=None, description='Default timeout in seconds'
     )
 

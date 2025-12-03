@@ -13,7 +13,12 @@ from datetime import date as date_aliased
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import ByteSize, ComplexityNotation, PositiveDecimal, PositiveInt
+from libspec.models.types import (
+    ByteSize,
+    ComplexityNotation,
+    FinitePositiveDecimal,
+    PositiveInt,
+)
 
 
 class ComplexitySpec(ExtensionModel):
@@ -28,12 +33,12 @@ class ComplexitySpec(ExtensionModel):
 class BenchmarkSpec(ExtensionModel):
     operation: str | None = Field(None, description='What was benchmarked')
     input_size: str | None = Field(None, description='Input size/parameters')
-    mean: PositiveDecimal | None = Field(default=None, description='Mean execution time')
-    median: PositiveDecimal | None = Field(default=None, description='Median execution time')
-    p95: PositiveDecimal | None = Field(default=None, description='95th percentile latency')
-    p99: PositiveDecimal | None = Field(default=None, description='99th percentile latency')
-    memory_peak: PositiveDecimal | None = Field(default=None, description='Peak memory usage')
-    throughput: PositiveDecimal | None = Field(default=None, description='Operations per second')
+    mean: FinitePositiveDecimal | None = Field(default=None, description='Mean execution time')
+    median: FinitePositiveDecimal | None = Field(default=None, description='Median execution time')
+    p95: FinitePositiveDecimal | None = Field(default=None, description='95th percentile latency')
+    p99: FinitePositiveDecimal | None = Field(default=None, description='99th percentile latency')
+    memory_peak: FinitePositiveDecimal | None = Field(default=None, description='Peak memory usage')
+    throughput: FinitePositiveDecimal | None = Field(default=None, description='Operations per second')
     environment: str | None = Field(None, description='Hardware/software environment')
     date: date_aliased | None = Field(None, description='When benchmark was run')
 

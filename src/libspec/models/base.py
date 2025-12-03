@@ -27,14 +27,30 @@ from pydantic import BaseModel, ConfigDict
 class LibspecModel(BaseModel):
     """Base model for all libspec types.
 
-    Provides common configuration:
-    - extra="forbid": Catch typos in spec files
-    - str_strip_whitespace: Clean up string inputs
-    - validate_default: Ensure defaults are valid
-    - validate_assignment: Re-validate when fields are modified
-    - use_enum_values: Serialize enums as their values
-    - from_attributes: Enable validation from dataclasses/ORM objects
-    - populate_by_name: Allow both field name and alias
+    All libspec models inherit common configuration:
+    - extra="forbid": Reject unknown fields (catches typos)
+    - str_strip_whitespace: Auto-strip string whitespace
+    - validate_default/validate_assignment: Always validate
+    - use_enum_values: Serialize enums as string values
+    - populate_by_name: Accept both field names and aliases
+    - serialize_by_alias: Output uses alias names (async_ → async)
+    - from_attributes: Support ORM/dataclass conversion
+
+    Validation Context:
+        Models support context-aware validation via model_validate():
+
+        - strict_models (bool): When True, enables strict type checking.
+          Disables type coercion (e.g., int 1 won't become bool True).
+          Used by StrictBool fields to reject non-boolean values.
+
+        - spec_dir (Path): Base directory for resolving relative paths.
+          Used by path validators to check file existence.
+
+        Example:
+            spec = LibspecSpec.model_validate(
+                data,
+                context={"strict_models": True, "spec_dir": Path("/project")}
+            )
     """
 
     model_config = ConfigDict(
@@ -44,6 +60,7 @@ class LibspecModel(BaseModel):
         validate_assignment=True,
         use_enum_values=True,
         populate_by_name=True,  # Allow both field name and alias
+        serialize_by_alias=True,  # Output uses alias names (async_ → async)
         from_attributes=True,  # Enable validation from dataclasses/ORM
     )
 
@@ -63,6 +80,7 @@ class ExtensibleModel(LibspecModel):
         validate_assignment=True,
         use_enum_values=True,
         populate_by_name=True,
+        serialize_by_alias=True,
         from_attributes=True,
     )
 
@@ -80,5 +98,6 @@ class ExtensionModel(LibspecModel):
         validate_assignment=True,
         use_enum_values=True,
         populate_by_name=True,
+        serialize_by_alias=True,
         from_attributes=True,
     )

@@ -137,7 +137,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -152,7 +152,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -564,7 +564,7 @@
         "timeout": {
           "anyOf": [
             {
-              "minimum": 0.0,
+              "exclusiveMinimum": 0,
               "type": "number"
             },
             {

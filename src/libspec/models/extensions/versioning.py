@@ -8,14 +8,13 @@ This module defines models for API versioning and deprecation:
 
 from __future__ import annotations
 
-import warnings
 from enum import Enum
 
 from pydantic import Field, HttpUrl, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import CrossReference, VersionConstraintStr
-from libspec.models.utils import compare_versions
+from libspec.models.utils import validate_version_timeline
 
 
 class Stability(str, Enum):
@@ -50,22 +49,12 @@ class VersioningTypeFields(ExtensionModel):
     @model_validator(mode='after')
     def validate_version_ordering(self) -> 'VersioningTypeFields':
         """Validate version ordering: since < deprecated_since < removed_in."""
-        if self.since is not None and self.deprecated_since is not None:
-            if compare_versions(self.since, self.deprecated_since) >= 0:
-                warnings.warn(
-                    f"'since' ({self.since}) should be earlier than "
-                    f"'deprecated_since' ({self.deprecated_since})",
-                    UserWarning,
-                    stacklevel=2,
-                )
-        if self.deprecated_since is not None and self.removed_in is not None:
-            if compare_versions(self.deprecated_since, self.removed_in) >= 0:
-                warnings.warn(
-                    f"'deprecated_since' ({self.deprecated_since}) should be earlier than "
-                    f"'removed_in' ({self.removed_in})",
-                    UserWarning,
-                    stacklevel=2,
-                )
+        validate_version_timeline(
+            since=self.since,
+            deprecated_since=self.deprecated_since,
+            removed_in=self.removed_in,
+            context="type version"
+        )
         return self
 
 
@@ -84,22 +73,12 @@ class VersioningMethodFields(ExtensionModel):
     @model_validator(mode='after')
     def validate_version_ordering(self) -> 'VersioningMethodFields':
         """Validate version ordering: since < deprecated_since < removed_in."""
-        if self.since is not None and self.deprecated_since is not None:
-            if compare_versions(self.since, self.deprecated_since) >= 0:
-                warnings.warn(
-                    f"'since' ({self.since}) should be earlier than "
-                    f"'deprecated_since' ({self.deprecated_since})",
-                    UserWarning,
-                    stacklevel=2,
-                )
-        if self.deprecated_since is not None and self.removed_in is not None:
-            if compare_versions(self.deprecated_since, self.removed_in) >= 0:
-                warnings.warn(
-                    f"'deprecated_since' ({self.deprecated_since}) should be earlier than "
-                    f"'removed_in' ({self.removed_in})",
-                    UserWarning,
-                    stacklevel=2,
-                )
+        validate_version_timeline(
+            since=self.since,
+            deprecated_since=self.deprecated_since,
+            removed_in=self.removed_in,
+            context="method version"
+        )
         return self
 
 
@@ -120,14 +99,12 @@ class DeprecationSpec(ExtensionModel):
     @model_validator(mode='after')
     def validate_version_ordering(self) -> 'DeprecationSpec':
         """Validate since < removed_in."""
-        if self.removed_in is not None:
-            if compare_versions(self.since, self.removed_in) >= 0:
-                warnings.warn(
-                    f"'since' ({self.since}) should be earlier than "
-                    f"'removed_in' ({self.removed_in})",
-                    UserWarning,
-                    stacklevel=2,
-                )
+        validate_version_timeline(
+            since=self.since,
+            deprecated_since=None,
+            removed_in=self.removed_in,
+            context="deprecation spec"
+        )
         return self
 
 

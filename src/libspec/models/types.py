@@ -12,6 +12,10 @@ from pydantic import (
     DirectoryPath,
     Field,
     FilePath,
+    NonNegativeFloat,
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
     StringConstraints,
     ValidationInfo,
 )
@@ -51,8 +55,16 @@ LibraryName = Annotated[
 ]
 """Library name pattern (lowercase with underscores)."""
 
-SemVer = Annotated[str, StringConstraints(pattern=r"^[0-9]+\.[0-9]+\.[0-9]+.*$")]
-"""Semantic version string (e.g., '1.2.3' or '1.2.3-beta.1')."""
+SemVer = Annotated[
+    str,
+    StringConstraints(
+        pattern=r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+        r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+        r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+        r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+    ),
+]
+"""Semantic version string per semver.org spec (e.g., '1.2.3', '1.2.3-beta.1', '1.0.0+build.123')."""
 
 SchemaVersion = Annotated[str, StringConstraints(pattern=r"^libspec/[0-9]+\.[0-9]+$")]
 """Schema version string (e.g., 'libspec/1.0')."""
@@ -60,7 +72,7 @@ SchemaVersion = Annotated[str, StringConstraints(pattern=r"^libspec/[0-9]+\.[0-9
 # Module path pattern
 ModulePath = Annotated[
     str,
-    StringConstraints(pattern=r"^[a-z_][a-z0-9_.]*$", min_length=1),
+    StringConstraints(pattern=r"^[a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)*$", min_length=1),
 ]
 """Python module path (e.g., 'mypackage.submodule')."""
 
@@ -100,17 +112,30 @@ LocalPath = PathlibPath
 # Function/method reference (dotted Python path)
 FunctionReference = Annotated[
     str,
-    StringConstraints(pattern=r"^[a-z_][a-z0-9_.]*$", min_length=1),
+    StringConstraints(pattern=r"^[a-z_][a-z0-9_]*(?:\.[a-z_][a-z0-9_]*)*$", min_length=1),
 ]
 """Python function/method reference path (e.g., 'module.submodule.function_name')."""
 
 # Simple method/attribute name (no dots, allows dunders)
 MethodName = Annotated[
     str,
-    StringConstraints(pattern=r"^_{0,2}[a-z][a-z0-9_]*_{0,2}$", min_length=1),
+    StringConstraints(pattern=r"^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$", min_length=1),
 ]
 """Simple Python method/attribute name (e.g., 'read_csv', 'on_enter', '__init__').
 Snake_case identifiers including dunder methods, no dots."""
+
+
+def _validate_snake_case_or_dunder(value: str) -> str:
+    """Validate snake_case or dunder method name."""
+    if value.startswith("__") and value.endswith("__"):
+        return value  # Valid dunder
+    if not re.match(r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$", value):
+        raise ValueError(f"Name '{value}' must be snake_case or __dunder__")
+    return value
+
+
+SnakeCaseOrDunderName = Annotated[str, AfterValidator(_validate_snake_case_or_dunder)]
+"""Function/method name: snake_case or __dunder__ format."""
 
 # HTTP route path
 RoutePath = Annotated[
@@ -143,7 +168,7 @@ ComplexityNotation = Annotated[
 # CLI long flag
 CliFlag = Annotated[
     str,
-    StringConstraints(pattern=r"^--[a-z][a-z0-9-]*$", min_length=3),
+    StringConstraints(pattern=r"^--[a-z][a-z0-9]*(?:-[a-z0-9]+)*$", min_length=3),
 ]
 """CLI long flag (e.g., '--verbose', '--output-file', '--dry-run')."""
 
@@ -226,10 +251,12 @@ TextEncodingStr = Annotated[
 """Text encoding name (e.g., 'utf-8', 'ascii', 'latin-1')."""
 
 # Datetime format string (strftime/strptime patterns)
+# TODO: Currently unused - consider removal or document intended use
 DatetimeFormatStr = Annotated[str, StringConstraints(min_length=1)]
 """Python datetime format string for strftime/strptime patterns."""
 
 # Compression algorithm name
+# TODO: Currently unused - consider removal or document intended use
 CompressionStr = Annotated[
     str, StringConstraints(pattern=r"^[a-z0-9-]+$", min_length=1)
 ]
@@ -243,6 +270,9 @@ CompressionStr = Annotated[
 # HTTP status codes
 HttpStatusCode = Annotated[int, Field(ge=100, le=599)]
 """HTTP status code (100-599)."""
+
+PortNumber = Annotated[int, Field(ge=1, le=65535)]
+"""TCP/UDP port number (1-65535)."""
 
 # Execution and ordering
 ExecutionOrder = Annotated[int, Field(ge=0)]
@@ -266,28 +296,22 @@ IntervalSeconds = Annotated[float, Field(gt=0)]
 """Interval in seconds (must be positive)."""
 
 # Counts and sizes
-PositiveInt = Annotated[int, Field(gt=0)]
-"""Positive integer (greater than 0)."""
-
-NonNegativeInt = Annotated[int, Field(ge=0)]
-"""Non-negative integer (0 or greater)."""
+# Note: PositiveInt, NonNegativeInt, PositiveFloat, NonNegativeFloat are imported from pydantic
+# and re-exported for backward compatibility. They use identical constraints (gt=0, ge=0).
 
 ByteSize = Annotated[int, Field(ge=0)]
 """Size in bytes (non-negative)."""
 
-# Decimal types for precise measurements
+# Decimal types for precise measurements (not available in Pydantic natively)
 PositiveDecimal = Annotated[Decimal, Field(gt=0)]
 """Positive decimal number (>0) for precise measurements like benchmarks, rates."""
 
+FinitePositiveDecimal = Annotated[Decimal, Field(gt=0, allow_inf_nan=False)]
+"""Finite positive decimal (>0, no inf/NaN) for benchmark metrics and measurements."""
+
+# TODO: Currently unused - consider removal or document intended use
 NonNegativeDecimal = Annotated[Decimal, Field(ge=0)]
 """Non-negative decimal (>=0) for optional precise measurements."""
-
-# Float types for durations and rates
-NonNegativeFloat = Annotated[float, Field(ge=0.0)]
-"""Non-negative float (>=0.0) for optional durations and rates."""
-
-PositiveFloat = Annotated[float, Field(gt=0)]
-"""Positive float (>0) for required durations like timeouts and intervals."""
 
 # Exit codes (Unix/POSIX conventions)
 ExitCode = Annotated[int, Field(ge=0, le=255)]
@@ -298,9 +322,11 @@ ExitCode = Annotated[int, Field(ge=0, le=255)]
 # Path Types (Strict Validation)
 # -----------------------------------------------------------------------------
 
+# TODO: Currently unused - consider removal or document intended use
 StrictFilePath = FilePath
 """Path that must exist and be a file. Use when file existence validation is required."""
 
+# TODO: Currently unused - consider removal or document intended use
 StrictDirectoryPath = DirectoryPath
 """Path that must exist and be a directory. Use when directory existence validation is required."""
 

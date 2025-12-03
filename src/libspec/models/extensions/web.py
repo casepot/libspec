@@ -18,6 +18,7 @@ from libspec.models.base import ExtensionModel
 from libspec.models.types import (
     ExceptionTypeName,
     FunctionReference,
+    HttpStatusCode,
     MimeType,
     NonEmptyStr,
     RegexPattern,
@@ -100,7 +101,7 @@ class RequestBodySpec(ExtensionModel):
 
 class ResponseSpec(ExtensionModel):
     type: TypeAnnotationStr | None = Field(None, description='Response model type')
-    status: Annotated[int, Field(ge=100, le=599)] | None = Field(default=200, description='HTTP status code')
+    status: HttpStatusCode | None = Field(default=200, description='HTTP status code')
     content_type: MimeType | None = Field(
         'application/json', description='Response content type'
     )
@@ -109,7 +110,7 @@ class ResponseSpec(ExtensionModel):
 
 
 class ErrorResponseSpec(ExtensionModel):
-    status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
+    status: HttpStatusCode = Field(default=..., description='HTTP status code')
     type: TypeAnnotationStr | None = Field(None, description='Error response model type')
     exception: ExceptionTypeName | None = Field(
         None, description='Exception type that triggers this response'
@@ -239,7 +240,7 @@ class WSMessageSpec(ExtensionModel):
 
 class ErrorHandlerSpec(ExtensionModel):
     exception: ExceptionTypeName = Field(default=..., description='Exception type to handle')
-    status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
+    status: HttpStatusCode = Field(default=..., description='HTTP status code')
     response_type: TypeAnnotationStr | None = Field(None, description='Response model type')
     handler: FunctionReference | None = Field(None, description='Custom handler function')
     description: str | None = Field(None, description='When this error handler applies')

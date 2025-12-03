@@ -642,7 +642,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -685,7 +685,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -785,7 +785,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -826,7 +826,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+              "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
               "type": "string"
             },
             {
@@ -932,7 +932,7 @@
             {
               "items": {
                 "minLength": 1,
-                "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+                "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
                 "type": "string"
               },
               "type": "array"
@@ -976,7 +976,7 @@
             {
               "items": {
                 "minLength": 1,
-                "pattern": "^_{0,2}[a-z][a-z0-9_]*_{0,2}$",
+                "pattern": "^(?:__[a-z][a-z0-9_]*__|_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*)$",
                 "type": "string"
               },
               "type": "array"
@@ -1314,7 +1314,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^[a-z_][a-z0-9_.]*$",
+              "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {

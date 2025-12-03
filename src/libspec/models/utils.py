@@ -23,6 +23,7 @@ __all__ = [
     "validate_local_path",
     "validate_path_or_url",
     "validate_regex_pattern",
+    "validate_version_timeline",
 ]
 
 # -----------------------------------------------------------------------------
@@ -63,6 +64,65 @@ def compare_versions(v1: str, v2: str) -> int:
     except (ValueError, AttributeError):
         # Cannot compare non-standard versions, assume OK
         return 0
+
+
+def validate_version_timeline(
+    since: str | None,
+    deprecated_since: str | None,
+    removed_in: str | None,
+    context: str = "version"
+) -> None:
+    """Validate version ordering: since < deprecated_since < removed_in.
+
+    Issues warnings for timeline inconsistencies.
+
+    Args:
+        since: Version when feature was introduced
+        deprecated_since: Version when feature was deprecated
+        removed_in: Version when feature will be/was removed
+        context: Description for warning messages (e.g., "version", "deprecation")
+    """
+    import warnings
+
+    # Warn if removed_in is specified without since or deprecated_since
+    if removed_in is not None and since is None and deprecated_since is None:
+        warnings.warn(
+            f"{context.capitalize()} specifies 'removed_in' without 'since' or 'deprecated_since'; "
+            "consider adding when introduction/deprecation occurred",
+            UserWarning,
+            stacklevel=3,
+        )
+
+    # Validate since < deprecated_since
+    if since is not None and deprecated_since is not None:
+        if compare_versions(since, deprecated_since) >= 0:
+            warnings.warn(
+                f"'since' ({since}) should be earlier than "
+                f"'deprecated_since' ({deprecated_since})",
+                UserWarning,
+                stacklevel=3,
+            )
+
+    # Validate deprecated_since < removed_in
+    if deprecated_since is not None and removed_in is not None:
+        if compare_versions(deprecated_since, removed_in) >= 0:
+            warnings.warn(
+                f"'deprecated_since' ({deprecated_since}) should be earlier than "
+                f"'removed_in' ({removed_in})",
+                UserWarning,
+                stacklevel=3,
+            )
+
+    # Validate since < removed_in (when deprecated_since is not present)
+    if since is not None and removed_in is not None and deprecated_since is None:
+        if compare_versions(since, removed_in) >= 0:
+            warnings.warn(
+                f"'since' ({since}) should be earlier than "
+                f"'removed_in' ({removed_in})",
+                UserWarning,
+                stacklevel=3,
+            )
+
 
 
 # -----------------------------------------------------------------------------
