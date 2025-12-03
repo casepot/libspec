@@ -143,9 +143,27 @@ libspec features --lifecycle-state released  # Filter by lifecycle
 List module definitions and dependencies.
 
 ```bash
-libspec modules                     # Public modules
+libspec modules                     # Public modules (flat list)
 libspec modules --internal          # Include internal
+
+# Tree view
+libspec modules --tree              # Hierarchical tree
+libspec modules --tree --exports    # Show exported names
+libspec modules --tree --deps       # Show dependencies
+libspec modules --tree --internal   # Include internal modules
+
+# Tree output formats
+libspec modules --tree --format dot      # Graphviz DOT
+libspec modules --tree --format mermaid  # Mermaid diagram
 ```
+
+| Option | Description |
+|--------|-------------|
+| `--tree` | Show modules as hierarchical tree |
+| `--internal` | Include internal/private modules |
+| `--exports` | Show exported names (with `--tree`) |
+| `--deps` | Show dependencies (with `--tree`) |
+| `--format` | Output format: `text`, `json`, `dot`, `mermaid` |
 
 #### `libspec principles`
 
@@ -429,7 +447,6 @@ libspec lint -r S001 -r S002 -r S003
 
 **Current limitations:**
 
-- `modules --tree` flag is accepted but ignored; output is always a flat list.
 - `coverage --threshold` is parsed but unused; coverage never fails based on the value.
 - Extension schema merging during validation is TODO, so extension fields are not validated against their schemas.
 - No lint auto-fix path: there is no `--fix` flag and no rules invoke `fix()`, so issues are only reported.

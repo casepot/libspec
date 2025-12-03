@@ -75,6 +75,18 @@ class ModuleSummary(BaseModel):
     internal: bool = False
 
 
+class ModuleTreeNode(BaseModel):
+    """A node in the module hierarchy tree."""
+
+    name: str
+    path: str
+    exports: list[str] = Field(default_factory=list)
+    depends_on: list[str] = Field(default_factory=list)
+    internal: bool = False
+    is_package: bool = True  # True if this is a real module in the spec
+    children: list["ModuleTreeNode"] = Field(default_factory=list)
+
+
 class PrincipleSummary(BaseModel):
     """Summary of a design principle."""
 

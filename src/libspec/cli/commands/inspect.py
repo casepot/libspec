@@ -1,5 +1,7 @@
 """Inspect commands: info, types, functions, features, modules, principles."""
 
+from __future__ import annotations
+
 import re
 
 import click
@@ -13,10 +15,12 @@ from libspec.cli.models.output import (
     InfoResult,
     LibraryInfo,
     ModuleSummary,
+    ModuleTreeNode,
     PrincipleSummary,
     TypeSummary,
 )
 from libspec.cli.output import (
+    build_module_tree,
     make_envelope,
     output_json,
     output_text_features,
@@ -24,6 +28,7 @@ from libspec.cli.output import (
     output_text_info,
     output_text_modules,
     output_text_principles,
+    output_text_tree,
     output_text_types,
 )
 from libspec.cli.spec_loader import LoadedSpec
@@ -341,17 +346,84 @@ def features(
 
 
 @click.command()
-@click.option("--tree", is_flag=True, help="Show as dependency tree (not yet implemented)")
+@click.option("--tree", is_flag=True, help="Show as hierarchical tree")
 @click.option("--internal", is_flag=True, help="Include internal/private modules")
+@click.option("--exports", is_flag=True, help="Show exported names (with --tree)")
+@click.option("--deps", is_flag=True, help="Show dependencies (with --tree)")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json", "dot", "mermaid"]),
+    default=None,
+    help="Output format for tree view",
+)
 @pass_context
-def modules(ctx: Context, tree: bool, internal: bool) -> None:
+def modules(
+    ctx: Context,
+    tree: bool,
+    internal: bool,
+    exports: bool,
+    deps: bool,
+    output_format: str | None,
+) -> None:
     """
     List module definitions and dependencies.
 
     \b
     Shows package structure with exports and internal dependencies.
+
+    \b
+    Use --tree for hierarchical view:
+        libspec modules --tree              # Basic hierarchy
+        libspec modules --tree --exports    # Show exported names
+        libspec modules --tree --deps       # Show dependencies
+        libspec modules --tree --internal   # Include internal modules
     """
     spec = ctx.get_spec()
+
+    if tree:
+        # Build tree structure
+        tree_root = build_module_tree(spec.modules, include_internal=internal)
+
+        if tree_root is None:
+            if ctx.text or output_format == "text":
+                print("---\n0 modules")
+            else:
+                envelope = make_envelope(
+                    "modules",
+                    spec,
+                    None,
+                    meta={"count": 0, "view": "tree"},
+                )
+                output_json(envelope, ctx.no_meta)
+            return
+
+        # Handle different output formats
+        effective_format = output_format or ("text" if ctx.text else "json")
+
+        if effective_format == "text":
+            output_text_tree(tree_root, show_exports=exports, show_deps=deps)
+            return
+
+        if effective_format == "dot":
+            _output_tree_dot(tree_root)
+            return
+
+        if effective_format == "mermaid":
+            _output_tree_mermaid(tree_root)
+            return
+
+        # JSON output (default)
+        envelope = make_envelope(
+            "modules",
+            spec,
+            tree_root.model_dump(exclude_none=True),
+            meta={"count": _count_modules(tree_root), "view": "tree"},
+        )
+        output_json(envelope, ctx.no_meta)
+        return
+
+    # Flat list output (original behavior)
     result: list[ModuleSummary] = []
 
     for m in spec.modules:
@@ -379,6 +451,54 @@ def modules(ctx: Context, tree: bool, internal: bool) -> None:
         meta={"count": len(result)},
     )
     output_json(envelope, ctx.no_meta)
+
+
+def _count_modules(node: ModuleTreeNode) -> int:
+    """Count real modules in a tree (excluding placeholders)."""
+    count = 1 if node.is_package else 0
+    for child in node.children:
+        count += _count_modules(child)
+    return count
+
+
+def _output_tree_dot(tree: ModuleTreeNode) -> None:
+    """Output tree as Graphviz DOT format."""
+    print("digraph modules {")
+    print("  rankdir=TB;")
+    print('  node [shape=box, style=filled, fillcolor=lightblue];')
+
+    def emit_nodes(node: ModuleTreeNode) -> None:
+        style = ""
+        if node.internal:
+            style = ', fillcolor=lightgray, style="filled,dashed"'
+        elif not node.is_package:
+            style = ", fillcolor=white"
+        print(f'  "{node.path}" [label="{node.name}"{style}];')
+        for child in node.children:
+            emit_nodes(child)
+
+    def emit_edges(node: ModuleTreeNode) -> None:
+        for child in node.children:
+            print(f'  "{node.path}" -> "{child.path}";')
+            emit_edges(child)
+
+    emit_nodes(tree)
+    emit_edges(tree)
+    print("}")
+
+
+def _output_tree_mermaid(tree: ModuleTreeNode) -> None:
+    """Output tree as Mermaid diagram."""
+    print("graph TD")
+
+    def emit_edges(node: ModuleTreeNode) -> None:
+        for child in node.children:
+            node_id = node.path.replace(".", "_")
+            child_id = child.path.replace(".", "_")
+            print(f"  {node_id}[{node.name}] --> {child_id}[{child.name}]")
+            emit_edges(child)
+
+    emit_edges(tree)
 
 
 @click.command()
