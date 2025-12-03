@@ -49,6 +49,7 @@ dev = [
     "pytest-cov>=4.0.0",
     "mypy>=1.0.0",
     "ruff>=0.1.0",
+    "pyright>=1.1.0",
 ]
 
 [project.urls]
@@ -75,3 +76,57 @@ select = ["E", "F", "I", "W"]
 [tool.mypy]
 python_version = "3.10"
 strict = true
+
+[tool.pyright]
+pythonVersion = "3.10"
+pythonPlatform = "All"
+typeCheckingMode = "strict"
+
+include = ["src"]
+exclude = ["**/__pycache__", ".venv", "build", "dist"]
+
+# Strict inference
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+strictParameterNoneValue = true
+
+# Error reporting - maximum strictness
+reportMissingImports = "error"
+reportMissingTypeStubs = "warning"
+reportUnusedImport = "error"
+reportUnusedClass = "error"
+reportUnusedFunction = "error"
+reportUnusedVariable = "error"
+reportDuplicateImport = "error"
+reportPrivateUsage = "error"
+reportConstantRedefinition = "error"
+reportIncompatibleMethodOverride = "error"
+reportIncompatibleVariableOverride = "error"
+reportInconsistentConstructor = "error"
+reportOverlappingOverload = "error"
+reportUninitializedInstanceVariable = "warning"
+reportInvalidStringEscapeSequence = "error"
+# Pydantic limitation: Field(default_factory=list) loses generic type info for model classes.
+# PEP 681 dataclass_transform doesn't provide a mechanism for type checkers to infer these.
+# Downgrade to warnings since these are mostly unavoidable with Pydantic models + dynamic JSON.
+reportUnknownParameterType = "error"
+reportUnknownArgumentType = "warning"
+reportUnknownLambdaType = "warning"
+reportUnknownVariableType = "warning"
+reportUnknownMemberType = "warning"
+reportMissingParameterType = "error"
+reportMissingTypeArgument = "error"
+reportInvalidTypeVarUse = "error"
+reportCallInDefaultInitializer = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportAssertAlwaysTrue = "warning"
+reportSelfClsParameterName = "error"
+reportUndefinedVariable = "error"
+reportUnboundVariable = "error"
+reportUnusedCoroutine = "error"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportMatchNotExhaustive = "error"
+reportImplicitOverride = "warning"

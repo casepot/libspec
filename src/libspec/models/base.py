@@ -10,6 +10,7 @@ class LibspecModel(BaseModel):
     - extra="forbid": Catch typos in spec files
     - str_strip_whitespace: Clean up string inputs
     - validate_default: Ensure defaults are valid
+    - validate_assignment: Re-validate when fields are modified
     - use_enum_values: Serialize enums as their values
     """
 
@@ -17,6 +18,7 @@ class LibspecModel(BaseModel):
         extra="forbid",
         str_strip_whitespace=True,
         validate_default=True,
+        validate_assignment=True,
         use_enum_values=True,
         populate_by_name=True,  # Allow both field name and alias
     )
@@ -34,6 +36,7 @@ class ExtensibleModel(LibspecModel):
         extra="ignore",
         str_strip_whitespace=True,
         validate_default=True,
+        validate_assignment=True,
         use_enum_values=True,
         populate_by_name=True,
     )
@@ -49,6 +52,7 @@ class ExtensionModel(LibspecModel):
         extra="ignore",
         str_strip_whitespace=True,
         validate_default=True,
+        validate_assignment=True,
         use_enum_values=True,
         populate_by_name=True,
     )

@@ -40,6 +40,13 @@ class ValidationSeverity(str, Enum):
     WARNING = "warning"
 
 
+class ValidationSource(str, Enum):
+    """Source of a validation issue."""
+
+    JSON_SCHEMA = "json_schema"
+    PYDANTIC = "pydantic"
+
+
 @dataclass
 class ValidationIssue:
     """Structured validation issue with context."""
@@ -48,6 +55,7 @@ class ValidationIssue:
     path: str = "$"
     severity: ValidationSeverity = ValidationSeverity.ERROR
     schema_path: str | None = None
+    source: ValidationSource = ValidationSource.JSON_SCHEMA
     context: dict[str, Any] | None = field(default=None)
 
 
@@ -100,7 +108,7 @@ def get_schema_path(schema_name: str = "core.schema.json") -> Path:
     return schema_path
 
 
-def get_core_schema() -> dict:
+def get_core_schema() -> dict[str, Any]:
     """
     Load and return the core schema as a dictionary.
 
@@ -114,7 +122,7 @@ def get_core_schema() -> dict:
         return json.load(f)
 
 
-def get_extension_schema(extension_name: str) -> dict:
+def get_extension_schema(extension_name: str) -> dict[str, Any]:
     """
     Load an extension schema by name.
 
@@ -142,8 +150,8 @@ def get_extension_schema(extension_name: str) -> dict:
 
 
 def merge_schemas(
-    core_schema: dict, extension_names: list[str]
-) -> tuple[dict, list[ValidationIssue]]:
+    core_schema: dict[str, Any], extension_names: list[str]
+) -> tuple[dict[str, Any], list[ValidationIssue]]:
     """
     Merge core schema with extension schemas.
 
@@ -238,7 +246,7 @@ def validate_spec(
         schema, merge_warnings = merge_schemas(schema, extensions)
         issues.extend(merge_warnings)
 
-    # Validate
+    # Validate with JSON Schema
     validator = Draft202012Validator(schema)
     for error in validator.iter_errors(spec):
         path = "$" + "".join(
@@ -250,8 +258,39 @@ def validate_spec(
                 path=path,
                 severity=ValidationSeverity.ERROR,
                 schema_path=error.json_path if hasattr(error, "json_path") else None,
+                source=ValidationSource.JSON_SCHEMA,
             )
         )
+
+    # Also validate with Pydantic to catch model validators
+    # Only run if JSON Schema validation passed (to avoid duplicate errors)
+    if not any(issue.severity == ValidationSeverity.ERROR for issue in issues):
+        from pydantic import ValidationError
+
+        from libspec.models.core import LibspecSpec
+
+        try:
+            LibspecSpec.model_validate(spec)
+        except ValidationError as e:
+            for err in e.errors():
+                # Format the path from Pydantic's loc tuple
+                loc_parts = []
+                for part in err["loc"]:
+                    if isinstance(part, int):
+                        loc_parts.append(f"[{part}]")
+                    else:
+                        loc_parts.append(f"[{part!r}]")
+                path = "$" + "".join(loc_parts)
+
+                issues.append(
+                    ValidationIssue(
+                        message=err["msg"],
+                        path=path,
+                        severity=ValidationSeverity.ERROR,
+                        source=ValidationSource.PYDANTIC,
+                        context={"type": err["type"]},
+                    )
+                )
 
     if structured:
         return issues

@@ -162,7 +162,7 @@ def _load_extension_field_index() -> dict[str, dict[str, set[str]]]:
     the packaged extension schemas so we stay in sync when schemas change.
     """
 
-    schema_dir = Path(files("libspec") / "schema" / "extensions")
+    schema_dir = Path(str(files("libspec") / "schema" / "extensions"))
     index: dict[str, dict[str, set[str]]] = {}
 
     for schema_path in sorted(schema_dir.glob("*.schema.json")):
@@ -446,21 +446,21 @@ def _ensure_no_extra_fields_when_extensions_absent(data: dict[str, Any]) -> None
     core_module_fields = set(Module.model_fields.keys())
     core_principle_fields = set(Principle.model_fields.keys())
 
-    for i, type_def in enumerate(data.get("library", {}).get("types", [])):
+    for _i, type_def in enumerate(data.get("library", {}).get("types", [])):
         extra = set(type_def.keys()) - core_type_fields
         if extra:
             raise SpecLoadError(
                 f"Unexpected fields in type '{type_def.get('name', '?')}': {sorted(extra)} "
                 "(no extensions declared; use --strict-models to enforce this check)"
             )
-    for i, fn in enumerate(data.get("library", {}).get("functions", [])):
+    for _i, fn in enumerate(data.get("library", {}).get("functions", [])):
         extra = set(fn.keys()) - core_func_fields
         if extra:
             raise SpecLoadError(
                 f"Unexpected fields in function '{fn.get('name', '?')}': {sorted(extra)} "
                 "(no extensions declared; use --strict-models to enforce this check)"
             )
-    for i, feat in enumerate(data.get("library", {}).get("features", [])):
+    for _i, feat in enumerate(data.get("library", {}).get("features", [])):
         extra = set(feat.keys()) - core_feature_fields
         if extra:
             raise SpecLoadError(

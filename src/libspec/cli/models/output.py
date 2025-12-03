@@ -1,9 +1,9 @@
 """Output models for CLI responses."""
 
 from datetime import datetime, timezone
-from typing import Any, Generic, TypeVar
+from typing import Annotated, Any, Generic, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PlainSerializer
 
 T = TypeVar("T")
 
@@ -16,18 +16,18 @@ class SpecContext(BaseModel):
     version: str
 
 
+ISODatetime = Annotated[datetime, PlainSerializer(lambda v: v.isoformat(), return_type=str)]
+
+
 class OutputEnvelope(BaseModel, Generic[T]):
     """Standard envelope for all JSON output."""
 
     libspec_cli: str = Field(default="0.1.0")
     command: str
     spec: SpecContext
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: ISODatetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     result: T
     meta: dict[str, Any] = Field(default_factory=dict)
-
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class TypeSummary(BaseModel):

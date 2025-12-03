@@ -23,6 +23,10 @@ class LintConfig(BaseModel):
     enable: list[str] = Field(default_factory=lambda: ["all"])
     disable: list[str] = Field(default_factory=list)
     rules: dict[str, str | LintRuleConfig] = Field(default_factory=dict)
+    baseline_python_version: str = Field(
+        default="3.8",
+        description="Baseline Python version for V003 rule (features from this version don't trigger warnings)",
+    )
 
     def get_rule_severity(self, rule_id: str, default: str) -> str:
         """Get the configured severity for a rule."""

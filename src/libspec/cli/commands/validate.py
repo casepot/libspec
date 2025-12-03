@@ -6,8 +6,10 @@ import click
 
 from libspec.cli.app import Context, pass_context
 
-# Import rules to trigger registration
-from libspec.cli.lint import rules  # noqa: F401
+# Import rules to trigger registration via side effect
+from libspec.cli.lint import rules as _rules  # noqa: F401
+
+del _rules  # Not directly used, imported for side effect
 from libspec.cli.lint.base import Severity
 from libspec.cli.lint.runner import LintRunner
 from libspec.cli.output import make_envelope, output_json, output_text_lint, output_text_validate
@@ -33,7 +35,7 @@ def validate(ctx: Context, strict: bool) -> None:
 
     spec = ctx.get_spec()
 
-    errors = do_validate(spec.path)
+    errors: list[str] = do_validate(spec.path)  # type: ignore[assignment]
     valid = len(errors) == 0
 
     if ctx.text:
