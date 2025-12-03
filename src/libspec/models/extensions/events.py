@@ -14,7 +14,14 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, NonEmptyStr, TimeWindow
+from libspec.models.types import (
+    FunctionReference,
+    NonEmptyStr,
+    RegexPattern,
+    SemVer,
+    TimeWindow,
+    TopicName,
+)
 
 
 class EventsTypeFields(ExtensionModel):
@@ -200,10 +207,25 @@ class EventBusSpec(ExtensionModel):
         None, description='Whether event sourcing is supported'
     )
 
+    @model_validator(mode='after')
+    def validate_delivery_guarantees(self) -> 'EventBusSpec':
+        """Validate delivery guarantees are mutually exclusive."""
+        guarantees = [
+            ('at_least_once', self.at_least_once),
+            ('at_most_once', self.at_most_once),
+            ('exactly_once', self.exactly_once),
+        ]
+        active = [name for name, value in guarantees if value is True]
+        if len(active) > 1:
+            raise ValueError(
+                f"Delivery guarantees are mutually exclusive, got: {', '.join(active)}"
+            )
+        return self
+
 
 class TopicSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Topic name')
-    pattern: str | None = Field(None, description='Topic pattern (for wildcards)')
+    pattern: RegexPattern | None = Field(None, description='Topic pattern (for wildcards)')
     partitions: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Number of partitions')
     retention: TimeWindow | None = Field(None, description='Message retention period')
     events: list[str] | None = Field(
@@ -269,8 +291,8 @@ class EventSpec(ExtensionModel):
     metadata: list[EventFieldSpec] | None = Field(
         None, description='Standard metadata fields'
     )
-    topic: str | None = Field(None, description='Default topic/channel')
-    version: str | None = Field(None, description='Event schema version')
+    topic: TopicName | None = Field(None, description='Default topic/channel')
+    version: SemVer | None = Field(None, description='Event schema version')
     idempotency_key: str | None = Field(None, description='Field used for idempotency')
     ordering_key: str | None = Field(None, description='Field used for ordering')
     ttl: TimeWindow | None = Field(None, description='Event time-to-live')
@@ -293,9 +315,19 @@ class HandlerSpec(ExtensionModel):
     )
     ordering: Ordering | None = Field(None, description='Event ordering guarantee')
     idempotent: bool | None = Field(None, description='Whether handler is idempotent')
-    dead_letter: str | None = Field(None, description='Dead letter topic on failure')
+    dead_letter: TopicName | None = Field(None, description='Dead letter topic on failure')
     filters: list[EventFilterSpec] | None = Field(None, description='Event filters')
     description: str | None = None
+
+    @model_validator(mode='after')
+    def validate_handles_not_empty(self) -> 'HandlerSpec':
+        """Validate handles list is not empty when provided."""
+        if self.handles is not None and len(self.handles) == 0:
+            raise ValueError(
+                f"Handler '{self.name}' has empty handles list; "
+                "either omit handles or specify at least one event"
+            )
+        return self
 
 
 class SagaSpec(ExtensionModel):

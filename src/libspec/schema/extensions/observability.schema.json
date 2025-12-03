@@ -108,6 +108,8 @@
         "endpoint": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^/.*$",
               "type": "string"
             },
             {
@@ -188,13 +190,13 @@
       "type": "string"
     },
     "LogLevel": {
-      "description": "Standard Python logging levels.",
+      "description": "Standard Python logging levels.\n\nNote: Values are lowercase for consistency with other enums in libspec,\nthough Python's logging module uses uppercase level names.",
       "enum": [
-        "DEBUG",
-        "INFO",
-        "WARNING",
-        "ERROR",
-        "CRITICAL"
+        "debug",
+        "info",
+        "warning",
+        "error",
+        "critical"
       ],
       "title": "LogLevel",
       "type": "string"
@@ -236,6 +238,8 @@
         "logger_name": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$",
               "type": "string"
             },
             {

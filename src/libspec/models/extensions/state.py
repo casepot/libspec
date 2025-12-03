@@ -14,7 +14,12 @@ from typing import Annotated
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, NonEmptyStr
+from libspec.models.types import (
+    FunctionReference,
+    NonEmptyStr,
+    StatePath,
+    TypeAnnotationStr,
+)
 
 
 class StoreType(str, Enum):
@@ -48,8 +53,8 @@ class ReducerSpec(ExtensionModel):
 
 class SliceSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Slice name')
-    path: str | None = Field(None, description='Path in state tree')
-    state_type: str | None = Field(None, description='Slice state type')
+    path: StatePath | None = Field(None, description='Path in state tree')
+    state_type: TypeAnnotationStr | None = Field(None, description='Slice state type')
     reducers: list[ReducerSpec] | None = Field(None, description='Slice reducers')
     actions: list[str] | None = Field(None, description='Auto-generated action names')
     selectors: list[str] | None = Field(None, description='Slice selectors')
@@ -144,7 +149,7 @@ class TransitionSpec(ExtensionModel):
     from_: str | None = Field(None, alias='from', description='Source state')
     to: str | None = Field(None, description='Target state')
     event: str | None = Field(None, description='Triggering event')
-    guard: str | None = Field(None, description='Guard condition')
+    guard: FunctionReference | None = Field(None, description='Guard condition')
     actions: list[str] | None = Field(None, description='Transition actions')
     internal: bool | None = Field(
         None, description='Whether transition is internal (no exit/entry)'
@@ -222,7 +227,7 @@ class SelectorSpec(ExtensionModel):
     input_selectors: list[str] | None = Field(
         None, description='Input selectors (for memoization)'
     )
-    return_type: str | None = Field(None, description='Return type')
+    return_type: TypeAnnotationStr | None = Field(None, description='Return type')
     memoized: bool | None = Field(None, description='Whether selector is memoized')
     description: str | None = None
 
@@ -282,7 +287,16 @@ class PersistenceSpec(ExtensionModel):
     whitelist: list[str] | None = Field(None, description='Paths to persist')
     blacklist: list[str] | None = Field(None, description='Paths to exclude')
     version: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Persistence version')
-    migrate: str | None = Field(None, description='Migration function reference')
+    migrate: FunctionReference | None = Field(None, description='Migration function reference')
+
+    @model_validator(mode='after')
+    def validate_list_exclusivity(self) -> 'PersistenceSpec':
+        """Validate whitelist and blacklist are mutually exclusive."""
+        if self.whitelist is not None and self.blacklist is not None:
+            raise ValueError(
+                "whitelist and blacklist are mutually exclusive; use one or the other"
+            )
+        return self
 
 
 class StateTypeFields(ExtensionModel):
@@ -294,7 +308,7 @@ class StateTypeFields(ExtensionModel):
 class StoreSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Store name')
     type: StoreType | None = Field(None, description='Store implementation type')
-    state_type: str | None = Field(None, description='State type reference')
+    state_type: TypeAnnotationStr | None = Field(None, description='State type reference')
     initial_state: str | None = Field(
         None, description='Initial state factory reference'
     )
@@ -329,6 +343,17 @@ class StateMachineSpec(ExtensionModel):
         None, description='Whether machine has parallel states'
     )
     description: str | None = None
+
+    @model_validator(mode='after')
+    def validate_initial_state_exists(self) -> 'StateMachineSpec':
+        """Validate that initial state exists in states list."""
+        state_names = {s.name for s in self.states}
+        if self.initial not in state_names:
+            raise ValueError(
+                f"State machine '{self.name}' initial state '{self.initial}' "
+                f"not found in states: {state_names}"
+            )
+        return self
 
 
 class StateLibraryFields(ExtensionModel):

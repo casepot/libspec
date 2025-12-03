@@ -178,6 +178,35 @@ EntryPointGroup = Annotated[
 PathOrUrl = Annotated[str, StringConstraints(min_length=1)]
 """Either a local file path or URL (validated contextually in strict mode)."""
 
+# Environment variable prefix (e.g., 'MYLIB_', 'APP_')
+EnvVarPrefix = Annotated[
+    str, StringConstraints(pattern=r"^[A-Z_][A-Z0-9_]*_?$", min_length=1)
+]
+"""Environment variable prefix in SCREAMING_SNAKE_CASE (e.g., 'MYLIB_', 'APP')."""
+
+# Python namespace path (package/module paths)
+PythonNamespaceStr = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*$", min_length=1),
+]
+"""Python namespace path (e.g., 'mypackage.plugins', 'flask.blueprints')."""
+
+# Text encoding name
+TextEncodingStr = Annotated[
+    str, StringConstraints(pattern=r"^[a-z0-9-]+$", min_length=1)
+]
+"""Text encoding name (e.g., 'utf-8', 'ascii', 'latin-1')."""
+
+# Datetime format string (strftime/strptime patterns)
+DatetimeFormatStr = Annotated[str, StringConstraints(min_length=1)]
+"""Python datetime format string for strftime/strptime patterns."""
+
+# Compression algorithm name
+CompressionStr = Annotated[
+    str, StringConstraints(pattern=r"^[a-z0-9-]+$", min_length=1)
+]
+"""Compression algorithm name (e.g., 'gzip', 'zstd', 'snappy', 'lz4')."""
+
 
 # -----------------------------------------------------------------------------
 # Core Enums

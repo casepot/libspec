@@ -65,6 +65,8 @@
         "env_prefix": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z_][A-Z0-9_]*_?$",
               "type": "string"
             },
             {
@@ -196,6 +198,8 @@
         "env_var_trigger": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z_][A-Z0-9_]*$",
               "type": "string"
             },
             {

@@ -50,6 +50,7 @@
         },
         "from_type": {
           "description": "Source type",
+          "minLength": 1,
           "title": "From Type",
           "type": "string"
         },
@@ -68,12 +69,15 @@
         },
         "to_type": {
           "description": "Target type",
+          "minLength": 1,
           "title": "To Type",
           "type": "string"
         },
         "validator": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -127,6 +131,8 @@
         "fallback": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -263,6 +269,8 @@
         "fallback": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1133,6 +1141,8 @@
         "encoding": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z0-9-]+$",
               "type": "string"
             },
             {
@@ -1708,6 +1718,8 @@
         "decoder": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1721,6 +1733,8 @@
         "encoder": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -1733,11 +1747,13 @@
         },
         "python_type": {
           "description": "Python type to map",
+          "minLength": 1,
           "title": "Python Type",
           "type": "string"
         },
         "serialized_type": {
           "description": "Type in serialized format",
+          "minLength": 1,
           "title": "Serialized Type",
           "type": "string"
         }

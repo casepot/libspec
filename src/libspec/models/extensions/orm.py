@@ -201,12 +201,12 @@ class ConstraintType(str, Enum):
 class Initially(str, Enum):
     """When deferrable constraints are checked.
 
-    - IMMEDIATE: Check constraint at statement end
-    - DEFERRED: Check constraint at transaction commit
+    - immediate: Check constraint at statement end
+    - deferred: Check constraint at transaction commit
     """
 
-    IMMEDIATE = 'IMMEDIATE'
-    DEFERRED = 'DEFERRED'
+    IMMEDIATE = 'immediate'
+    DEFERRED = 'deferred'
 
 
 class ConstraintSpec(ExtensionModel):

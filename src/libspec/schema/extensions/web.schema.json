@@ -154,6 +154,8 @@
         "handler": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -476,6 +478,7 @@
         "pattern": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -640,6 +643,8 @@
         "window": {
           "anyOf": [
             {
+              "minLength": 2,
+              "pattern": "^[0-9]+(ms|s|m|h|d)$",
               "type": "string"
             },
             {

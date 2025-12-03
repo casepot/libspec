@@ -424,6 +424,7 @@
         "file_pattern": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -535,6 +536,8 @@
         "token_normalize_func": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -986,6 +989,8 @@
         "env_var": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[A-Z_][A-Z0-9_]*$",
               "type": "string"
             },
             {

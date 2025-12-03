@@ -19,6 +19,7 @@ from libspec.models.types import (
     EnvVarName,
     FunctionReference,
     NonEmptyStr,
+    RegexPattern,
     TypeAnnotationStr,
 )
 
@@ -55,7 +56,7 @@ class ShellCompletionSpec(ExtensionModel):
     install_command: str | None = Field(
         None, description='Command to install completions'
     )
-    env_var: str | None = Field(
+    env_var: EnvVarName | None = Field(
         None, description='Environment variable for completion script'
     )
 
@@ -84,7 +85,7 @@ class CompletionSpec(ExtensionModel):
     function: FunctionReference | None = Field(
         None, description='Custom completion function reference'
     )
-    file_pattern: str | None = Field(
+    file_pattern: RegexPattern | None = Field(
         None, description='File pattern for path completion'
     )
 
@@ -129,7 +130,7 @@ class ContextSettingsSpec(ExtensionModel):
     auto_envvar_prefix: str | None = Field(
         None, description='Auto-generate envvar names with prefix'
     )
-    token_normalize_func: str | None = Field(
+    token_normalize_func: FunctionReference | None = Field(
         None, description='Function to normalize tokens'
     )
 
@@ -146,6 +147,20 @@ class ArgumentSpec(ExtensionModel):
     description: str | None = Field(None, description='Help text')
     envvar: EnvVarName | None = Field(None, description='Environment variable fallback')
     shell_complete: CompletionSpec | None = None
+
+    @model_validator(mode='after')
+    def validate_required_consistency(self) -> 'ArgumentSpec':
+        """Validate required argument configuration."""
+        if self.required is True:
+            if self.default is not None:
+                raise ValueError(
+                    f"Argument '{self.name}' is required but has a default value"
+                )
+            if self.nargs == '?':
+                raise ValueError(
+                    f"Argument '{self.name}' is required but nargs='?' makes it optional"
+                )
+        return self
 
 
 class OptionSpec(ExtensionModel):

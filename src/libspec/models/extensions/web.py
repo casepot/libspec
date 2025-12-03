@@ -15,7 +15,15 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, MimeType, NonEmptyStr, RoutePath, TypeAnnotationStr
+from libspec.models.types import (
+    FunctionReference,
+    MimeType,
+    NonEmptyStr,
+    RegexPattern,
+    RoutePath,
+    TimeWindow,
+    TypeAnnotationStr,
+)
 
 
 class Method(str, Enum):
@@ -51,7 +59,7 @@ class PathParamSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Parameter name in path')
     type: TypeAnnotationStr = Field(default=..., description='Parameter type')
     description: str | None = None
-    pattern: str | None = Field(None, description='Regex pattern for validation')
+    pattern: RegexPattern | None = Field(None, description='Regex pattern for validation')
 
 
 class QueryParamSpec(ExtensionModel):
@@ -61,6 +69,15 @@ class QueryParamSpec(ExtensionModel):
     default: str | None = Field(None, description='Default value')
     description: str | None = None
     multiple: bool | None = Field(False, description='Whether multiple values allowed')
+
+    @model_validator(mode='after')
+    def validate_required_no_default(self) -> 'QueryParamSpec':
+        """Validate that required params don't have defaults."""
+        if self.required is True and self.default is not None:
+            raise ValueError(
+                f"Query parameter '{self.name}' is required but has a default value"
+            )
+        return self
 
 
 class HeaderSpec(ExtensionModel):
@@ -183,6 +200,20 @@ class DependencySpec(ExtensionModel):
     )
     description: str | None = None
 
+    @model_validator(mode='after')
+    def validate_cacheable_scope(self) -> 'DependencySpec':
+        """Validate that non-cacheable dependencies use request scope."""
+        import warnings
+
+        if self.cacheable is False and self.scope is not None and self.scope != Scope.request:
+            warnings.warn(
+                f"Dependency '{self.name}' is not cacheable but has scope '{self.scope}'; "
+                f"consider using 'request' scope",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self
+
 
 class Direction(str, Enum):
     """WebSocket message flow direction.
@@ -208,7 +239,7 @@ class ErrorHandlerSpec(ExtensionModel):
     exception: str = Field(default=..., description='Exception type to handle')
     status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
     response_type: str | None = Field(None, description='Response model type')
-    handler: str | None = Field(None, description='Custom handler function')
+    handler: FunctionReference | None = Field(None, description='Custom handler function')
     description: str | None = None
 
 
@@ -216,7 +247,7 @@ class RateLimitSpec(ExtensionModel):
     requests: Annotated[int, Field(ge=1)] | None = Field(
         default=None, description='Number of requests allowed'
     )
-    window: str | None = Field(None, description="Time window (e.g., '1m', '1h')")
+    window: TimeWindow | None = Field(None, description="Time window (e.g., '1m', '1h')")
     key: str | None = Field(None, description="Rate limit key (e.g., 'ip', 'user')")
     burst: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Burst allowance')
     description: str | None = None

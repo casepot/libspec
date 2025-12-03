@@ -444,10 +444,10 @@
       "type": "string"
     },
     "Initially": {
-      "description": "When deferrable constraints are checked.\n\n- IMMEDIATE: Check constraint at statement end\n- DEFERRED: Check constraint at transaction commit",
+      "description": "When deferrable constraints are checked.\n\n- immediate: Check constraint at statement end\n- deferred: Check constraint at transaction commit",
       "enum": [
-        "IMMEDIATE",
-        "DEFERRED"
+        "immediate",
+        "deferred"
       ],
       "title": "Initially",
       "type": "string"

@@ -164,7 +164,7 @@ class TestDoubleSpec(ExtensionModel):
         default=None, description="Whether library provides a test double"
     )
     type: str | None = Field(default=None, description="Test double type reference")
-    builder: str | None = Field(default=None, description="Builder function reference")
+    builder: FunctionReference | None = Field(default=None, description="Builder function reference")
     configurable_behaviors: list[str] = Field(
         default_factory=list, description="Behaviors that can be configured"
     )

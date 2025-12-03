@@ -435,6 +435,8 @@
         "migrate": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -641,6 +643,7 @@
         "return_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -780,6 +783,8 @@
         "path": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -825,6 +830,7 @@
         "state_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -1368,6 +1374,7 @@
         "state_type": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -1469,6 +1476,8 @@
         "guard": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {

@@ -14,7 +14,12 @@ from enum import Enum
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, NonEmptyStr
+from libspec.models.types import (
+    FunctionReference,
+    NonEmptyStr,
+    TextEncodingStr,
+    TypeAnnotationStr,
+)
 
 
 class SerializationFormat(str, Enum):
@@ -138,25 +143,25 @@ class SerializationErrorKind(str, Enum):
 class TypeMappingSpec(ExtensionModel):
     """Mapping between Python types and serialization types."""
 
-    python_type: str = Field(default=..., description="Python type to map")
-    serialized_type: str = Field(default=..., description="Type in serialized format")
+    python_type: TypeAnnotationStr = Field(default=..., description="Python type to map")
+    serialized_type: TypeAnnotationStr = Field(default=..., description="Type in serialized format")
     bidirectional: bool | None = Field(
         True, description="Whether mapping works both ways"
     )
-    encoder: str | None = Field(None, description="Custom encoder function reference")
-    decoder: str | None = Field(None, description="Custom decoder function reference")
+    encoder: FunctionReference | None = Field(None, description="Custom encoder function reference")
+    decoder: FunctionReference | None = Field(None, description="Custom decoder function reference")
 
 
 class CoercionRuleSpec(ExtensionModel):
     """Type coercion rule for deserialization."""
 
-    from_type: str = Field(default=..., description="Source type")
-    to_type: str = Field(default=..., description="Target type")
+    from_type: TypeAnnotationStr = Field(default=..., description="Source type")
+    to_type: TypeAnnotationStr = Field(default=..., description="Target type")
     behavior: CoercionBehavior | None = Field(None, description="Coercion behavior")
     lossy: bool | None = Field(
         None, description="Whether coercion may lose information"
     )
-    validator: str | None = Field(None, description="Validation function reference")
+    validator: FunctionReference | None = Field(None, description="Validation function reference")
 
 
 class EncoderSpec(ExtensionModel):
@@ -220,7 +225,7 @@ class EncoderRegistrySpec(ExtensionModel):
 
     name: NonEmptyStr = Field(default=..., description="Registry name")
     encoders: list[EncoderSpec] | None = Field(None, description="Registered encoders")
-    fallback: str | None = Field(None, description="Fallback encoder reference")
+    fallback: FunctionReference | None = Field(None, description="Fallback encoder reference")
     strict: bool | None = Field(
         None, description="Error on unhandled types vs using repr"
     )
@@ -231,7 +236,7 @@ class DecoderRegistrySpec(ExtensionModel):
 
     name: NonEmptyStr = Field(default=..., description="Registry name")
     decoders: list[DecoderSpec] | None = Field(None, description="Registered decoders")
-    fallback: str | None = Field(None, description="Fallback decoder reference")
+    fallback: FunctionReference | None = Field(None, description="Fallback decoder reference")
     strict: bool | None = Field(
         None, description="Error on unhandled types vs returning raw"
     )
@@ -347,7 +352,7 @@ class SerializationSettingsSpec(ExtensionModel):
     binary_encoding: BinaryEncoding | None = Field(
         None, description="Default binary encoding"
     )
-    encoding: str | None = Field(
+    encoding: TextEncodingStr | None = Field(
         None, description="Text encoding (e.g., 'utf-8')"
     )
     max_string_length: int | None = Field(
@@ -362,6 +367,15 @@ class SerializationSettingsSpec(ExtensionModel):
     pretty_print: bool | None = Field(
         None, description="Whether to pretty print output"
     )
+
+    @model_validator(mode='after')
+    def validate_custom_datetime_format(self) -> 'SerializationSettingsSpec':
+        """Validate custom datetime format is provided when needed."""
+        if self.datetime_format == DateTimeFormat.custom and not self.datetime_custom_format:
+            raise ValueError(
+                "datetime_custom_format is required when datetime_format is 'custom'"
+            )
+        return self
 
 
 class SerializationErrorSpec(ExtensionModel):

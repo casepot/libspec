@@ -12,10 +12,17 @@ from enum import Enum
 
 from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, NonEmptyStr
+from libspec.models.types import (
+    EntryPointGroup,
+    FunctionReference,
+    NonEmptyStr,
+    PythonNamespaceStr,
+    RegexPattern,
+    SemVer,
+)
 
 
 class PluginsTypeFields(ExtensionModel):
@@ -58,7 +65,7 @@ class ExtensionPointSpec(ExtensionModel):
         None, description='Whether implementations are priority ordered'
     )
     lifecycle: Lifecycle | None = Field(None, description='Extension lifecycle')
-    version: str | None = Field(None, description='Extension point API version')
+    version: SemVer | None = Field(None, description='Extension point API version')
     deprecated: bool | None = Field(
         None, description='Whether extension point is deprecated'
     )
@@ -181,25 +188,42 @@ class DiscoveryMechanismType(str, Enum):
 
 class DiscoveryMechanismSpec(ExtensionModel):
     type: DiscoveryMechanismType = Field(default=..., description='Discovery mechanism type')
-    entry_point_group: str | None = Field(
+    entry_point_group: EntryPointGroup | None = Field(
         None, description='Entry point group name (for entry_points)'
     )
-    namespace: str | None = Field(
+    namespace: PythonNamespaceStr | None = Field(
         None, description='Package namespace (for namespace_packages)'
     )
     paths: list[str] | None = Field(
         None, description='Directories to scan (for directory_scan)'
     )
-    pattern: str | None = Field(None, description='File pattern (for directory_scan)')
+    pattern: RegexPattern | None = Field(None, description='File pattern (for directory_scan)')
     config_key: str | None = Field(None, description='Config key (for config_file)')
-    decorator: str | None = Field(
+    decorator: FunctionReference | None = Field(
         None, description='Decorator function (for decorator)'
     )
+
+    @model_validator(mode='after')
+    def validate_type_specific_fields(self) -> 'DiscoveryMechanismSpec':
+        """Validate type-specific required fields."""
+        if self.type == DiscoveryMechanismType.entry_points and not self.entry_point_group:
+            raise ValueError(
+                "entry_point_group is required when type is 'entry_points'"
+            )
+        if self.type == DiscoveryMechanismType.namespace_packages and not self.namespace:
+            raise ValueError(
+                "namespace is required when type is 'namespace_packages'"
+            )
+        if self.type == DiscoveryMechanismType.directory_scan and not self.paths:
+            raise ValueError(
+                "paths is required when type is 'directory_scan'"
+            )
+        return self
 
 
 class PluginHookRegistration(ExtensionModel):
     hook: str = Field(default=..., description='Hook name')
-    handler: str = Field(default=..., description='Handler method reference')
+    handler: FunctionReference = Field(default=..., description='Handler method reference')
     priority: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Handler priority')
 
 
@@ -272,12 +296,12 @@ class DiscoverySpec(ExtensionModel):
     discovery_order: list[str] | None = Field(
         None, description='Order of discovery mechanisms'
     )
-    namespace: str | None = Field(None, description='Plugin namespace')
+    namespace: PythonNamespaceStr | None = Field(None, description='Plugin namespace')
 
 
 class PluginSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Plugin name')
-    version: str | None = Field(None, description='Plugin version')
+    version: SemVer | None = Field(None, description='Plugin version')
     type: str | None = Field(None, description='Plugin class reference')
     implements: list[str] | None = Field(
         None, description='Extension points implemented'

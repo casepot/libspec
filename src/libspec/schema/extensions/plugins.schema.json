@@ -18,6 +18,8 @@
         "decorator": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_.]*$",
               "type": "string"
             },
             {
@@ -31,6 +33,8 @@
         "entry_point_group": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z][a-z0-9]*([._][a-z0-9]+)*$",
               "type": "string"
             },
             {
@@ -44,6 +48,8 @@
         "namespace": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -73,6 +79,7 @@
         "pattern": {
           "anyOf": [
             {
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -157,6 +164,8 @@
         "namespace": {
           "anyOf": [
             {
+              "minLength": 1,
+              "pattern": "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)*$",
               "type": "string"
             },
             {
@@ -321,6 +330,7 @@
         "version": {
           "anyOf": [
             {
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+.*$",
               "type": "string"
             },
             {
@@ -577,6 +587,8 @@
       "properties": {
         "handler": {
           "description": "Handler method reference",
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_.]*$",
           "title": "Handler",
           "type": "string"
         },
@@ -837,6 +849,7 @@
         "version": {
           "anyOf": [
             {
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+.*$",
               "type": "string"
             },
             {

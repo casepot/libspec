@@ -208,6 +208,13 @@ class GenericParam(LibspecModel):
                 raise ValueError("TypeVarTuple does not support explicit variance")
             if self.constraints:
                 raise ValueError("TypeVarTuple does not support type constraints")
+        elif self.kind == GenericParamKind.TYPE_VAR:
+            # TypeVar: bound and constraints are mutually exclusive
+            if self.bound is not None and self.constraints:
+                raise ValueError(
+                    f"TypeVar '{self.name}' cannot have both 'bound' and 'constraints'; "
+                    "use bound for upper bound OR constraints for allowed types"
+                )
         return self
 
 
@@ -360,6 +367,23 @@ class Method(ExtensibleModel):
                 stacklevel=2,
             )
         return v
+
+    @model_validator(mode="after")
+    def validate_yield_consistency(self) -> Self:
+        """Validate that yields and async_yields are consistent."""
+        if self.yields is not None and self.async_yields is not None:
+            raise ValueError(
+                "Cannot specify both 'yields' and 'async_yields'; use one based on generator type"
+            )
+        # Warn if generator specifies explicit return
+        if (self.yields is not None or self.async_yields is not None) and self.returns is not None:
+            warnings.warn(
+                f"Generator method '{self.name}' specifies 'returns'; "
+                "generators typically don't need explicit return type",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self
 
 
 class Constructor(LibspecModel):

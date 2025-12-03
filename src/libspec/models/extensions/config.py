@@ -14,7 +14,7 @@ from typing import Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import CliFlag, EnvVarName, NonEmptyStr, ShortFlag
+from libspec.models.types import CliFlag, EnvVarName, EnvVarPrefix, NonEmptyStr, ShortFlag
 
 
 class SettingSpec(ExtensionModel):
@@ -111,7 +111,7 @@ class ConfigSourcesSpec(ExtensionModel):
     file_name_pattern: str | None = Field(
         None, description="Config file name pattern (e.g., '{name}.toml')"
     )
-    env_prefix: str | None = Field(
+    env_prefix: EnvVarPrefix | None = Field(
         None, description="Environment variable prefix (e.g., 'MYLIB_')"
     )
     nested_delimiter: str | None = Field(
@@ -128,7 +128,7 @@ class ProfileSpec(ExtensionModel):
     overrides: dict[str, Any] | None = Field(
         None, description='Setting overrides for this profile'
     )
-    env_var_trigger: str | None = Field(
+    env_var_trigger: EnvVarName | None = Field(
         None, description='Env var that activates this profile'
     )
 
