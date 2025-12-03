@@ -1,7 +1,7 @@
 """Output models for CLI responses."""
 
 from datetime import datetime, timezone
-from typing import Annotated, Any, Generic, TypeVar
+from typing import Annotated, Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, Field, PlainSerializer
 
@@ -75,6 +75,14 @@ class ModuleSummary(BaseModel):
     internal: bool = False
 
 
+class ModuleEntity(BaseModel):
+    """An entity (type or function) within a module."""
+
+    name: str
+    kind: str  # "class", "protocol", "function", "decorator", etc.
+    entity_type: Literal["type", "function"]
+
+
 class ModuleTreeNode(BaseModel):
     """A node in the module hierarchy tree."""
 
@@ -84,6 +92,7 @@ class ModuleTreeNode(BaseModel):
     depends_on: list[str] = Field(default_factory=list)
     internal: bool = False
     is_package: bool = True  # True if this is a real module in the spec
+    entities: list[ModuleEntity] = Field(default_factory=list)
     children: list["ModuleTreeNode"] = Field(default_factory=list)
 
 

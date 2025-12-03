@@ -350,6 +350,12 @@ def features(
 @click.option("--internal", is_flag=True, help="Include internal/private modules")
 @click.option("--exports", is_flag=True, help="Show exported names (with --tree)")
 @click.option("--deps", is_flag=True, help="Show dependencies (with --tree)")
+@click.option("--entities", is_flag=True, help="Show types/functions under modules")
+@click.option("--depth", type=int, help="Limit tree depth")
+@click.option("--types-only", is_flag=True, help="Only show types (with --entities)")
+@click.option("--functions-only", is_flag=True, help="Only show functions (with --entities)")
+@click.option("--kind", "kind_filter", help="Filter entities by kind (with --entities)")
+@click.option("--stats", is_flag=True, help="Show entity counts per module")
 @click.option(
     "--format",
     "output_format",
@@ -364,6 +370,12 @@ def modules(
     internal: bool,
     exports: bool,
     deps: bool,
+    entities: bool,
+    depth: int | None,
+    types_only: bool,
+    functions_only: bool,
+    kind_filter: str | None,
+    stats: bool,
     output_format: str | None,
 ) -> None:
     """
@@ -378,12 +390,39 @@ def modules(
         libspec modules --tree --exports    # Show exported names
         libspec modules --tree --deps       # Show dependencies
         libspec modules --tree --internal   # Include internal modules
+
+    \b
+    Use --entities to show types/functions under modules:
+        libspec modules --tree --entities   # Show all entities
+        libspec modules --tree --entities --types-only
+        libspec modules --tree --entities --kind protocol
+        libspec modules --tree --depth 2    # Limit depth
+        libspec modules --tree --stats      # Show entity counts
     """
     spec = ctx.get_spec()
 
+    # Validate option combinations
+    if types_only and functions_only:
+        raise click.UsageError("Cannot use both --types-only and --functions-only")
+    if (types_only or functions_only or kind_filter) and not entities:
+        raise click.UsageError("--types-only, --functions-only, and --kind require --entities")
+    if stats and not tree:
+        raise click.UsageError("--stats requires --tree")
+    if depth is not None and not tree:
+        raise click.UsageError("--depth requires --tree")
+
     if tree:
         # Build tree structure
-        tree_root = build_module_tree(spec.modules, include_internal=internal)
+        tree_root = build_module_tree(
+            spec.modules,
+            types=spec.types if entities else None,
+            functions=spec.functions if entities else None,
+            include_internal=internal,
+            max_depth=depth,
+            types_only=types_only,
+            functions_only=functions_only,
+            kind_filter=kind_filter,
+        )
 
         if tree_root is None:
             if ctx.text or output_format == "text":
@@ -402,7 +441,13 @@ def modules(
         effective_format = output_format or ("text" if ctx.text else "json")
 
         if effective_format == "text":
-            output_text_tree(tree_root, show_exports=exports, show_deps=deps)
+            output_text_tree(
+                tree_root,
+                show_exports=exports,
+                show_deps=deps,
+                show_entities=entities,
+                show_stats=stats,
+            )
             return
 
         if effective_format == "dot":

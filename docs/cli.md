@@ -152,6 +152,14 @@ libspec modules --tree --exports    # Show exported names
 libspec modules --tree --deps       # Show dependencies
 libspec modules --tree --internal   # Include internal modules
 
+# Entity view (types/functions under modules)
+libspec modules --tree --entities   # Show all entities
+libspec modules --tree --entities --types-only
+libspec modules --tree --entities --functions-only
+libspec modules --tree --entities --kind protocol
+libspec modules --tree --depth 2    # Limit tree depth
+libspec modules --tree --stats      # Show entity counts
+
 # Tree output formats
 libspec modules --tree --format dot      # Graphviz DOT
 libspec modules --tree --format mermaid  # Mermaid diagram
@@ -163,6 +171,12 @@ libspec modules --tree --format mermaid  # Mermaid diagram
 | `--internal` | Include internal/private modules |
 | `--exports` | Show exported names (with `--tree`) |
 | `--deps` | Show dependencies (with `--tree`) |
+| `--entities` | Show types/functions under modules |
+| `--depth` | Limit tree depth (1 = root + children) |
+| `--types-only` | Only show types (with `--entities`) |
+| `--functions-only` | Only show functions (with `--entities`) |
+| `--kind` | Filter entities by kind (with `--entities`) |
+| `--stats` | Show entity counts per module |
 | `--format` | Output format: `text`, `json`, `dot`, `mermaid` |
 
 #### `libspec principles`

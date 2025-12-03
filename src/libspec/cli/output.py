@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
-from libspec.cli.models.output import ModuleTreeNode, OutputEnvelope, SpecContext
+from libspec.cli.models.output import ModuleEntity, ModuleTreeNode, OutputEnvelope, SpecContext
 from libspec.cli.spec_loader import LoadedSpec
 
 if TYPE_CHECKING:
-    from libspec.models import Module
+    from libspec.models import FunctionDef, Module, TypeDef
 
 
 def make_envelope(
@@ -139,13 +140,25 @@ def output_text_validate(errors: list[str], valid: bool) -> None:
 
 def build_module_tree(
     modules: list[Module],
+    types: list[TypeDef] | None = None,
+    functions: list[FunctionDef] | None = None,
     include_internal: bool = False,
+    max_depth: int | None = None,
+    types_only: bool = False,
+    functions_only: bool = False,
+    kind_filter: str | None = None,
 ) -> ModuleTreeNode | None:
     """Build a tree structure from flat module list.
 
     Args:
         modules: Flat list of Module objects
+        types: Optional list of TypeDef objects to include as entities
+        functions: Optional list of FunctionDef objects to include as entities
         include_internal: Whether to include internal modules
+        max_depth: Maximum tree depth (1 = root only, None = unlimited)
+        types_only: Only include type entities (requires types)
+        functions_only: Only include function entities (requires functions)
+        kind_filter: Filter entities by kind (e.g., "class", "protocol", "decorator")
 
     Returns:
         Root node of the tree, or None if no modules
@@ -168,6 +181,39 @@ def build_module_tree(
 
     # Get root package name (first component of shortest path)
     root_name = paths[0].split(".")[0]
+
+    # Build module -> entities mapping
+    module_entities: dict[str, list[ModuleEntity]] = defaultdict(list)
+    if types or functions:
+        if types and not functions_only:
+            for t in types:
+                if kind_filter and t.kind != kind_filter:
+                    continue
+                # Skip internal module entities unless include_internal
+                if not include_internal and t.module not in module_data:
+                    continue
+                module_entities[t.module].append(ModuleEntity(
+                    name=t.name,
+                    kind=t.kind,
+                    entity_type="type",
+                ))
+
+        if functions and not types_only:
+            for f in functions:
+                if kind_filter and f.kind != kind_filter:
+                    continue
+                # Skip internal module entities unless include_internal
+                if not include_internal and f.module not in module_data:
+                    continue
+                module_entities[f.module].append(ModuleEntity(
+                    name=f.name,
+                    kind=f.kind,
+                    entity_type="function",
+                ))
+
+        # Sort: types first (alpha), then functions (alpha)
+        for entities in module_entities.values():
+            entities.sort(key=lambda e: (e.entity_type != "type", e.name))
 
     # Build tree nodes for all paths
     nodes: dict[str, ModuleTreeNode] = {}
@@ -198,6 +244,7 @@ def build_module_tree(
                 depends_on=mod.depends_on,
                 internal=mod.internal,
                 is_package=True,
+                entities=module_entities.get(path, []),
             )
         else:
             # Placeholder node (intermediate package not in spec)
@@ -205,13 +252,31 @@ def build_module_tree(
                 name=name,
                 path=path,
                 is_package=False,
+                entities=module_entities.get(path, []),
             )
 
         nodes[path] = node
         return node
 
+    # Calculate depth relative to root (depth 1 = root + 1 level of children)
+    root_depth = root_name.count(".")
+
+    def path_depth(path: str) -> int:
+        """Calculate depth of a path relative to root.
+
+        Returns how many levels below root this path is:
+        - root = 0 (always shown)
+        - root.child = 1 (shown at depth >= 1)
+        - root.child.grandchild = 2 (shown at depth >= 2)
+        """
+        return path.count(".") - root_depth
+
     # Create all nodes and build parent-child relationships
     for path in paths:
+        # Apply depth filter
+        if max_depth is not None and path_depth(path) > max_depth:
+            continue
+
         get_or_create_node(path)
 
         # Create intermediate nodes and link to parents
@@ -219,6 +284,10 @@ def build_module_tree(
         for i in range(1, len(parts)):
             parent_path = ".".join(parts[:i])
             child_path = ".".join(parts[: i + 1])
+
+            # Skip creating child if it exceeds max depth
+            if max_depth is not None and path_depth(child_path) > max_depth:
+                continue
 
             parent_node = get_or_create_node(parent_path)
             child_node = get_or_create_node(child_path)
@@ -239,10 +308,39 @@ def build_module_tree(
     return root
 
 
+def _entity_kind_prefix(kind: str) -> str:
+    """Map entity kind to display prefix."""
+    return {
+        "class": "class",
+        "dataclass": "dataclass",
+        "protocol": "protocol",
+        "enum": "enum",
+        "type_alias": "alias",
+        "namedtuple": "namedtuple",
+        "typed_dict": "typeddict",
+        "newtype": "newtype",
+        "literal": "literal",
+        "generic_alias": "generic",
+        "union": "union",
+        "function": "func",
+        "decorator": "decorator",
+        "context_manager": "ctxmgr",
+        "async_context_manager": "actxmgr",
+        "generator": "generator",
+        "async_generator": "agen",
+        "property": "property",
+        "staticmethod": "static",
+        "classmethod": "classmethod",
+        "coroutine": "coro",
+    }.get(kind, kind)
+
+
 def output_text_tree(
     tree: ModuleTreeNode,
     show_exports: bool = False,
     show_deps: bool = False,
+    show_entities: bool = False,
+    show_stats: bool = False,
 ) -> int:
     """Output module tree in ASCII format.
 
@@ -250,6 +348,8 @@ def output_text_tree(
         tree: Root node of the tree
         show_exports: Whether to show export names
         show_deps: Whether to show dependencies
+        show_entities: Whether to show types/functions under modules
+        show_stats: Whether to show entity counts per module
 
     Returns:
         Count of modules displayed
@@ -278,6 +378,18 @@ def output_text_tree(
         if node.internal:
             name_part += " (internal)"
 
+        # Add stats if requested
+        if show_stats and node.entities:
+            type_count = sum(1 for e in node.entities if e.entity_type == "type")
+            func_count = sum(1 for e in node.entities if e.entity_type == "function")
+            parts = []
+            if type_count:
+                parts.append(f"{type_count} types")
+            if func_count:
+                parts.append(f"{func_count} funcs")
+            if parts:
+                name_part += f" [{', '.join(parts)}]"
+
         # Add exports if requested
         if show_exports and node.exports:
             exports_str = ", ".join(node.exports[:5])
@@ -303,6 +415,14 @@ def output_text_tree(
             child_prefix = ""
         else:
             child_prefix = prefix + ("    " if is_last else "│   ")
+
+        # Render entities if requested (before child modules)
+        if show_entities and node.entities:
+            for i, entity in enumerate(node.entities):
+                is_last_entity = (i == len(node.entities) - 1) and not node.children
+                connector = "└── " if is_last_entity else "├── "
+                kind_prefix = _entity_kind_prefix(entity.kind)
+                print(f"{child_prefix}{connector}{kind_prefix} {entity.name}")
 
         for i, child in enumerate(node.children):
             is_last_child = i == len(node.children) - 1
