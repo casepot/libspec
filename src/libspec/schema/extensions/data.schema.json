@@ -14,12 +14,12 @@
       "type": "string"
     },
     "Behavior": {
-      "description": "Type coercion behavior.\n\n- implicit: Automatically convert types\n- explicit: Require explicit cast call\n- error: Raise error on type mismatch\n- warning: Warn but allow conversion",
+      "description": "Type coercion behavior.\n\n- implicit: Automatically convert types\n- explicit: Require explicit cast call\n- error: Raise error on type mismatch\n- warn: Warn but allow conversion",
       "enum": [
         "implicit",
         "explicit",
         "error",
-        "warning"
+        "warn"
       ],
       "title": "Behavior",
       "type": "string"

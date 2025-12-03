@@ -43,6 +43,42 @@ from .types import (
 )
 from .utils import ensure_strict_bool
 
+
+def _compare_versions(v1: str, v2: str) -> int:
+    """Compare two version strings.
+
+    Returns:
+        -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2.
+        Returns 0 if versions cannot be compared (non-standard formats).
+    """
+    # Strip common prefixes like >=, <=, ~=, ==, etc.
+    def normalize(v: str) -> str:
+        return re.sub(r'^[><=~!]+\s*', '', v.strip())
+
+    v1_clean = normalize(v1)
+    v2_clean = normalize(v2)
+
+    try:
+        # Split into numeric parts
+        parts1 = [int(x) for x in re.split(r'[.-]', v1_clean) if x.isdigit()]
+        parts2 = [int(x) for x in re.split(r'[.-]', v2_clean) if x.isdigit()]
+
+        # Pad to same length
+        max_len = max(len(parts1), len(parts2))
+        parts1.extend([0] * (max_len - len(parts1)))
+        parts2.extend([0] * (max_len - len(parts2)))
+
+        for p1, p2 in zip(parts1, parts2):
+            if p1 < p2:
+                return -1
+            if p1 > p2:
+                return 1
+        return 0
+    except (ValueError, AttributeError):
+        # Cannot compare non-standard versions, assume OK
+        return 0
+
+
 # -----------------------------------------------------------------------------
 # Function/Method Components (Leaf Types)
 # -----------------------------------------------------------------------------
@@ -145,7 +181,7 @@ class DeprecationInfo(LibspecModel):
 
     @model_validator(mode="after")
     def validate_deprecation_timeline(self) -> "DeprecationInfo":
-        """Warn if removal is specified without since."""
+        """Warn if removal is specified without since, or if since >= removal."""
         if self.removal is not None and self.since is None:
             warnings.warn(
                 "Deprecation specifies 'removal' version without 'since' version; "
@@ -153,6 +189,15 @@ class DeprecationInfo(LibspecModel):
                 UserWarning,
                 stacklevel=2,
             )
+        # Warn if since >= removal (deprecated version should be before removal)
+        if self.since is not None and self.removal is not None:
+            if _compare_versions(self.since, self.removal) >= 0:
+                warnings.warn(
+                    f"Deprecation 'since' ({self.since}) should be earlier than "
+                    f"'removal' ({self.removal})",
+                    UserWarning,
+                    stacklevel=2,
+                )
         return self
 
 
@@ -182,11 +227,11 @@ class GenericParam(LibspecModel):
     )
     constraints: list[TypeAnnotationStr] = Field(
         default_factory=list,
-        description="Type constraints for TypeVar (e.g., ['int', 'str'] means T can only be int or str)",
+        description="Type constraints for TypeVar (e.g., ['int', 'str'])",
     )
     python_added: PythonVersion | None = Field(
         default=None,
-        description="Python version when this generic construct was introduced (e.g., '3.10' for ParamSpec)",
+        description="Python version when this construct was introduced",
     )
 
     @model_validator(mode="after")
@@ -244,7 +289,7 @@ class Property(ExtensibleModel):
     )
     required: bool | None = Field(
         default=None,
-        description="For TypedDict properties: whether this key is required. None inherits from total.",
+        description="For TypedDict: whether this key is required. None inherits total.",
     )
     python_added: PythonVersion | None = Field(
         default=None,
@@ -651,7 +696,7 @@ class FunctionDef(ExtensibleModel):
         if (self.yields is not None or self.async_yields is not None) and self.returns is not None:
             warnings.warn(
                 f"Generator function '{self.name}' specifies 'returns'; "
-                "generators typically don't need explicit return type (they return generator objects)",
+                "generators typically don't need explicit return type",
                 UserWarning,
                 stacklevel=2,
             )
@@ -673,7 +718,7 @@ class Feature(ExtensibleModel):
     )
     steps: list[NonEmptyStr] = Field(
         default_factory=list,
-        description="Verification/test steps (at least one recommended; enforced by lint rule C001)",
+        description="Verification/test steps (at least one recommended; lint C001)",
     )
     references: list[CrossReference] = Field(
         default_factory=list, description="Related types, functions, or features"
@@ -725,7 +770,8 @@ class Export(LibspecModel):
                 )
             if self.source_name is not None:
                 raise ValueError(
-                    "Exports with origin='reexported' should not have source_name (use 'aliased' for renamed exports)"
+                    "Exports with origin='reexported' should not have source_name "
+                    "(use 'aliased' for renamed exports)"
                 )
         elif self.origin == ExportOrigin.ALIASED:
             if self.source_module is None:
@@ -748,7 +794,7 @@ class Module(LibspecModel):
     )
     exports: list[str | Export] = Field(
         default_factory=list,
-        description="Public names exported by this module (strings for simple names, Export for detailed tracking)",
+        description="Public names exported (strings or Export for detailed tracking)",
     )
     depends_on: list[str] = Field(
         default_factory=list, description="Internal module dependencies"

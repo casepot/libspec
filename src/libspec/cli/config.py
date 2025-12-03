@@ -1,13 +1,14 @@
 """Configuration loading from pyproject.toml."""
 
+import sys
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-try:
+if sys.version_info >= (3, 11):
     import tomllib
-except ImportError:
-    import tomli as tomllib  # type: ignore[import-not-found,no-redef]
+else:
+    import tomli as tomllib  # type: ignore[import-not-found]
 
 
 class LintRuleConfig(BaseModel):
@@ -25,7 +26,7 @@ class LintConfig(BaseModel):
     rules: dict[str, str | LintRuleConfig] = Field(default_factory=dict)
     baseline_python_version: str = Field(
         default="3.8",
-        description="Baseline Python version for V003 rule (features from this version don't trigger warnings)",
+        description="Baseline Python version for V003 rule (features don't warn)",
     )
 
     def get_rule_severity(self, rule_id: str, default: str) -> str:

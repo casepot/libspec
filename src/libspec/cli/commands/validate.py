@@ -7,12 +7,17 @@ import click
 from libspec.cli.app import Context, pass_context
 
 # Import rules to trigger registration via side effect
-from libspec.cli.lint import rules as _rules  # noqa: F401
-
-del _rules  # Not directly used, imported for side effect
+from libspec.cli.lint import rules as _rules  # noqa: F401, E402
 from libspec.cli.lint.base import Severity
 from libspec.cli.lint.runner import LintRunner
-from libspec.cli.output import make_envelope, output_json, output_text_lint, output_text_validate
+from libspec.cli.output import (
+    make_envelope,
+    output_json,
+    output_text_lint,
+    output_text_validate,
+)
+
+del _rules  # Not directly used, imported for side effect
 
 
 @click.command()

@@ -318,7 +318,7 @@
           "description": "Implementation status"
         },
         "steps": {
-          "description": "Verification/test steps (at least one recommended; enforced by lint rule C001)",
+          "description": "Verification/test steps (at least one recommended; lint C001)",
           "items": {
             "minLength": 1,
             "type": "string"
@@ -635,7 +635,7 @@
           "title": "Bound"
         },
         "constraints": {
-          "description": "Type constraints for TypeVar (e.g., ['int', 'str'] means T can only be int or str)",
+          "description": "Type constraints for TypeVar (e.g., ['int', 'str'])",
           "items": {
             "minLength": 1,
             "type": "string"
@@ -680,7 +680,7 @@
             }
           ],
           "default": null,
-          "description": "Python version when this generic construct was introduced (e.g., '3.10' for ParamSpec)",
+          "description": "Python version when this construct was introduced",
           "title": "Python Added"
         },
         "variance": {
@@ -1057,7 +1057,7 @@
           "title": "Description"
         },
         "exports": {
-          "description": "Public names exported by this module (strings for simple names, Export for detailed tracking)",
+          "description": "Public names exported (strings or Export for detailed tracking)",
           "items": {
             "anyOf": [
               {
@@ -1386,7 +1386,7 @@
             }
           ],
           "default": null,
-          "description": "For TypedDict properties: whether this key is required. None inherits from total.",
+          "description": "For TypedDict: whether this key is required. None inherits total.",
           "title": "Required"
         },
         "type": {

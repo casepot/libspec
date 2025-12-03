@@ -278,19 +278,6 @@ class GenericVariance(str, Enum):
     CONTRAVARIANT = "contravariant"
 
 
-class BehaviorMode(str, Enum):
-    """Mode for handling implicit/explicit behaviors.
-
-    Common pattern used across extensions for specifying how the library
-    handles automatic vs manual operations (e.g., type coercion, validation).
-    """
-
-    IMPLICIT = "implicit"  # Automatically applied
-    EXPLICIT = "explicit"  # Must be explicitly requested
-    ERROR = "error"  # Raise an error
-    WARN = "warn"  # Log a warning but continue
-
-
 class ExtensionName(str, Enum):
     """Available extension names."""
 

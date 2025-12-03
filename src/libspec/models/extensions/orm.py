@@ -83,6 +83,8 @@ class ColumnSpec(ExtensionModel):
     @model_validator(mode='after')
     def validate_column_constraints(self) -> 'ColumnSpec':
         """Validate column constraint consistency."""
+        import warnings
+
         # Primary keys cannot also be foreign keys (in the same column definition)
         if self.primary_key and self.foreign_key:
             raise ValueError(
@@ -103,6 +105,14 @@ class ColumnSpec(ExtensionModel):
         if self.default is not None and self.server_default is not None:
             raise ValueError(
                 f"Column {self.name!r} cannot specify both 'default' and 'server_default'"
+            )
+        # auto_increment typically implies primary_key
+        if self.auto_increment is True and self.primary_key is not True:
+            warnings.warn(
+                f"Column {self.name!r} has auto_increment=True but primary_key is not True; "
+                "auto_increment typically implies primary key",
+                UserWarning,
+                stacklevel=2,
             )
         return self
 
@@ -165,10 +175,26 @@ class RelationshipSpec(ExtensionModel):
     @model_validator(mode='after')
     def validate_relationship_config(self) -> 'RelationshipSpec':
         """Validate relationship configuration consistency."""
+        import warnings
+
         if self.secondary is not None and self.type != RelationshipType.many_to_many:
             raise ValueError(
                 f"Relationship '{self.name}' has 'secondary' table but type is "
                 f"'{self.type.value}'; secondary only applies to many_to_many"
+            )
+        # lazy='dynamic' requires uselist=True (returns query object, not single item)
+        if self.lazy == Lazy.dynamic and self.uselist is False:
+            raise ValueError(
+                f"Relationship '{self.name}' has lazy='dynamic' which requires uselist=True; "
+                "dynamic returns a query object, not a single item"
+            )
+        # many_to_one should specify foreign_keys for clarity
+        if self.type == RelationshipType.many_to_one and not self.foreign_keys:
+            warnings.warn(
+                f"Relationship '{self.name}' is many_to_one but does not specify foreign_keys; "
+                "consider explicitly specifying the foreign key columns",
+                UserWarning,
+                stacklevel=2,
             )
         return self
 

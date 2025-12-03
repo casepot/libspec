@@ -53,7 +53,8 @@ def validate_local_path(value: str, info: ValidationInfo, field: str) -> str:
     if not in_strict_mode(info):
         return value
 
-    base_dir = Path(info.context.get(SPEC_DIR_CONTEXT_KEY, Path.cwd())) if info.context else Path.cwd()
+    ctx_dir = info.context.get(SPEC_DIR_CONTEXT_KEY, Path.cwd()) if info.context else Path.cwd()
+    base_dir = Path(ctx_dir)
     candidate = Path(value)
     probe = candidate if candidate.is_absolute() else base_dir / candidate
 

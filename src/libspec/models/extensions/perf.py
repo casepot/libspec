@@ -19,7 +19,7 @@ from libspec.models.types import ComplexityNotation
 
 
 class ComplexitySpec(ExtensionModel):
-    time: ComplexityNotation | None = Field(None, description="Time complexity (e.g., 'O(n log n)')")
+    time: ComplexityNotation | None = Field(None, description="Time complexity, e.g. 'O(n log n)'")
     space: ComplexityNotation | None = Field(None, description="Space complexity (e.g., 'O(n)')")
     best_case: ComplexityNotation | None = Field(None, description='Best-case time complexity')
     worst_case: ComplexityNotation | None = Field(None, description='Worst-case time complexity')

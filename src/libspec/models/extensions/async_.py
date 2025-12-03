@@ -41,6 +41,19 @@ class CancellationSpec(ExtensionModel):
         True, description='Whether cancellation propagates to children'
     )
 
+    @model_validator(mode='after')
+    def validate_propagates_with_mode(self) -> 'CancellationSpec':
+        """Warn if propagates is set when cancellation mode is 'none'."""
+        import warnings
+
+        if self.mode == CancellationMode.none and self.propagates is True:
+            warnings.warn(
+                "propagates has no effect when cancellation mode is 'none'",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self
+
 
 class AsyncStateSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='State name')
@@ -230,6 +243,16 @@ class SchedulingSpec(ExtensionModel):
     timeout: Annotated[float, Field(ge=0.0)] | None = Field(
         default=None, description='Default timeout in seconds'
     )
+
+    @model_validator(mode='after')
+    def validate_realtime_preemptible(self) -> 'SchedulingSpec':
+        """Validate realtime priority is not preemptible."""
+        if self.priority == Priority.realtime and self.preemptible is True:
+            raise ValueError(
+                "realtime priority is incompatible with preemptible=True; "
+                "realtime tasks should not be interrupted"
+            )
+        return self
 
 
 class AsyncMethodFields(ExtensionModel):

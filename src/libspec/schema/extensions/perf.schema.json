@@ -239,7 +239,7 @@
             }
           ],
           "default": null,
-          "description": "Time complexity (e.g., 'O(n log n)')",
+          "description": "Time complexity, e.g. 'O(n log n)'",
           "title": "Time"
         },
         "worst_case": {

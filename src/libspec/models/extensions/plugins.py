@@ -9,7 +9,6 @@ This module defines models for plugin system specifications:
 from __future__ import annotations
 
 from enum import Enum
-
 from typing import Annotated
 
 from pydantic import Field, model_validator

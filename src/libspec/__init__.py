@@ -119,7 +119,8 @@ def get_core_schema() -> dict[str, Any]:
 
     schema_path = get_schema_path("core.schema.json")
     with open(schema_path) as f:
-        return json.load(f)
+        result: dict[str, Any] = json.load(f)
+        return result
 
 
 def get_extension_schema(extension_name: str) -> dict[str, Any]:
@@ -146,7 +147,8 @@ def get_extension_schema(extension_name: str) -> dict[str, Any]:
 
     schema_path = get_schema_path(f"extensions/{extension_name}.schema.json")
     with open(schema_path) as f:
-        return json.load(f)
+        result: dict[str, Any] = json.load(f)
+        return result
 
 
 def merge_schemas(

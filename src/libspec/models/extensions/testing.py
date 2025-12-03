@@ -16,7 +16,13 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import FunctionReference, LocalPath, MethodName, NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import (
+    FunctionReference,
+    LocalPath,
+    MethodName,
+    NonEmptyStr,
+    TypeAnnotationStr,
+)
 
 # -----------------------------------------------------------------------------
 # Enums
@@ -192,11 +198,16 @@ class FactoryFieldSpec(ExtensionModel):
     subfactory: str | None = Field(default=None, description="Subfactory reference")
 
     @model_validator(mode='after')
-    def validate_faker_sequence_exclusivity(self) -> 'FactoryFieldSpec':
-        """Validate faker and sequence are mutually exclusive."""
+    def validate_field_exclusivity(self) -> 'FactoryFieldSpec':
+        """Validate mutually exclusive field combinations."""
         if self.faker is not None and self.sequence is True:
             raise ValueError(
                 f"Field '{self.name}' cannot use both 'faker' and 'sequence'"
+            )
+        if self.subfactory is not None and self.default is not None:
+            raise ValueError(
+                f"Field '{self.name}' cannot use both 'subfactory' and 'default'; "
+                "use subfactory for related models or default for static values"
             )
         return self
 
@@ -401,6 +412,18 @@ class ParametrizeSpec(ExtensionModel):
     ids: str | None = Field(default=None, description="How test IDs are generated")
     example: str | None = Field(default=None, description="Example usage")
     description: str | None = Field(default=None, description="When to use this pattern")
+
+    @model_validator(mode='after')
+    def validate_indirect_params_exist(self) -> 'ParametrizeSpec':
+        """Validate indirect params reference valid parameter names."""
+        if self.indirect:
+            invalid = set(self.indirect) - set(self.params)
+            if invalid:
+                raise ValueError(
+                    f"ParametrizeSpec '{self.name}' has indirect params not in params list: "
+                    f"{sorted(invalid)}"
+                )
+        return self
 
 
 # -----------------------------------------------------------------------------

@@ -27,10 +27,10 @@ from libspec.models import (
     FeatureStatus,
     FunctionDef,
     FunctionKind,
-    LifecycleFields,
-    LifecycleLibraryFields,
     Library,
     LibspecSpec,
+    LifecycleFields,
+    LifecycleLibraryFields,
     Module,
     ObservabilityLibraryFields,
     ORMLibraryFields,
@@ -293,7 +293,9 @@ def _iter_methods(type_def: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
-def _ensure_strict_paths(library: dict[str, Any], declared: set[str], context: dict[str, Any]) -> None:
+def _ensure_strict_paths(
+    library: dict[str, Any], declared: set[str], context: dict[str, Any]
+) -> None:
     """In strict mode, enforce that selected path fields reference real files/directories."""
 
     if not context.get(STRICT_CONTEXT_KEY):
@@ -305,7 +307,9 @@ def _ensure_strict_paths(library: dict[str, Any], declared: set[str], context: d
         candidate = Path(path_value)
         probe = candidate if candidate.is_absolute() else base_dir / candidate
         if not probe.exists():
-            raise SpecLoadError(f"{field} must reference an existing file or directory: {path_value}")
+            raise SpecLoadError(
+                f"{field} must reference an existing file or directory: {path_value}"
+            )
 
     if "testing" in declared:
         coverage = library.get("coverage", {}) or {}
@@ -380,7 +384,9 @@ def _enforce_strict_scalars(payload: Any) -> None:
     _walk(payload)
 
 
-def _validate_extension_payloads(data: dict[str, Any], declared: set[str], context: dict[str, Any]) -> None:
+def _validate_extension_payloads(
+    data: dict[str, Any], declared: set[str], context: dict[str, Any]
+) -> None:
     """Run extension-level validation for declared extensions in strict mode."""
 
     if not declared:

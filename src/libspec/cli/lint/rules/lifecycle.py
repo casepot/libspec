@@ -20,7 +20,7 @@ def get_workflow_for_entity(
         return None
     for w in spec.get("library", {}).get("workflows", []):
         if w.get("name") == workflow_name:
-            return w
+            return dict(w)
     return None
 
 

@@ -71,7 +71,7 @@ pass_context = click.make_pass_decorator(Context)
 @click.option(
     "--strict-models/--no-strict-models",
     default=None,
-    help="Enable strict Pydantic parsing (no coercion, extra fields rejected when extensions absent)",
+    help="Enable strict Pydantic parsing (no coercion, extra fields rejected)",
 )
 @click.version_option(version="0.1.0", prog_name="libspec")
 @click.pass_context
@@ -110,22 +110,22 @@ def cli(
 # Import and register command groups (must be after cli definition to avoid circular imports)
 from libspec.cli.commands import analyze, inspect, lifecycle, query, validate  # noqa: E402
 
-cli.add_command(inspect.info)
-cli.add_command(inspect.types)
-cli.add_command(inspect.functions)
-cli.add_command(inspect.features)
-cli.add_command(inspect.modules)
-cli.add_command(inspect.principles)
+cli.add_command(inspect.info)  # type: ignore[has-type]
+cli.add_command(inspect.types)  # type: ignore[has-type]
+cli.add_command(inspect.functions)  # type: ignore[has-type]
+cli.add_command(inspect.features)  # type: ignore[has-type]
+cli.add_command(inspect.modules)  # type: ignore[has-type]
+cli.add_command(inspect.principles)  # type: ignore[has-type]
 
-cli.add_command(query.query)
-cli.add_command(query.refs)
-cli.add_command(query.search)
+cli.add_command(query.query)  # type: ignore[has-type]
+cli.add_command(query.refs)  # type: ignore[has-type]
+cli.add_command(query.search)  # type: ignore[has-type]
 
-cli.add_command(validate.validate)
-cli.add_command(validate.lint)
+cli.add_command(validate.validate)  # type: ignore[has-type]
+cli.add_command(validate.lint)  # type: ignore[has-type]
 
-cli.add_command(analyze.coverage)
-cli.add_command(analyze.deps)
-cli.add_command(analyze.surface)
+cli.add_command(analyze.coverage)  # type: ignore[has-type]
+cli.add_command(analyze.deps)  # type: ignore[has-type]
+cli.add_command(analyze.surface)  # type: ignore[has-type]
 
-cli.add_command(lifecycle.lifecycle)
+cli.add_command(lifecycle.lifecycle)  # type: ignore[has-type]

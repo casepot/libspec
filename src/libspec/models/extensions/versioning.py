@@ -8,12 +8,49 @@ This module defines models for API versioning and deprecation:
 
 from __future__ import annotations
 
+import re
+import warnings
 from enum import Enum
 
-from pydantic import Field, HttpUrl
+from pydantic import Field, HttpUrl, model_validator
 
 from libspec.models.base import ExtensionModel
 from libspec.models.types import CrossReference, VersionConstraintStr
+
+
+def _compare_versions(v1: str, v2: str) -> int:
+    """Compare two version strings.
+
+    Returns:
+        -1 if v1 < v2, 0 if v1 == v2, 1 if v1 > v2.
+        Returns 0 if versions cannot be compared (non-standard formats).
+    """
+    # Strip common prefixes like >=, <=, ~=, ==, etc.
+    def normalize(v: str) -> str:
+        return re.sub(r'^[><=~!]+\\s*', '', v.strip())
+
+    v1_clean = normalize(v1)
+    v2_clean = normalize(v2)
+
+    try:
+        # Split into numeric parts
+        parts1 = [int(x) for x in re.split(r'[.-]', v1_clean) if x.isdigit()]
+        parts2 = [int(x) for x in re.split(r'[.-]', v2_clean) if x.isdigit()]
+
+        # Pad to same length
+        max_len = max(len(parts1), len(parts2))
+        parts1.extend([0] * (max_len - len(parts1)))
+        parts2.extend([0] * (max_len - len(parts2)))
+
+        for p1, p2 in zip(parts1, parts2):
+            if p1 < p2:
+                return -1
+            if p1 > p2:
+                return 1
+        return 0
+    except (ValueError, AttributeError):
+        # Cannot compare non-standard versions, assume OK
+        return 0
 
 
 class Stability(str, Enum):
@@ -45,6 +82,27 @@ class VersioningTypeFields(ExtensionModel):
     )
     stability: Stability | None = None
 
+    @model_validator(mode='after')
+    def validate_version_ordering(self) -> 'VersioningTypeFields':
+        """Validate version ordering: since < deprecated_since < removed_in."""
+        if self.since is not None and self.deprecated_since is not None:
+            if _compare_versions(self.since, self.deprecated_since) >= 0:
+                warnings.warn(
+                    f"'since' ({self.since}) should be earlier than "
+                    f"'deprecated_since' ({self.deprecated_since})",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        if self.deprecated_since is not None and self.removed_in is not None:
+            if _compare_versions(self.deprecated_since, self.removed_in) >= 0:
+                warnings.warn(
+                    f"'deprecated_since' ({self.deprecated_since}) should be earlier than "
+                    f"'removed_in' ({self.removed_in})",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        return self
+
 
 class VersioningMethodFields(ExtensionModel):
     since: VersionConstraintStr | None = Field(
@@ -57,6 +115,27 @@ class VersioningMethodFields(ExtensionModel):
         None, description='Version when this method will be/was removed'
     )
     stability: Stability | None = None
+
+    @model_validator(mode='after')
+    def validate_version_ordering(self) -> 'VersioningMethodFields':
+        """Validate version ordering: since < deprecated_since < removed_in."""
+        if self.since is not None and self.deprecated_since is not None:
+            if _compare_versions(self.since, self.deprecated_since) >= 0:
+                warnings.warn(
+                    f"'since' ({self.since}) should be earlier than "
+                    f"'deprecated_since' ({self.deprecated_since})",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        if self.deprecated_since is not None and self.removed_in is not None:
+            if _compare_versions(self.deprecated_since, self.removed_in) >= 0:
+                warnings.warn(
+                    f"'deprecated_since' ({self.deprecated_since}) should be earlier than "
+                    f"'removed_in' ({self.removed_in})",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        return self
 
 
 class DeprecationSpec(ExtensionModel):
@@ -72,6 +151,19 @@ class DeprecationSpec(ExtensionModel):
     )
     migration: str | None = Field(None, description='Migration instructions')
     reason: str | None = Field(None, description='Why this was deprecated')
+
+    @model_validator(mode='after')
+    def validate_version_ordering(self) -> 'DeprecationSpec':
+        """Validate since < removed_in."""
+        if self.removed_in is not None:
+            if _compare_versions(self.since, self.removed_in) >= 0:
+                warnings.warn(
+                    f"'since' ({self.since}) should be earlier than "
+                    f"'removed_in' ({self.removed_in})",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        return self
 
 
 class BreakingChangeSpec(ExtensionModel):

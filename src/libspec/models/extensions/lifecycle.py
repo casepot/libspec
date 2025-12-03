@@ -13,7 +13,6 @@ from datetime import date as date_type
 from typing import Annotated, Literal, Union
 
 from pydantic import (
-    AnyUrl,
     Field,
     HttpUrl,
     NonNegativeInt,
@@ -130,7 +129,8 @@ class DeprecationNoticeEvidence(EvidenceBase):
 
     type: Literal["deprecation_notice"]
     reference: NonEmptyStr
-    date: date_type = Field(..., description="Date of the deprecation notice")  # Required for deprecation notices
+    # Required for deprecation notices (intentionally narrows base class optional to required)
+    date: date_type = Field(..., description="Date of the deprecation notice")  # pyright: ignore[reportIncompatibleVariableOverride,reportGeneralTypeIssues]
 
 
 class CustomEvidence(EvidenceBase):

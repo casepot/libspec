@@ -104,7 +104,9 @@ class Color(str, Enum):
 
 
 class HelpFormattingSpec(ExtensionModel):
-    max_width: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Maximum help text width')
+    max_width: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Maximum help text width'
+    )
     show_default: bool | None = Field(
         None, description='Show defaults in help by default'
     )

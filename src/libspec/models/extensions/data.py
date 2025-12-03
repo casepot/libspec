@@ -81,13 +81,13 @@ class Behavior(str, Enum):
     - implicit: Automatically convert types
     - explicit: Require explicit cast call
     - error: Raise error on type mismatch
-    - warning: Warn but allow conversion
+    - warn: Warn but allow conversion
     """
 
     implicit = 'implicit'
     explicit = 'explicit'
     error = 'error'
-    warning = 'warning'
+    warn = 'warn'
 
 
 class CoercionRule(ExtensionModel):
@@ -243,6 +243,17 @@ class EvaluationStrategySpec(ExtensionModel):
         None, description='Whether query optimization is performed'
     )
     explain_method: MethodName | None = Field(None, description='Method to explain query plan')
+
+    @model_validator(mode='after')
+    def validate_lazy_eager_disjoint(self) -> 'EvaluationStrategySpec':
+        """Validate lazy_operations and eager_triggers are disjoint."""
+        if self.lazy_operations and self.eager_triggers:
+            overlap = set(self.lazy_operations) & set(self.eager_triggers)
+            if overlap:
+                raise ValueError(
+                    f"Operations cannot be both lazy and eager triggers: {sorted(overlap)}"
+                )
+        return self
 
 
 class Layout(str, Enum):

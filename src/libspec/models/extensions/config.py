@@ -14,7 +14,14 @@ from typing import Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import CliFlag, EnvVarName, EnvVarPrefix, LocalPath, NonEmptyStr, ShortFlag
+from libspec.models.types import (
+    CliFlag,
+    EnvVarName,
+    EnvVarPrefix,
+    LocalPath,
+    NonEmptyStr,
+    ShortFlag,
+)
 
 
 class SettingSpec(ExtensionModel):
