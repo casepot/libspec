@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from typing import Any, Literal
 
-from pydantic import AnyUrl, Field, ValidationInfo, field_validator, model_validator
+from pydantic import AnyUrl, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 from typing_extensions import Self
 
 from .base import ExtensibleModel, LibspecModel
@@ -102,6 +102,10 @@ class YieldSpec(LibspecModel):
     type: NonEmptyStr = Field(description="Yielded type annotation")
     description: str | None = Field(
         default=None, description="What each yielded value represents"
+    )
+    python_added: PythonVersion | None = Field(
+        default=None,
+        description="Python version when this yield type construct was introduced",
     )
 
 
@@ -201,6 +205,10 @@ class Property(ExtensibleModel):
     readonly: bool = Field(
         default=False, description="Whether this is a read-only property"
     )
+    readonly_marker: bool | None = Field(
+        default=None,
+        description="For TypedDict: whether this uses PEP 705 ReadOnly[T] marker (Python 3.13+)",
+    )
     default: str | None = Field(
         default=None, description="Default value (as a string representation)"
     )
@@ -219,6 +227,15 @@ class Property(ExtensibleModel):
         default=None,
         description="Python version required for this property's type annotation",
     )
+
+    @model_validator(mode="after")
+    def validate_readonly_marker(self) -> Self:
+        """Validate that readonly_marker=True requires readonly=True."""
+        if self.readonly_marker is True and not self.readonly:
+            raise ValueError(
+                f"Property '{self.name}': readonly_marker=True requires readonly=True"
+            )
+        return self
 
 
 class EnumValue(LibspecModel):
@@ -426,6 +443,27 @@ class TypeDef(ExtensibleModel):
             if self.typed_dict_closed is not None:
                 raise ValueError(
                     f"'{self.name}': typed_dict_closed is only valid for TypedDict types"
+                )
+
+        # NewType must have type_target (the wrapped type)
+        if self.kind == TypeKind.NEWTYPE:
+            if not self.type_target:
+                raise ValueError(
+                    f"NewType '{self.name}' must specify type_target (the wrapped type)"
+                )
+
+        # Literal types cannot have methods or properties (they're value types)
+        if self.kind == TypeKind.LITERAL:
+            if self.methods or self.properties:
+                raise ValueError(
+                    f"Literal type '{self.name}' cannot have methods or properties"
+                )
+
+        # GenericAlias must have type_target (the aliased generic type)
+        if self.kind == TypeKind.GENERIC_ALIAS:
+            if not self.type_target:
+                raise ValueError(
+                    f"GenericAlias '{self.name}' must specify type_target (the aliased type)"
                 )
 
         return self
@@ -715,10 +753,17 @@ class LibspecSpec(LibspecModel):
     )
     library: Library = Field(description="The library specification")
 
-    model_config = LibspecModel.model_config.copy()
-    model_config["json_schema_extra"] = {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "https://libspec.dev/schema/core.schema.json",
-        "title": "LibSpec Core Schema",
-        "description": "Schema for library specification documents",
-    }
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True,
+        validate_default=True,
+        validate_assignment=True,
+        use_enum_values=True,
+        populate_by_name=True,
+        json_schema_extra={
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://libspec.dev/schema/core.schema.json",
+            "title": "LibSpec Core Schema",
+            "description": "Schema for library specification documents",
+        },
+    )
