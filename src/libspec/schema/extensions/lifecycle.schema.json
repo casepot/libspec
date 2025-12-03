@@ -227,6 +227,7 @@
       "description": "Deprecation notice evidence - requires date.",
       "properties": {
         "date": {
+          "description": "Date of the deprecation notice",
           "format": "date",
           "title": "Date",
           "type": "string"

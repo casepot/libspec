@@ -112,6 +112,127 @@
       "title": "AsyncMethodFields",
       "type": "object"
     },
+    "AsyncStateSpec": {
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this state represents",
+          "title": "Description"
+        },
+        "name": {
+          "description": "State name",
+          "title": "Name",
+          "type": "string"
+        },
+        "on_enter": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action to run on entering this state",
+          "title": "On Enter"
+        },
+        "on_exit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Action to run on exiting this state",
+          "title": "On Exit"
+        },
+        "terminal": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "description": "Whether this is a terminal state",
+          "title": "Terminal"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "AsyncStateSpec",
+      "type": "object"
+    },
+    "AsyncTransitionSpec": {
+      "properties": {
+        "from": {
+          "description": "Source state name",
+          "title": "From",
+          "type": "string"
+        },
+        "guard": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Condition that must be true for transition",
+          "title": "Guard"
+        },
+        "side_effects": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Side effects of this transition",
+          "title": "Side Effects"
+        },
+        "to": {
+          "description": "Target state name",
+          "title": "To",
+          "type": "string"
+        },
+        "trigger": {
+          "description": "What causes this transition (method call, event, etc.)",
+          "title": "Trigger",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "trigger"
+      ],
+      "title": "AsyncTransitionSpec",
+      "type": "object"
+    },
     "AsyncTypeFields": {
       "properties": {
         "lifecycle": {
@@ -252,7 +373,7 @@
           "anyOf": [
             {
               "items": {
-                "$ref": "#/$defs/StateSpec"
+                "$ref": "#/$defs/AsyncStateSpec"
               },
               "type": "array"
             },
@@ -268,7 +389,7 @@
           "anyOf": [
             {
               "items": {
-                "$ref": "#/$defs/TransitionSpec"
+                "$ref": "#/$defs/AsyncTransitionSpec"
               },
               "type": "array"
             },
@@ -455,72 +576,6 @@
       "title": "Semantics",
       "type": "string"
     },
-    "StateSpec": {
-      "properties": {
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "What this state represents",
-          "title": "Description"
-        },
-        "name": {
-          "description": "State name",
-          "title": "Name",
-          "type": "string"
-        },
-        "on_enter": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Action to run on entering this state",
-          "title": "On Enter"
-        },
-        "on_exit": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Action to run on exiting this state",
-          "title": "On Exit"
-        },
-        "terminal": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": false,
-          "description": "Whether this is a terminal state",
-          "title": "Terminal"
-        }
-      },
-      "required": [
-        "name"
-      ],
-      "title": "StateSpec",
-      "type": "object"
-    },
     "SyncBackpressure": {
       "enum": [
         "block",
@@ -597,61 +652,6 @@
         }
       },
       "title": "SyncSpec",
-      "type": "object"
-    },
-    "TransitionSpec": {
-      "properties": {
-        "from": {
-          "description": "Source state name",
-          "title": "From",
-          "type": "string"
-        },
-        "guard": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Condition that must be true for transition",
-          "title": "Guard"
-        },
-        "side_effects": {
-          "anyOf": [
-            {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Side effects of this transition",
-          "title": "Side Effects"
-        },
-        "to": {
-          "description": "Target state name",
-          "title": "To",
-          "type": "string"
-        },
-        "trigger": {
-          "description": "What causes this transition (method call, event, etc.)",
-          "title": "Trigger",
-          "type": "string"
-        }
-      },
-      "required": [
-        "from",
-        "to",
-        "trigger"
-      ],
-      "title": "TransitionSpec",
       "type": "object"
     }
   },

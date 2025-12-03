@@ -45,6 +45,10 @@
         "mean": {
           "anyOf": [
             {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
               "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             },
@@ -59,6 +63,10 @@
         "median": {
           "anyOf": [
             {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
               "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             },
@@ -72,6 +80,10 @@
         },
         "memory_peak": {
           "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
             {
               "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
@@ -100,6 +112,10 @@
         "p95": {
           "anyOf": [
             {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
               "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             },
@@ -114,6 +130,10 @@
         "p99": {
           "anyOf": [
             {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
               "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"
             },
@@ -127,6 +147,10 @@
         },
         "throughput": {
           "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
             {
               "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
               "type": "string"

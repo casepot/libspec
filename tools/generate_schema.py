@@ -1,8 +1,9 @@
 """Generate JSON Schemas from Pydantic models.
 
 Usage:
-    uv run python tools/generate_schema.py          # regenerate all schemas
-    uv run python tools/generate_schema.py --check  # fail if drift detected
+    uv run python tools/generate_schema.py            # regenerate all schemas
+    uv run python tools/generate_schema.py --check    # fail if drift detected
+    uv run python tools/generate_schema.py --verbose  # show status of each schema
 
 This generates:
 - core.schema.json from LibspecSpec model
@@ -178,7 +179,7 @@ EXTENSIONS: dict[str, tuple[str, str, list[type]]] = {
 
 def generate_core_schema() -> dict[str, Any]:
     """Return the JSON Schema derived from the core models."""
-    return LibspecSpec.model_json_schema(by_alias=True)
+    return LibspecSpec.model_json_schema(by_alias=True, mode="validation")
 
 
 def generate_extension_schema(
@@ -201,7 +202,7 @@ def generate_extension_schema(
     for model in models:
         # Generate schema for this model
         adapter = TypeAdapter(model)
-        schema = adapter.json_schema(by_alias=True, mode="serialization")
+        schema = adapter.json_schema(by_alias=True, mode="validation")
 
         # Extract $defs if present
         if "$defs" in schema:
@@ -238,35 +239,50 @@ def check_schema(path: Path, schema: dict[str, Any]) -> bool:
 
 def main(argv: list[str]) -> int:
     check = "--check" in argv
+    verbose = "--verbose" in argv or "-v" in argv
     errors: list[str] = []
 
     # Generate core schema
     core_schema = generate_core_schema()
     if check:
-        if not check_schema(CORE_SCHEMA_PATH, core_schema):
+        is_ok = check_schema(CORE_SCHEMA_PATH, core_schema)
+        if verbose:
+            status = "✓ up-to-date" if is_ok else "✗ drift detected"
+            print(f"  core.schema.json: {status}")
+        if not is_ok:
             errors.append("core.schema.json")
     else:
         write_schema(CORE_SCHEMA_PATH, core_schema)
+        if verbose:
+            print(f"  core.schema.json: ✓ written")
 
     # Generate extension schemas
-    for ext_name, (title, description, models) in EXTENSIONS.items():
+    for ext_name, (title, description, models) in sorted(EXTENSIONS.items()):
         ext_schema = generate_extension_schema(ext_name, title, description, models)
         ext_path = EXTENSIONS_DIR / f"{ext_name}.schema.json"
 
         if check:
-            if not check_schema(ext_path, ext_schema):
+            is_ok = check_schema(ext_path, ext_schema)
+            if verbose:
+                status = "✓ up-to-date" if is_ok else "✗ drift detected"
+                print(f"  extensions/{ext_name}.schema.json: {status}")
+            if not is_ok:
                 errors.append(f"extensions/{ext_name}.schema.json")
         else:
             write_schema(ext_path, ext_schema)
+            if verbose:
+                print(f"  extensions/{ext_name}.schema.json: ✓ written")
 
     if errors:
         sys.stderr.write(
-            f"The following schemas are out of date: {', '.join(errors)}\n"
+            f"\nThe following schemas are out of date: {', '.join(errors)}\n"
             "Run `uv run python tools/generate_schema.py` to update.\n"
         )
         return 1
 
-    if not check:
+    if check and verbose:
+        print(f"\nAll {1 + len(EXTENSIONS)} schemas are up-to-date.")
+    elif not check:
         print(f"Generated core.schema.json and {len(EXTENSIONS)} extension schemas.")
 
     return 0

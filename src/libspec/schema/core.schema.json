@@ -16,7 +16,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -524,7 +524,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -659,7 +659,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -944,7 +944,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -1110,7 +1110,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -1191,7 +1191,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -1328,7 +1328,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -1344,6 +1344,19 @@
           "description": "Whether this is a read-only property",
           "title": "Readonly",
           "type": "boolean"
+        },
+        "readonly_marker": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For TypedDict: whether this uses PEP 705 ReadOnly[T] marker (Python 3.13+)",
+          "title": "Readonly Marker"
         },
         "required": {
           "anyOf": [
@@ -1399,7 +1412,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -1488,7 +1501,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -1623,7 +1636,7 @@
           "anyOf": [
             {
               "minLength": 3,
-              "pattern": "^3\\.(8|9|10|11|12|13|14)(\\+)?$",
+              "pattern": "^3\\.\\d+(\\+)?$",
               "type": "string"
             },
             {
@@ -1715,7 +1728,10 @@
         "enum",
         "type_alias",
         "namedtuple",
-        "typed_dict"
+        "typed_dict",
+        "newtype",
+        "literal",
+        "generic_alias"
       ],
       "title": "TypeKind",
       "type": "string"
@@ -1747,6 +1763,21 @@
           "default": null,
           "description": "What each yielded value represents",
           "title": "Description"
+        },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.\\d+(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this yield type construct was introduced",
+          "title": "Python Added"
         },
         "type": {
           "description": "Yielded type annotation",
