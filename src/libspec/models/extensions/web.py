@@ -8,10 +8,11 @@ This module defines models for web framework specifications:
 
 from __future__ import annotations
 
+import re
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import Field, conint
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 
@@ -34,15 +35,15 @@ class Auth(Enum):
 
 
 class PathParamSpec(ExtensionModel):
-    name: str = Field(..., description='Parameter name in path')
-    type: str = Field(..., description='Parameter type')
+    name: str = Field(default=..., description='Parameter name in path')
+    type: str = Field(default=..., description='Parameter type')
     description: str | None = None
     pattern: str | None = Field(None, description='Regex pattern for validation')
 
 
 class QueryParamSpec(ExtensionModel):
-    name: str = Field(..., description='Query parameter name')
-    type: str = Field(..., description='Parameter type')
+    name: str = Field(default=..., description='Query parameter name')
+    type: str = Field(default=..., description='Parameter type')
     required: bool | None = False
     default: str | None = Field(None, description='Default value')
     description: str | None = None
@@ -50,7 +51,7 @@ class QueryParamSpec(ExtensionModel):
 
 
 class HeaderSpec(ExtensionModel):
-    name: str = Field(..., description='Header name')
+    name: str = Field(default=..., description='Header name')
     type: str | None = Field(None, description='Value type')
     required: bool | None = False
     description: str | None = None
@@ -67,7 +68,7 @@ class RequestBodySpec(ExtensionModel):
 
 class ResponseSpec(ExtensionModel):
     type: str | None = Field(None, description='Response model type')
-    status: conint(ge=100, le=599) | None = Field(200, description='HTTP status code')
+    status: Annotated[int, Field(ge=100, le=599)] | None = Field(default=200, description='HTTP status code')
     content_type: str | None = Field(
         'application/json', description='Response content type'
     )
@@ -76,7 +77,7 @@ class ResponseSpec(ExtensionModel):
 
 
 class ErrorResponseSpec(ExtensionModel):
-    status: conint(ge=100, le=599) = Field(..., description='HTTP status code')
+    status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
     type: str | None = Field(None, description='Error response model type')
     exception: str | None = Field(
         None, description='Exception type that triggers this response'
@@ -98,10 +99,10 @@ class Position(Enum):
 
 
 class MiddlewareSpec(ExtensionModel):
-    name: str = Field(..., description='Middleware name')
+    name: str = Field(default=..., description='Middleware name')
     type: str | None = Field(None, description='Middleware class/function reference')
-    order: conint(ge=0) | None = Field(
-        None, description='Execution order (lower = earlier)'
+    order: Annotated[int, Field(ge=0)] | None = Field(
+        default=None, description='Execution order (lower = earlier)'
     )
     applies_to: AppliesTo | None = Field(
         None, description='Which routes this applies to'
@@ -125,8 +126,8 @@ class Scope(Enum):
 
 
 class DependencySpec(ExtensionModel):
-    name: str = Field(..., description='Dependency name')
-    type: str = Field(..., description='Dependency type')
+    name: str = Field(default=..., description='Dependency name')
+    type: str = Field(default=..., description='Dependency type')
     factory: str | None = Field(None, description='Factory function reference')
     scope: Scope | None = Field(None, description='Dependency lifetime')
     cacheable: bool | None = Field(True, description='Whether result can be cached')
@@ -146,31 +147,31 @@ class Direction(Enum):
 
 
 class WSMessageSpec(ExtensionModel):
-    name: str = Field(..., description='Message type name')
+    name: str = Field(default=..., description='Message type name')
     direction: Direction
     type: str | None = Field(None, description='Message payload type')
     description: str | None = None
 
 
 class ErrorHandlerSpec(ExtensionModel):
-    exception: str = Field(..., description='Exception type to handle')
-    status: conint(ge=100, le=599) = Field(..., description='HTTP status code')
+    exception: str = Field(default=..., description='Exception type to handle')
+    status: Annotated[int, Field(ge=100, le=599)] = Field(default=..., description='HTTP status code')
     response_type: str | None = Field(None, description='Response model type')
     handler: str | None = Field(None, description='Custom handler function')
 
 
 class RateLimitSpec(ExtensionModel):
-    requests: conint(ge=1) | None = Field(
-        None, description='Number of requests allowed'
+    requests: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Number of requests allowed'
     )
     window: str | None = Field(None, description="Time window (e.g., '1m', '1h')")
     key: str | None = Field(None, description="Rate limit key (e.g., 'ip', 'user')")
-    burst: conint(ge=1) | None = Field(None, description='Burst allowance')
+    burst: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Burst allowance')
 
 
 class RouteSpec(ExtensionModel):
-    path: str = Field(..., description="URL path pattern (e.g., '/users/{user_id}')")
-    method: Method = Field(..., description='HTTP method')
+    path: str = Field(default=..., description="URL path pattern (e.g., '/users/{user_id}')")
+    method: Method = Field(default=..., description='HTTP method')
     handler: str | None = Field(None, description='Handler function reference')
     name: str | None = Field(None, description='Route name for URL generation')
     path_params: list[PathParamSpec] | None = Field(
@@ -195,9 +196,33 @@ class RouteSpec(ExtensionModel):
     summary: str | None = Field(None, description='Short summary for OpenAPI')
     description: str | None = Field(None, description='Detailed description')
 
+    @model_validator(mode='after')
+    def validate_path(self) -> 'RouteSpec':
+        """Validate path starts with / and has balanced braces."""
+        if not self.path.startswith('/'):
+            raise ValueError(f"Route path must start with '/': {self.path!r}")
+        # Check balanced braces for path parameters
+        open_braces = self.path.count('{')
+        close_braces = self.path.count('}')
+        if open_braces != close_braces:
+            raise ValueError(
+                f"Unbalanced braces in path {self.path!r}: "
+                f"{open_braces} open, {close_braces} close"
+            )
+        # Validate path parameter format (alphanumeric + underscore)
+        param_pattern = re.compile(r'\{([^}]+)\}')
+        for match in param_pattern.finditer(self.path):
+            param_name = match.group(1)
+            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', param_name):
+                raise ValueError(
+                    f"Invalid path parameter name {param_name!r} in {self.path!r}: "
+                    "must be a valid identifier"
+                )
+        return self
+
 
 class WebSocketSpec(ExtensionModel):
-    path: str = Field(..., description='WebSocket endpoint path')
+    path: str = Field(default=..., description='WebSocket endpoint path')
     handler: str | None = Field(None, description='Handler function reference')
     subprotocols: list[str] | None = Field(None, description='Supported subprotocols')
     auth: Auth | None = None
