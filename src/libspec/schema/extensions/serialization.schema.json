@@ -139,6 +139,7 @@
         },
         "name": {
           "description": "Registry name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -205,6 +206,7 @@
         },
         "name": {
           "description": "Decoder name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -269,6 +271,7 @@
         },
         "name": {
           "description": "Registry name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -335,6 +338,7 @@
         },
         "name": {
           "description": "Encoder name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -448,6 +452,7 @@
         },
         "name": {
           "description": "Field name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -553,6 +558,7 @@
         },
         "name": {
           "description": "Schema name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1378,6 +1384,7 @@
         },
         "name": {
           "description": "Option name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1505,6 +1512,7 @@
         },
         "name": {
           "description": "Serializer name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

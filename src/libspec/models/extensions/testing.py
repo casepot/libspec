@@ -16,7 +16,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr, TypeAnnotationStr
+from libspec.models.types import LocalPath, NonEmptyStr, TypeAnnotationStr
 
 # -----------------------------------------------------------------------------
 # Enums
@@ -140,7 +140,7 @@ class FixtureSpec(ExtensionModel):
 class MockSpec(ExtensionModel):
     """A mock/stub utility definition."""
 
-    name: str = Field(description="Mock utility name")
+    name: NonEmptyStr = Field(description="Mock utility name")
     type: MockType | None = Field(default=None, description="Type of test double")
     target: str | None = Field(
         default=None, description="What this mocks (type reference)"
@@ -178,7 +178,7 @@ class TestDoubleSpec(ExtensionModel):
 class FactoryFieldSpec(ExtensionModel):
     """A factory field definition."""
 
-    name: str = Field(description="Field name")
+    name: NonEmptyStr = Field(description="Field name")
     default: Any | None = Field(default=None, description="Default value or generator")
     faker: str | None = Field(
         default=None, description="Faker provider (e.g., 'name', 'email')"
@@ -195,7 +195,7 @@ class FactoryFieldSpec(ExtensionModel):
 class TraitSpec(ExtensionModel):
     """A factory trait (named variation)."""
 
-    name: str = Field(description="Trait name")
+    name: NonEmptyStr = Field(description="Trait name")
     overrides: dict[str, Any] | None = Field(
         default=None, description="Field overrides"
     )
@@ -205,7 +205,7 @@ class TraitSpec(ExtensionModel):
 class SequenceSpec(ExtensionModel):
     """A sequence generator for factories."""
 
-    name: str = Field(description="Sequence name")
+    name: NonEmptyStr = Field(description="Sequence name")
     pattern: str | None = Field(
         default=None, description="Pattern with {n} placeholder"
     )
@@ -215,7 +215,7 @@ class SequenceSpec(ExtensionModel):
 class FactorySpec(ExtensionModel):
     """A test data factory definition."""
 
-    name: str = Field(description="Factory name")
+    name: NonEmptyStr = Field(description="Factory name")
     model: str = Field(description="Model type this creates")
     fields: list[FactoryFieldSpec] = Field(
         default_factory=list, description="Field definitions"
@@ -243,7 +243,7 @@ class FactorySpec(ExtensionModel):
 class AssertionSpec(ExtensionModel):
     """A custom assertion definition."""
 
-    name: str = Field(description="Assertion name")
+    name: NonEmptyStr = Field(description="Assertion name")
     signature: str | None = Field(default=None, description="Function signature")
     checks: str | None = Field(default=None, description="What this assertion checks")
     failure_message: str | None = Field(
@@ -258,7 +258,7 @@ class AssertionSpec(ExtensionModel):
 class TestPatternSpec(ExtensionModel):
     """A recommended test pattern."""
 
-    name: str = Field(description="Pattern name")
+    name: NonEmptyStr = Field(description="Pattern name")
     category: TestCategory | None = Field(default=None, description="Pattern category")
     applies_to: list[str] = Field(
         default_factory=list, description="Types/features this pattern applies to"
@@ -308,7 +308,7 @@ class CoverageSpec(ExtensionModel):
 class MarkerArgSpec(ExtensionModel):
     """A pytest marker argument specification."""
 
-    name: str = Field(description="Argument name")
+    name: NonEmptyStr = Field(description="Argument name")
     type: TypeAnnotationStr | None = Field(default=None, description="Argument type")
     required: bool = Field(default=False, description="Whether argument is required")
     description: str | None = Field(default=None, description="What this argument controls")
@@ -337,7 +337,7 @@ class MarkerSpec(ExtensionModel):
 class ConftestSpec(ExtensionModel):
     """Documentation for a conftest.py file."""
 
-    path: str = Field(description="Path to conftest.py relative to project root")
+    path: LocalPath = Field(description="Path to conftest.py relative to project root")
     scope: ConftestScope | None = Field(
         default=None, description="Scope of fixtures in this conftest"
     )
@@ -356,7 +356,7 @@ class ConftestSpec(ExtensionModel):
 class HookSpec(ExtensionModel):
     """A pytest hook implementation."""
 
-    name: str = Field(
+    name: NonEmptyStr = Field(
         description="Hook name (e.g., 'pytest_configure', 'pytest_collection_modifyitems')"
     )
     phase: HookPhase | None = Field(default=None, description="When this hook runs")
@@ -380,7 +380,7 @@ class HookSpec(ExtensionModel):
 class ParametrizeSpec(ExtensionModel):
     """A common parametrization pattern."""
 
-    name: str = Field(description="Pattern name for reference")
+    name: NonEmptyStr = Field(description="Pattern name for reference")
     params: list[str] = Field(description="Parameter names")
     values_source: str | None = Field(
         default=None, description="Where values come from (fixture, constant, file, etc.)"

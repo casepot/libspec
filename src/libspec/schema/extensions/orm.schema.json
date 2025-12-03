@@ -934,6 +934,7 @@
         },
         "name": {
           "description": "Pattern name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

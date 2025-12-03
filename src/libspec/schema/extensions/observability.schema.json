@@ -147,6 +147,7 @@
         },
         "name": {
           "description": "Health check name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -354,6 +355,8 @@
         },
         "name": {
           "description": "Metric name (e.g., 'mylib_requests_total')",
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_]*$",
           "title": "Name",
           "type": "string"
         },

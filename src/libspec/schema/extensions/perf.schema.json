@@ -172,6 +172,8 @@
         "amortized": {
           "anyOf": [
             {
+              "minLength": 4,
+              "pattern": "^O\\(.+\\)$",
               "type": "string"
             },
             {
@@ -185,6 +187,8 @@
         "best_case": {
           "anyOf": [
             {
+              "minLength": 4,
+              "pattern": "^O\\(.+\\)$",
               "type": "string"
             },
             {
@@ -211,6 +215,8 @@
         "space": {
           "anyOf": [
             {
+              "minLength": 4,
+              "pattern": "^O\\(.+\\)$",
               "type": "string"
             },
             {
@@ -224,6 +230,8 @@
         "time": {
           "anyOf": [
             {
+              "minLength": 4,
+              "pattern": "^O\\(.+\\)$",
               "type": "string"
             },
             {
@@ -237,6 +245,8 @@
         "worst_case": {
           "anyOf": [
             {
+              "minLength": 4,
+              "pattern": "^O\\(.+\\)$",
               "type": "string"
             },
             {

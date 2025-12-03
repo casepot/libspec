@@ -143,6 +143,18 @@ class DeprecationInfo(LibspecModel):
         default=None, description="Suggested replacement (cross-reference)"
     )
 
+    @model_validator(mode="after")
+    def validate_deprecation_timeline(self) -> "DeprecationInfo":
+        """Warn if removal is specified without since."""
+        if self.removal is not None and self.since is None:
+            warnings.warn(
+                "Deprecation specifies 'removal' version without 'since' version; "
+                "consider adding when deprecation was introduced",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self
+
 
 # -----------------------------------------------------------------------------
 # Type Components (Leaf Types)
@@ -610,6 +622,14 @@ class FunctionDef(ExtensibleModel):
         if self.kind == FunctionKind.ASYNC_GENERATOR and self.yields is not None:
             raise ValueError(
                 "Async generator functions should use 'async_yields', not 'yields'"
+            )
+        # Warn if generator specifies explicit return (generators return generator objects)
+        if (self.yields is not None or self.async_yields is not None) and self.returns is not None:
+            warnings.warn(
+                f"Generator function '{self.name}' specifies 'returns'; "
+                "generators typically don't need explicit return type (they return generator objects)",
+                UserWarning,
+                stacklevel=2,
             )
         return self
 

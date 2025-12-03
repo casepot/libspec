@@ -13,6 +13,19 @@
           "description": "Default value",
           "title": "Default"
         },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Help text",
+          "title": "Description"
+        },
         "envvar": {
           "anyOf": [
             {
@@ -27,19 +40,6 @@
           "default": null,
           "description": "Environment variable fallback",
           "title": "Envvar"
-        },
-        "help": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Help text",
-          "title": "Help"
         },
         "metavar": {
           "anyOf": [
@@ -291,6 +291,19 @@
           "description": "Deprecation message",
           "title": "Deprecated Message"
         },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Help text",
+          "title": "Description"
+        },
         "epilog": {
           "anyOf": [
             {
@@ -332,19 +345,6 @@
           "default": null,
           "description": "Handler function reference",
           "title": "Handler"
-        },
-        "help": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Help text",
-          "title": "Help"
         },
         "hidden": {
           "anyOf": [
@@ -756,6 +756,19 @@
           "description": "Default value",
           "title": "Default"
         },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Help text",
+          "title": "Description"
+        },
         "envvar": {
           "anyOf": [
             {
@@ -781,19 +794,6 @@
           "default": null,
           "description": "Value when flag is set",
           "title": "Flag Value"
-        },
-        "help": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Help text",
-          "title": "Help"
         },
         "hidden": {
           "anyOf": [

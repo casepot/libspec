@@ -714,6 +714,7 @@
         },
         "name": {
           "description": "Handler name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -939,6 +940,7 @@
         },
         "name": {
           "description": "Saga name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1037,6 +1039,7 @@
         },
         "name": {
           "description": "Step name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1155,6 +1158,8 @@
         "retention": {
           "anyOf": [
             {
+              "minLength": 2,
+              "pattern": "^[0-9]+(ms|s|m|h|d)$",
               "type": "string"
             },
             {

@@ -44,6 +44,7 @@
         },
         "name": {
           "description": "Assertion name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -133,6 +134,7 @@
         },
         "path": {
           "description": "Path to conftest.py relative to project root",
+          "minLength": 1,
           "title": "Path",
           "type": "string"
         },
@@ -313,6 +315,7 @@
         },
         "name": {
           "description": "Field name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -388,6 +391,7 @@
         },
         "name": {
           "description": "Factory name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -621,6 +625,7 @@
         },
         "name": {
           "description": "Hook name (e.g., 'pytest_configure', 'pytest_collection_modifyitems')",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -700,6 +705,7 @@
         },
         "name": {
           "description": "Argument name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -858,6 +864,7 @@
         },
         "name": {
           "description": "Mock utility name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -957,6 +964,7 @@
         },
         "name": {
           "description": "Pattern name for reference",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1223,6 +1231,7 @@
       "properties": {
         "name": {
           "description": "Sequence name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1433,6 +1442,7 @@
         },
         "name": {
           "description": "Pattern name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1617,6 +1627,7 @@
         },
         "name": {
           "description": "Trait name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

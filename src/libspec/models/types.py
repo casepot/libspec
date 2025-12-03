@@ -76,6 +76,80 @@ EnvVarName = Annotated[str, StringConstraints(pattern=r"^[A-Z_][A-Z0-9_]*$", min
 LocalPath = Annotated[str, StringConstraints(min_length=1)]
 """Local filesystem path, validated in strict mode."""
 
+# -----------------------------------------------------------------------------
+# Pattern-Based Constrained Types
+# -----------------------------------------------------------------------------
+
+# Cross-reference with format validation
+CrossReferenceStrict = Annotated[
+    str,
+    StringConstraints(
+        pattern=r"^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+        min_length=1,
+    ),
+]
+"""Validated cross-reference format: #/types/X, #/functions/Y, or lib#/types/Z."""
+
+# Function/method reference (dotted Python path)
+FunctionReference = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z_][a-z0-9_.]*$", min_length=1),
+]
+"""Python function/method reference path (e.g., 'module.submodule.function_name')."""
+
+# HTTP route path
+RoutePath = Annotated[
+    str,
+    StringConstraints(pattern=r"^/.*$", min_length=1),
+]
+"""HTTP route path starting with / (e.g., '/users/{id}', '/api/v1/items')."""
+
+# MIME type
+MimeType = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z]+/[a-z0-9.+-]+$", min_length=3),
+]
+"""MIME content type (e.g., 'application/json', 'text/html', 'image/png')."""
+
+# Time window/duration
+TimeWindow = Annotated[
+    str,
+    StringConstraints(pattern=r"^[0-9]+(ms|s|m|h|d)$", min_length=2),
+]
+"""Time duration string (e.g., '100ms', '30s', '5m', '24h', '7d')."""
+
+# Big-O complexity notation
+ComplexityNotation = Annotated[
+    str,
+    StringConstraints(pattern=r"^O\(.+\)$", min_length=4),
+]
+"""Big-O complexity notation (e.g., 'O(1)', 'O(n)', 'O(n log n)', 'O(n^2)')."""
+
+# CLI long flag
+CliFlag = Annotated[
+    str,
+    StringConstraints(pattern=r"^--[a-z][a-z0-9-]*$", min_length=3),
+]
+"""CLI long flag (e.g., '--verbose', '--output-file', '--dry-run')."""
+
+# CLI short flag
+ShortFlag = Annotated[
+    str,
+    StringConstraints(pattern=r"^-[a-zA-Z]$", min_length=2, max_length=2),
+]
+"""CLI short flag (e.g., '-v', '-o', '-n')."""
+
+# Prometheus-style metric name
+MetricName = Annotated[
+    str,
+    StringConstraints(pattern=r"^[a-z_][a-z0-9_]*$", min_length=1),
+]
+"""Prometheus-compatible metric name (e.g., 'http_requests_total', 'process_cpu_seconds')."""
+
+# Regular expression pattern (validated at parse time via validator if needed)
+RegexPattern = Annotated[str, StringConstraints(min_length=1)]
+"""Regular expression pattern string."""
+
 
 # -----------------------------------------------------------------------------
 # Core Enums

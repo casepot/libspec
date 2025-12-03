@@ -40,6 +40,16 @@ class SafetyFunctionFields(ExtensionModel):
 
 
 class ThreadSafetyMode(Enum):
+    """How thread safety is achieved for a type.
+
+    - immutable: Thread-safe through immutability
+    - synchronized: Uses locks/mutexes for synchronization
+    - thread_local: Each thread has its own instance
+    - lock_free: Uses atomic operations without locks
+    - wait_free: Lock-free with guaranteed progress
+    - none: No thread safety guarantees
+    """
+
     immutable = 'immutable'
     synchronized = 'synchronized'
     thread_local = 'thread_local'
@@ -49,6 +59,15 @@ class ThreadSafetyMode(Enum):
 
 
 class LockType(Enum):
+    """Type of lock used for synchronization.
+
+    - Lock: Basic mutual exclusion lock
+    - RLock: Reentrant lock (same thread can acquire multiple times)
+    - RWLock: Read-write lock (multiple readers, single writer)
+    - Semaphore: Counting semaphore for resource pooling
+    - none: No locking mechanism
+    """
+
     Lock = 'Lock'
     RLock = 'RLock'
     RWLock = 'RWLock'
@@ -57,6 +76,14 @@ class LockType(Enum):
 
 
 class LockGranularity(Enum):
+    """Granularity level of locking mechanisms.
+
+    - global_: Single lock for all instances (coarse-grained)
+    - per_instance: Each instance has its own lock
+    - per_method: Locks are scoped to individual methods
+    - fine_grained: Multiple locks for different data segments
+    """
+
     global_ = 'global'
     per_instance = 'per_instance'
     per_method = 'per_method'
@@ -91,6 +118,14 @@ class ReentrancySpec(ExtensionModel):
 
 
 class Leaks(Enum):
+    """Memory leak potential classification.
+
+    - none: No memory leaks possible
+    - possible: Memory leaks may occur in certain conditions
+    - managed: Leaks are tracked and managed (e.g., pools)
+    - external: Leaks depend on external resource handling
+    """
+
     none = 'none'
     possible = 'possible'
     managed = 'managed'
@@ -98,6 +133,15 @@ class Leaks(Enum):
 
 
 class Cleanup(Enum):
+    """How resources are cleaned up.
+
+    - automatic: Garbage collector handles cleanup
+    - manual: User must explicitly call cleanup method
+    - context_manager: Uses __enter__/__exit__ protocol
+    - destructor: Cleanup in __del__ method
+    - ref_counted: Reference counting triggers cleanup
+    """
+
     automatic = 'automatic'
     manual = 'manual'
     context_manager = 'context_manager'
@@ -117,6 +161,16 @@ class MemorySafetySpec(ExtensionModel):
 
 
 class Model(Enum):
+    """Concurrency model used by the type.
+
+    - shared_nothing: No shared state between threads/processes
+    - actor: Actor model with message passing
+    - csp: Communicating Sequential Processes
+    - shared_memory: Shared memory with synchronization
+    - stm: Software Transactional Memory
+    - none: No specific concurrency model
+    """
+
     shared_nothing = 'shared_nothing'
     actor = 'actor'
     csp = 'csp'

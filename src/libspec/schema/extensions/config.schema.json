@@ -339,6 +339,8 @@
         "cli_flag": {
           "anyOf": [
             {
+              "minLength": 3,
+              "pattern": "^--[a-z][a-z0-9-]*$",
               "type": "string"
             },
             {
@@ -352,6 +354,9 @@
         "cli_short": {
           "anyOf": [
             {
+              "maxLength": 2,
+              "minLength": 2,
+              "pattern": "^-[a-zA-Z]$",
               "type": "string"
             },
             {

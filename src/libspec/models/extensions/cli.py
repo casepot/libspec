@@ -138,7 +138,7 @@ class ArgumentSpec(ExtensionModel):
         None, description="Number of arguments (int, '?', '*', '+')"
     )
     metavar: str | None = Field(None, description='Display name in help')
-    help: str | None = Field(None, description='Help text')
+    description: str | None = Field(None, description='Help text')
     envvar: EnvVarName | None = Field(None, description='Environment variable fallback')
     shell_complete: CompletionSpec | None = None
 
@@ -157,7 +157,7 @@ class OptionSpec(ExtensionModel):
     multiple: bool | None = Field(None, description='Whether option can be repeated')
     choices: list[Any] | None = Field(default=None, description='Valid choices')
     metavar: str | None = Field(None, description='Display name in help')
-    help: str | None = Field(None, description='Help text')
+    description: str | None = Field(None, description='Help text')
     hidden: bool | None = Field(None, description='Whether option is hidden from help')
     envvar: EnvVarName | None = Field(None, description='Environment variable name')
     prompt: bool | str | None = Field(
@@ -185,7 +185,7 @@ class CommandSpec(ExtensionModel):
     )
     options: list[OptionSpec] | None = Field(None, description='Command options/flags')
     subcommands: list[CommandSpec] | None = Field(None, description='Subcommands')
-    help: str | None = Field(None, description='Help text')
+    description: str | None = Field(None, description='Help text')
     short_help: str | None = Field(
         None, description='Short help shown in command listings'
     )

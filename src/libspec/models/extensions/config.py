@@ -14,7 +14,7 @@ from typing import Any
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import EnvVarName, NonEmptyStr
+from libspec.models.types import CliFlag, EnvVarName, NonEmptyStr, ShortFlag
 
 
 class SettingSpec(ExtensionModel):
@@ -24,8 +24,8 @@ class SettingSpec(ExtensionModel):
     )
     default: Any | None = Field(None, description='Default value')
     env_var: EnvVarName | None = Field(None, description='Environment variable name')
-    cli_flag: str | None = Field(None, description="CLI flag (e.g., '--timeout')")
-    cli_short: str | None = Field(None, description="Short CLI flag (e.g., '-t')")
+    cli_flag: CliFlag | None = Field(None, description="CLI flag (e.g., '--timeout')")
+    cli_short: ShortFlag | None = Field(None, description="Short CLI flag (e.g., '-t')")
     validation: str | None = Field(
         None, description="Validation rule (e.g., 'gt(0)', 'regex(...)')"
     )

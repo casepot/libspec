@@ -14,7 +14,7 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import NonEmptyStr
+from libspec.models.types import NonEmptyStr, TimeWindow
 
 
 class EventsTypeFields(ExtensionModel):
@@ -199,7 +199,7 @@ class TopicSpec(ExtensionModel):
     name: NonEmptyStr = Field(default=..., description='Topic name')
     pattern: str | None = Field(None, description='Topic pattern (for wildcards)')
     partitions: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Number of partitions')
-    retention: str | None = Field(None, description='Message retention period')
+    retention: TimeWindow | None = Field(None, description='Message retention period')
     events: list[str] | None = Field(
         None, description='Event types published to this topic'
     )
@@ -236,7 +236,7 @@ class OnFailure(Enum):
 
 
 class SagaStepSpec(ExtensionModel):
-    name: str = Field(default=..., description='Step name')
+    name: NonEmptyStr = Field(default=..., description='Step name')
     action: str | None = Field(None, description='Action to perform (command/event)')
     wait_for: list[str] | None = Field(None, description='Events to wait for')
     timeout: Annotated[float, Field(ge=0.0)] | None = Field(
@@ -272,7 +272,7 @@ class EventSpec(ExtensionModel):
 
 
 class HandlerSpec(ExtensionModel):
-    name: str = Field(default=..., description='Handler name')
+    name: NonEmptyStr = Field(default=..., description='Handler name')
     handles: list[str] | None = Field(None, description='Events this handler processes')
     function: str | None = Field(None, description='Handler function reference')
     async_: bool | None = Field(
@@ -293,7 +293,7 @@ class HandlerSpec(ExtensionModel):
 
 
 class SagaSpec(ExtensionModel):
-    name: str = Field(default=..., description='Saga name')
+    name: NonEmptyStr = Field(default=..., description='Saga name')
     type: str | None = Field(None, description='Saga class reference')
     starts_with: list[str] | None = Field(
         None, description='Events that start this saga'

@@ -1,6 +1,7 @@
 {
   "$defs": {
     "Cleanup": {
+      "description": "How resources are cleaned up.\n\n- automatic: Garbage collector handles cleanup\n- manual: User must explicitly call cleanup method\n- context_manager: Uses __enter__/__exit__ protocol\n- destructor: Cleanup in __del__ method\n- ref_counted: Reference counting triggers cleanup",
       "enum": [
         "automatic",
         "manual",
@@ -69,6 +70,7 @@
       "type": "object"
     },
     "Leaks": {
+      "description": "Memory leak potential classification.\n\n- none: No memory leaks possible\n- possible: Memory leaks may occur in certain conditions\n- managed: Leaks are tracked and managed (e.g., pools)\n- external: Leaks depend on external resource handling",
       "enum": [
         "none",
         "possible",
@@ -79,6 +81,7 @@
       "type": "string"
     },
     "LockGranularity": {
+      "description": "Granularity level of locking mechanisms.\n\n- global_: Single lock for all instances (coarse-grained)\n- per_instance: Each instance has its own lock\n- per_method: Locks are scoped to individual methods\n- fine_grained: Multiple locks for different data segments",
       "enum": [
         "global",
         "per_instance",
@@ -89,6 +92,7 @@
       "type": "string"
     },
     "LockType": {
+      "description": "Type of lock used for synchronization.\n\n- Lock: Basic mutual exclusion lock\n- RLock: Reentrant lock (same thread can acquire multiple times)\n- RWLock: Read-write lock (multiple readers, single writer)\n- Semaphore: Counting semaphore for resource pooling\n- none: No locking mechanism",
       "enum": [
         "Lock",
         "RLock",
@@ -156,6 +160,7 @@
       "type": "object"
     },
     "Model": {
+      "description": "Concurrency model used by the type.\n\n- shared_nothing: No shared state between threads/processes\n- actor: Actor model with message passing\n- csp: Communicating Sequential Processes\n- shared_memory: Shared memory with synchronization\n- stm: Software Transactional Memory\n- none: No specific concurrency model",
       "enum": [
         "shared_nothing",
         "actor",
@@ -398,6 +403,7 @@
       "type": "object"
     },
     "ThreadSafetyMode": {
+      "description": "How thread safety is achieved for a type.\n\n- immutable: Thread-safe through immutability\n- synchronized: Uses locks/mutexes for synchronization\n- thread_local: Each thread has its own instance\n- lock_free: Uses atomic operations without locks\n- wait_free: Lock-free with guaranteed progress\n- none: No thread safety guarantees",
       "enum": [
         "immutable",
         "synchronized",

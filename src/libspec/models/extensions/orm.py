@@ -155,6 +155,16 @@ class RelationshipSpec(ExtensionModel):
     viewonly: bool | None = Field(None, description='Whether relationship is read-only')
     order_by: str | None = Field(None, description='Default ordering')
 
+    @model_validator(mode='after')
+    def validate_relationship_config(self) -> 'RelationshipSpec':
+        """Validate relationship configuration consistency."""
+        if self.secondary is not None and self.type != RelationshipType.many_to_many:
+            raise ValueError(
+                f"Relationship '{self.name}' has 'secondary' table but type is "
+                f"'{self.type.value}'; secondary only applies to many_to_many"
+            )
+        return self
+
 
 class IndexSpec(ExtensionModel):
     name: str | None = Field(default=None, description='Index name')
@@ -273,7 +283,7 @@ class Pattern(Enum):
 
 
 class QueryPatternSpec(ExtensionModel):
-    name: str = Field(default=..., description='Pattern name')
+    name: NonEmptyStr = Field(default=..., description='Pattern name')
     pattern: Pattern | None = Field(None, description='Query pattern type')
     method: str | None = Field(None, description='Method reference')
     description: str | None = Field(None, description='Pattern description')

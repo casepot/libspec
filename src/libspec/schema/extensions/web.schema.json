@@ -91,6 +91,7 @@
         },
         "name": {
           "description": "Dependency name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -260,6 +261,7 @@
         },
         "name": {
           "description": "Header name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -353,6 +355,7 @@
         },
         "name": {
           "description": "Middleware name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -450,6 +453,7 @@
         },
         "name": {
           "description": "Parameter name in path",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -532,6 +536,7 @@
         },
         "name": {
           "description": "Query parameter name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -626,6 +631,8 @@
         "content_type": {
           "anyOf": [
             {
+              "minLength": 3,
+              "pattern": "^[a-z]+/[a-z0-9.+-]+$",
               "type": "string"
             },
             {
@@ -682,6 +689,8 @@
         "content_type": {
           "anyOf": [
             {
+              "minLength": 3,
+              "pattern": "^[a-z]+/[a-z0-9.+-]+$",
               "type": "string"
             },
             {
@@ -856,6 +865,8 @@
         },
         "path": {
           "description": "URL path pattern (e.g., '/users/{user_id}')",
+          "minLength": 1,
+          "pattern": "^/.*$",
           "title": "Path",
           "type": "string"
         },
@@ -1007,6 +1018,7 @@
         },
         "name": {
           "description": "Message type name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

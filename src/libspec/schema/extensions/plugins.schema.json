@@ -367,6 +367,7 @@
         },
         "name": {
           "description": "Parameter name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -794,6 +795,7 @@
         },
         "name": {
           "description": "Plugin name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1094,6 +1096,7 @@
         },
         "name": {
           "description": "Registry name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },

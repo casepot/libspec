@@ -15,6 +15,7 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import MetricName, NonEmptyStr
 
 
 class LogLevel(Enum):
@@ -65,7 +66,7 @@ class MetricType(Enum):
 
 
 class MetricSpec(ExtensionModel):
-    name: str = Field(default=..., description="Metric name (e.g., 'mylib_requests_total')")
+    name: MetricName = Field(default=..., description="Metric name (e.g., 'mylib_requests_total')")
     type: MetricType = Field(default=..., description='Metric type')
     description: str | None = Field(None, description='What this metric measures')
     labels: list[str] | None = Field(None, description='Label names for this metric')
@@ -141,7 +142,7 @@ class HealthCheckType(Enum):
 
 
 class HealthCheckSpec(ExtensionModel):
-    name: str = Field(default=..., description='Health check name')
+    name: NonEmptyStr = Field(default=..., description='Health check name')
     type: HealthCheckType = Field(default=..., description='Health check type')
     endpoint: str | None = Field(None, description='HTTP endpoint path')
     method: str | None = Field(None, description='Method to call for health check')

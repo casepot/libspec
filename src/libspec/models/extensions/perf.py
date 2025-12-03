@@ -15,14 +15,15 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import ComplexityNotation
 
 
 class ComplexitySpec(ExtensionModel):
-    time: str | None = Field(None, description="Time complexity (e.g., 'O(n log n)')")
-    space: str | None = Field(None, description="Space complexity (e.g., 'O(n)')")
-    best_case: str | None = Field(None, description='Best-case time complexity')
-    worst_case: str | None = Field(None, description='Worst-case time complexity')
-    amortized: str | None = Field(None, description='Amortized time complexity')
+    time: ComplexityNotation | None = Field(None, description="Time complexity (e.g., 'O(n log n)')")
+    space: ComplexityNotation | None = Field(None, description="Space complexity (e.g., 'O(n)')")
+    best_case: ComplexityNotation | None = Field(None, description='Best-case time complexity')
+    worst_case: ComplexityNotation | None = Field(None, description='Worst-case time complexity')
+    amortized: ComplexityNotation | None = Field(None, description='Amortized time complexity')
     notes: str | None = Field(None, description='Additional notes about complexity')
 
 

@@ -119,6 +119,7 @@
         },
         "type": {
           "description": "Exception class name",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -200,11 +201,13 @@
         },
         "name": {
           "description": "Field name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
         "type": {
           "description": "Field type",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         }
@@ -275,6 +278,7 @@
         },
         "module": {
           "description": "Module where exception is defined",
+          "minLength": 1,
           "title": "Module",
           "type": "string"
         },
@@ -322,6 +326,7 @@
         },
         "type": {
           "description": "Exception class name",
+          "minLength": 1,
           "title": "Type",
           "type": "string"
         },
@@ -347,6 +352,7 @@
       "type": "object"
     },
     "Severity": {
+      "description": "Error severity level.\n\n- info: Informational message, no action needed\n- warning: Potential issue, operation continues\n- error: Operation failed but system stable\n- critical: Severe error, may affect system stability",
       "enum": [
         "info",
         "warning",

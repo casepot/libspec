@@ -13,10 +13,11 @@ from enum import Enum
 from pydantic import AnyUrl, Field
 
 from libspec.models.base import ExtensionModel
+from libspec.models.types import NonEmptyStr, TypeAnnotationStr
 
 
 class ErrorHierarchyNode(ExtensionModel):
-    type: str = Field(default=..., description='Exception class name')
+    type: NonEmptyStr = Field(default=..., description='Exception class name')
     base: str | None = Field(
         None, description="Base class (e.g., 'Exception', 'RuntimeError')"
     )
@@ -27,12 +28,20 @@ class ErrorHierarchyNode(ExtensionModel):
 
 
 class ExceptionField(ExtensionModel):
-    name: str = Field(default=..., description='Field name')
-    type: str = Field(default=..., description='Field type')
+    name: NonEmptyStr = Field(default=..., description='Field name')
+    type: TypeAnnotationStr = Field(default=..., description='Field type')
     description: str | None = Field(None, description='What this field contains')
 
 
 class Severity(Enum):
+    """Error severity level.
+
+    - info: Informational message, no action needed
+    - warning: Potential issue, operation continues
+    - error: Operation failed but system stable
+    - critical: Severe error, may affect system stability
+    """
+
     info = 'info'
     warning = 'warning'
     error = 'error'
@@ -49,8 +58,8 @@ class ErrorCode(ExtensionModel):
 
 
 class ExceptionSpec(ExtensionModel):
-    type: str = Field(default=..., description='Exception class name')
-    module: str = Field(default=..., description='Module where exception is defined')
+    type: NonEmptyStr = Field(default=..., description='Exception class name')
+    module: NonEmptyStr = Field(default=..., description='Module where exception is defined')
     base: str | None = Field(None, description='Base exception class')
     description: str | None = Field(None, description='When this exception is raised')
     fields: list[ExceptionField] | None = Field(

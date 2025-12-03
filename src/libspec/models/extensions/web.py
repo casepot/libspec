@@ -15,7 +15,7 @@ from typing import Annotated, Any
 from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import TypeAnnotationStr
+from libspec.models.types import MimeType, NonEmptyStr, RoutePath, TypeAnnotationStr
 
 
 class Method(Enum):
@@ -31,7 +31,7 @@ class Method(Enum):
     PATCH = 'PATCH'
     HEAD = 'HEAD'
     OPTIONS = 'OPTIONS'
-    field_ = '*'
+    WILDCARD = '*'
 
 
 class Auth(Enum):
@@ -48,14 +48,14 @@ class Auth(Enum):
 
 
 class PathParamSpec(ExtensionModel):
-    name: str = Field(default=..., description='Parameter name in path')
+    name: NonEmptyStr = Field(default=..., description='Parameter name in path')
     type: TypeAnnotationStr = Field(default=..., description='Parameter type')
     description: str | None = None
     pattern: str | None = Field(None, description='Regex pattern for validation')
 
 
 class QueryParamSpec(ExtensionModel):
-    name: str = Field(default=..., description='Query parameter name')
+    name: NonEmptyStr = Field(default=..., description='Query parameter name')
     type: TypeAnnotationStr = Field(default=..., description='Parameter type')
     required: bool | None = False
     default: str | None = Field(None, description='Default value')
@@ -64,7 +64,7 @@ class QueryParamSpec(ExtensionModel):
 
 
 class HeaderSpec(ExtensionModel):
-    name: str = Field(default=..., description='Header name')
+    name: NonEmptyStr = Field(default=..., description='Header name')
     type: TypeAnnotationStr | None = Field(None, description='Value type')
     required: bool | None = False
     description: str | None = None
@@ -72,7 +72,7 @@ class HeaderSpec(ExtensionModel):
 
 class RequestBodySpec(ExtensionModel):
     type: str | None = Field(None, description='Request body model type')
-    content_type: str | None = Field(
+    content_type: MimeType | None = Field(
         'application/json', description='Expected content type'
     )
     required: bool | None = True
@@ -82,7 +82,7 @@ class RequestBodySpec(ExtensionModel):
 class ResponseSpec(ExtensionModel):
     type: str | None = Field(None, description='Response model type')
     status: Annotated[int, Field(ge=100, le=599)] | None = Field(default=200, description='HTTP status code')
-    content_type: str | None = Field(
+    content_type: MimeType | None = Field(
         'application/json', description='Response content type'
     )
     headers: list[HeaderSpec] | None = Field(None, description='Response headers')
@@ -126,7 +126,7 @@ class Position(Enum):
 
 
 class MiddlewareSpec(ExtensionModel):
-    name: str = Field(default=..., description='Middleware name')
+    name: NonEmptyStr = Field(default=..., description='Middleware name')
     type: str | None = Field(None, description='Middleware class/function reference')
     order: Annotated[int, Field(ge=0)] | None = Field(
         default=None, description='Execution order (lower = earlier)'
@@ -143,6 +143,15 @@ class MiddlewareSpec(ExtensionModel):
     position: Position | None = Field(None, description='When middleware runs')
     config: dict[str, Any] | None = Field(None, description='Middleware configuration')
     description: str | None = None
+
+    @model_validator(mode='after')
+    def validate_middleware_config(self) -> 'MiddlewareSpec':
+        """Validate applies_to has corresponding tags/routes."""
+        if self.applies_to == AppliesTo.tagged and not self.tags:
+            raise ValueError("tags required when applies_to='tagged'")
+        if self.applies_to == AppliesTo.specific and not self.routes:
+            raise ValueError("routes required when applies_to='specific'")
+        return self
 
 
 class Scope(Enum):
@@ -161,7 +170,7 @@ class Scope(Enum):
 
 
 class DependencySpec(ExtensionModel):
-    name: str = Field(default=..., description='Dependency name')
+    name: NonEmptyStr = Field(default=..., description='Dependency name')
     type: str = Field(default=..., description='Dependency type')
     factory: str | None = Field(None, description='Factory function reference')
     scope: Scope | None = Field(None, description='Dependency lifetime')
@@ -189,7 +198,7 @@ class Direction(Enum):
 
 
 class WSMessageSpec(ExtensionModel):
-    name: str = Field(default=..., description='Message type name')
+    name: NonEmptyStr = Field(default=..., description='Message type name')
     direction: Direction
     type: str | None = Field(None, description='Message payload type')
     description: str | None = None
@@ -212,7 +221,7 @@ class RateLimitSpec(ExtensionModel):
 
 
 class RouteSpec(ExtensionModel):
-    path: str = Field(default=..., description="URL path pattern (e.g., '/users/{user_id}')")
+    path: RoutePath = Field(default=..., description="URL path pattern (e.g., '/users/{user_id}')")
     method: Method = Field(default=..., description='HTTP method')
     handler: str | None = Field(None, description='Handler function reference')
     name: str | None = Field(None, description='Route name for URL generation')

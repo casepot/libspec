@@ -114,7 +114,7 @@ class ResultCollection(Enum):
 
 
 class HookParamSpec(ExtensionModel):
-    name: str = Field(default=..., description='Parameter name')
+    name: NonEmptyStr = Field(default=..., description='Parameter name')
     type: str = Field(default=..., description='Parameter type')
     mutable: bool | None = Field(None, description='Whether parameter can be modified')
     description: str | None = None
@@ -243,7 +243,7 @@ class HookSpec(ExtensionModel):
 
 
 class RegistrySpec(ExtensionModel):
-    name: str = Field(default=..., description='Registry name')
+    name: NonEmptyStr = Field(default=..., description='Registry name')
     type: str | None = Field(None, description='Registry class reference')
     key_type: str | None = Field(None, description='Registration key type')
     value_type: str | None = Field(None, description='Registered value type')
@@ -276,7 +276,7 @@ class DiscoverySpec(ExtensionModel):
 
 
 class PluginSpec(ExtensionModel):
-    name: str = Field(default=..., description='Plugin name')
+    name: NonEmptyStr = Field(default=..., description='Plugin name')
     version: str | None = Field(None, description='Plugin version')
     type: str | None = Field(None, description='Plugin class reference')
     implements: list[str] | None = Field(

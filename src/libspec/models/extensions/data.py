@@ -14,7 +14,7 @@ from typing import Annotated
 from pydantic import Field
 
 from libspec.models.base import ExtensionModel
-from libspec.models.types import TypeAnnotationStr
+from libspec.models.types import NonEmptyStr, TypeAnnotationStr
 
 
 class CopySemantics(Enum):
@@ -58,7 +58,7 @@ class DTypeCategory(Enum):
 
 
 class DTypeSpec(ExtensionModel):
-    name: str = Field(default=..., description='Data type name')
+    name: NonEmptyStr = Field(default=..., description='Data type name')
     category: DTypeCategory | None = Field(None, description='Type category')
     numpy_equivalent: str | None = Field(None, description='Equivalent NumPy dtype')
     python_type: TypeAnnotationStr | None = Field(
@@ -127,7 +127,7 @@ class TransformCategory(Enum):
 
 
 class TransformSpec(ExtensionModel):
-    name: str = Field(default=..., description='Transform name')
+    name: NonEmptyStr = Field(default=..., description='Transform name')
     category: TransformCategory = Field(default=..., description='Transform category')
     method: str | None = Field(None, description='Method reference')
     input_shape: str | None = Field(
@@ -187,7 +187,7 @@ class ErrorHandling(Enum):
 
 
 class PipelineStage(ExtensionModel):
-    name: str = Field(default=..., description='Stage name')
+    name: NonEmptyStr = Field(default=..., description='Stage name')
     transform: str | None = Field(None, description='Transform to apply')
     inputs: list[str] | None = Field(None, description='Input names (for DAG)')
     output: str | None = Field(None, description='Output name')
@@ -415,7 +415,7 @@ class DTypeBehaviorSpec(ExtensionModel):
 
 
 class PipelineSpec(ExtensionModel):
-    name: str = Field(default=..., description='Pipeline name')
+    name: NonEmptyStr = Field(default=..., description='Pipeline name')
     type: PipelineType | None = Field(None, description='Pipeline type')
     stages: list[PipelineStage] | None = Field(None, description='Pipeline stages')
     error_handling: ErrorHandling | None = Field(

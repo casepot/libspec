@@ -315,6 +315,7 @@
         },
         "name": {
           "description": "Data type name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1104,6 +1105,7 @@
         },
         "name": {
           "description": "Pipeline name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1162,6 +1164,7 @@
         },
         "name": {
           "description": "Stage name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
@@ -1307,6 +1310,7 @@
         },
         "name": {
           "description": "Transform name",
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
