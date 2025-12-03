@@ -9,9 +9,9 @@ This module defines models for event-driven architecture:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import Field, confloat, conint
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
@@ -41,8 +41,8 @@ class EventCategory(Enum):
 
 
 class EventFieldSpec(ExtensionModel):
-    name: str = Field(..., description='Field name')
-    type: str = Field(..., description='Field type')
+    name: str = Field(default=..., description='Field name')
+    type: str = Field(default=..., description='Field type')
     required: bool | None = Field(True, description='Whether field is required')
     description: str | None = None
 
@@ -61,15 +61,15 @@ class Backoff(Enum):
 
 
 class RetrySpec(ExtensionModel):
-    max_attempts: conint(ge=1) | None = Field(
-        None, description='Maximum retry attempts'
+    max_attempts: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Maximum retry attempts'
     )
     backoff: Backoff | None = Field(None, description='Backoff strategy')
-    initial_delay: confloat(ge=0.0) | None = Field(
-        None, description='Initial delay in seconds'
+    initial_delay: Annotated[float, Field(ge=0.0)] | None = Field(
+        default=None, description='Initial delay in seconds'
     )
-    max_delay: confloat(ge=0.0) | None = Field(
-        None, description='Maximum delay in seconds'
+    max_delay: Annotated[float, Field(ge=0.0)] | None = Field(
+        default=None, description='Maximum delay in seconds'
     )
     jitter: bool | None = Field(None, description='Whether to add jitter')
     retryable_exceptions: list[str] | None = Field(
@@ -133,9 +133,9 @@ class EventBusSpec(ExtensionModel):
 
 
 class TopicSpec(ExtensionModel):
-    name: str = Field(..., description='Topic name')
+    name: str = Field(default=..., description='Topic name')
     pattern: str | None = Field(None, description='Topic pattern (for wildcards)')
-    partitions: conint(ge=1) | None = Field(None, description='Number of partitions')
+    partitions: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Number of partitions')
     retention: str | None = Field(None, description='Message retention period')
     events: list[str] | None = Field(
         None, description='Event types published to this topic'
@@ -158,25 +158,25 @@ class OnFailure(Enum):
 
 
 class SagaStepSpec(ExtensionModel):
-    name: str = Field(..., description='Step name')
+    name: str = Field(default=..., description='Step name')
     action: str | None = Field(None, description='Action to perform (command/event)')
     wait_for: list[str] | None = Field(None, description='Events to wait for')
-    timeout: confloat(ge=0.0) | None = Field(
-        None, description='Step timeout in seconds'
+    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
+        default=None, description='Step timeout in seconds'
     )
     on_failure: OnFailure | None = Field(None, description='Failure handling')
 
 
 class CompensationSpec(ExtensionModel):
-    step: str = Field(..., description='Step to compensate')
-    action: str = Field(..., description='Compensation action')
+    step: str = Field(default=..., description='Step to compensate')
+    action: str = Field(default=..., description='Compensation action')
     idempotent: bool | None = Field(
         None, description='Whether compensation is idempotent'
     )
 
 
 class EventSpec(ExtensionModel):
-    name: str = Field(..., description='Event type name')
+    name: str = Field(default=..., description='Event type name')
     type: str | None = Field(None, description='Event class reference')
     category: EventCategory | None = Field(None, description='Event category')
     payload: list[EventFieldSpec] | None = Field(
@@ -194,18 +194,18 @@ class EventSpec(ExtensionModel):
 
 
 class HandlerSpec(ExtensionModel):
-    name: str = Field(..., description='Handler name')
+    name: str = Field(default=..., description='Handler name')
     handles: list[str] | None = Field(None, description='Events this handler processes')
     function: str | None = Field(None, description='Handler function reference')
     async_: bool | None = Field(
         None, alias='async', description='Whether handler is async'
     )
     retry: RetrySpec | None = None
-    timeout: confloat(ge=0.0) | None = Field(
-        None, description='Handler timeout in seconds'
+    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
+        default=None, description='Handler timeout in seconds'
     )
-    concurrency: conint(ge=1) | None = Field(
-        None, description='Max concurrent executions'
+    concurrency: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Max concurrent executions'
     )
     ordering: Ordering | None = Field(None, description='Event ordering guarantee')
     idempotent: bool | None = Field(None, description='Whether handler is idempotent')
@@ -215,7 +215,7 @@ class HandlerSpec(ExtensionModel):
 
 
 class SagaSpec(ExtensionModel):
-    name: str = Field(..., description='Saga name')
+    name: str = Field(default=..., description='Saga name')
     type: str | None = Field(None, description='Saga class reference')
     starts_with: list[str] | None = Field(
         None, description='Events that start this saga'
@@ -224,8 +224,8 @@ class SagaSpec(ExtensionModel):
     compensations: list[CompensationSpec] | None = Field(
         None, description='Compensation actions'
     )
-    timeout: confloat(ge=0.0) | None = Field(
-        None, description='Saga timeout in seconds'
+    timeout: Annotated[float, Field(ge=0.0)] | None = Field(
+        default=None, description='Saga timeout in seconds'
     )
     persistence: Persistence | None = Field(
         None, description='State persistence strategy'

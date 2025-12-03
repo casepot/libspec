@@ -9,8 +9,10 @@ This module defines models for performance specifications:
 from __future__ import annotations
 
 from datetime import date as date_aliased
+from decimal import Decimal
+from typing import Annotated
 
-from pydantic import Field, condecimal, conint
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
@@ -27,22 +29,22 @@ class ComplexitySpec(ExtensionModel):
 class BenchmarkSpec(ExtensionModel):
     operation: str | None = Field(None, description='What was benchmarked')
     input_size: str | None = Field(None, description='Input size/parameters')
-    mean: condecimal(gt=0) | None = Field(None, description='Mean execution time')
-    median: condecimal(gt=0) | None = Field(None, description='Median execution time')
-    p95: condecimal(gt=0) | None = Field(None, description='95th percentile latency')
-    p99: condecimal(gt=0) | None = Field(None, description='99th percentile latency')
-    memory_peak: condecimal(gt=0) | None = Field(None, description='Peak memory usage')
-    throughput: condecimal(gt=0) | None = Field(
-        None, description='Operations per second'
+    mean: Annotated[Decimal, Field(gt=0)] | None = Field(default=None, description='Mean execution time')
+    median: Annotated[Decimal, Field(gt=0)] | None = Field(default=None, description='Median execution time')
+    p95: Annotated[Decimal, Field(gt=0)] | None = Field(default=None, description='95th percentile latency')
+    p99: Annotated[Decimal, Field(gt=0)] | None = Field(default=None, description='99th percentile latency')
+    memory_peak: Annotated[Decimal, Field(gt=0)] | None = Field(default=None, description='Peak memory usage')
+    throughput: Annotated[Decimal, Field(gt=0)] | None = Field(
+        default=None, description='Operations per second'
     )
     environment: str | None = Field(None, description='Hardware/software environment')
     date: date_aliased | None = Field(None, description='When benchmark was run')
 
 
 class MemoryLayoutSpec(ExtensionModel):
-    size_bytes: conint(ge=0) | None = Field(None, description='Instance size in bytes')
-    alignment: conint(ge=1) | None = Field(
-        None, description='Memory alignment requirement'
+    size_bytes: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Instance size in bytes')
+    alignment: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Memory alignment requirement'
     )
     cache_friendly: bool | None = Field(
         None, description='Whether layout is cache-optimized'
@@ -54,8 +56,8 @@ class ScalingSpec(ExtensionModel):
     horizontal: bool | None = Field(None, description='Supports horizontal scaling')
     vertical: bool | None = Field(None, description='Supports vertical scaling')
     bottleneck: str | None = Field(None, description='Primary scaling bottleneck')
-    max_concurrent: conint(ge=1) | None = Field(
-        None, description='Maximum concurrent operations'
+    max_concurrent: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Maximum concurrent operations'
     )
     sharding_supported: bool | None = Field(
         None, description='Whether sharding is supported'

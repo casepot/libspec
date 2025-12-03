@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import Field, conint
+from typing import Annotated
+
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
@@ -34,7 +36,7 @@ class Lifecycle(Enum):
 
 
 class ExtensionPointSpec(ExtensionModel):
-    name: str = Field(..., description='Extension point name')
+    name: str = Field(default=..., description='Extension point name')
     interface: str | None = Field(None, description='Interface type reference')
     protocol: str | None = Field(None, description='Protocol type reference')
     multiple: bool | None = Field(
@@ -79,8 +81,8 @@ class ResultCollection(Enum):
 
 
 class HookParamSpec(ExtensionModel):
-    name: str = Field(..., description='Parameter name')
-    type: str = Field(..., description='Parameter type')
+    name: str = Field(default=..., description='Parameter name')
+    type: str = Field(default=..., description='Parameter type')
     mutable: bool | None = Field(None, description='Whether parameter can be modified')
     description: str | None = None
 
@@ -119,7 +121,7 @@ class DiscoveryMechanismType(Enum):
 
 
 class DiscoveryMechanismSpec(ExtensionModel):
-    type: DiscoveryMechanismType = Field(..., description='Discovery mechanism type')
+    type: DiscoveryMechanismType = Field(default=..., description='Discovery mechanism type')
     entry_point_group: str | None = Field(
         None, description='Entry point group name (for entry_points)'
     )
@@ -137,9 +139,9 @@ class DiscoveryMechanismSpec(ExtensionModel):
 
 
 class PluginHookRegistration(ExtensionModel):
-    hook: str = Field(..., description='Hook name')
-    handler: str = Field(..., description='Handler method reference')
-    priority: conint(ge=0) | None = Field(None, description='Handler priority')
+    hook: str = Field(default=..., description='Hook name')
+    handler: str = Field(default=..., description='Handler method reference')
+    priority: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Handler priority')
 
 
 class PluginLifecycleSpec(ExtensionModel):
@@ -157,7 +159,7 @@ class PluginLifecycleSpec(ExtensionModel):
 
 
 class HookSpec(ExtensionModel):
-    name: str = Field(..., description='Hook name')
+    name: str = Field(default=..., description='Hook name')
     type: HookType | None = Field(None, description='Hook type')
     signature: str | None = Field(None, description='Hook callback signature')
     parameters: list[HookParamSpec] | None = Field(None, description='Hook parameters')
@@ -182,7 +184,7 @@ class HookSpec(ExtensionModel):
 
 
 class RegistrySpec(ExtensionModel):
-    name: str = Field(..., description='Registry name')
+    name: str = Field(default=..., description='Registry name')
     type: str | None = Field(None, description='Registry class reference')
     key_type: str | None = Field(None, description='Registration key type')
     value_type: str | None = Field(None, description='Registered value type')
@@ -215,7 +217,7 @@ class DiscoverySpec(ExtensionModel):
 
 
 class PluginSpec(ExtensionModel):
-    name: str = Field(..., description='Plugin name')
+    name: str = Field(default=..., description='Plugin name')
     version: str | None = Field(None, description='Plugin version')
     type: str | None = Field(None, description='Plugin class reference')
     implements: list[str] | None = Field(
@@ -226,8 +228,8 @@ class PluginSpec(ExtensionModel):
     )
     dependencies: list[str] | None = Field(None, description='Plugin dependencies')
     conflicts: list[str] | None = Field(None, description='Conflicting plugins')
-    priority: conint(ge=0) | None = Field(
-        None, description='Plugin priority (lower = earlier)'
+    priority: Annotated[int, Field(ge=0)] | None = Field(
+        default=None, description='Plugin priority (lower = earlier)'
     )
     enabled_by_default: bool | None = Field(
         None, description='Whether plugin is enabled by default'

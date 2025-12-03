@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import Field, PositiveFloat, confloat, conint
+from typing import Annotated
+
+from pydantic import Field, PositiveFloat
 
 from libspec.models.base import ExtensionModel
 
@@ -52,15 +54,15 @@ class MetricType(Enum):
 
 
 class MetricSpec(ExtensionModel):
-    name: str = Field(..., description="Metric name (e.g., 'mylib_requests_total')")
-    type: MetricType = Field(..., description='Metric type')
+    name: str = Field(default=..., description="Metric name (e.g., 'mylib_requests_total')")
+    type: MetricType = Field(default=..., description='Metric type')
     description: str | None = Field(None, description='What this metric measures')
     labels: list[str] | None = Field(None, description='Label names for this metric')
     unit: str | None = Field(
         None, description="Unit of measurement (e.g., 'seconds', 'bytes')"
     )
-    buckets: list[confloat(ge=0.0)] | None = Field(
-        None, description='Histogram buckets (for histogram type)'
+    buckets: list[Annotated[float, Field(ge=0.0)]] | None = Field(
+        default=None, description='Histogram buckets (for histogram type)'
     )
 
 
@@ -87,8 +89,8 @@ class TracingSpec(ExtensionModel):
         None, description='Context propagation format'
     )
     sampling: Sampling | None = Field(None, description='Sampling strategy')
-    sampling_rate: confloat(ge=0.0, le=1.0) | None = Field(
-        None, description='Sampling rate (0.0-1.0)'
+    sampling_rate: Annotated[float, Field(ge=0.0, le=1.0)] | None = Field(
+        default=None, description='Sampling rate (0.0-1.0)'
     )
     attributes: list[str] | None = Field(None, description='Standard span attributes')
     events: list[str] | None = Field(None, description='Span events emitted')
@@ -102,8 +104,8 @@ class HealthCheckType(Enum):
 
 
 class HealthCheckSpec(ExtensionModel):
-    name: str = Field(..., description='Health check name')
-    type: HealthCheckType = Field(..., description='Health check type')
+    name: str = Field(default=..., description='Health check name')
+    type: HealthCheckType = Field(default=..., description='Health check type')
     endpoint: str | None = Field(None, description='HTTP endpoint path')
     method: str | None = Field(None, description='Method to call for health check')
     timeout: PositiveFloat | None = Field(None, description='Timeout in seconds')
@@ -121,8 +123,8 @@ class TraceFormat(Enum):
 
 
 class DebugToolsSpec(ExtensionModel):
-    repr_depth: conint(ge=1) | None = Field(
-        None, description='Default __repr__ recursion depth'
+    repr_depth: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Default __repr__ recursion depth'
     )
     sensitive_fields: list[str] | None = Field(
         None, description='Fields redacted in debug output'

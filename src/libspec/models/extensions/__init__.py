@@ -34,6 +34,12 @@ from .orm import ORMLibraryFields
 from .perf import PerfFunctionFields, PerfMethodFields, PerfTypeFields
 from .plugins import PluginsLibraryFields, PluginsTypeFields
 from .safety import SafetyFunctionFields, SafetyMethodFields, SafetyTypeFields
+from .serialization import (
+    SerializationFunctionFields,
+    SerializationLibraryFields,
+    SerializationMethodFields,
+    SerializationTypeFields,
+)
 from .state import StateLibraryFields, StateTypeFields
 from .testing import TestingLibraryFields, TestingTypeFields
 from .versioning import (
@@ -99,6 +105,11 @@ __all__ = [
     # State
     "StateLibraryFields",
     "StateTypeFields",
+    # Serialization
+    "SerializationLibraryFields",
+    "SerializationTypeFields",
+    "SerializationMethodFields",
+    "SerializationFunctionFields",
     # Testing
     "TestingLibraryFields",
     "TestingTypeFields",

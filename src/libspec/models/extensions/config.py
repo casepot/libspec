@@ -17,9 +17,9 @@ from libspec.models.base import ExtensionModel
 
 
 class SettingSpec(ExtensionModel):
-    name: str = Field(..., description='Setting name')
+    name: str = Field(default=..., description='Setting name')
     type: str = Field(
-        ..., description='Setting type (str, int, float, bool, list, dict)'
+        default=..., description='Setting type (str, int, float, bool, list, dict)'
     )
     default: Any | None = Field(None, description='Default value')
     env_var: str | None = Field(None, description='Environment variable name')
@@ -39,8 +39,8 @@ class SettingSpec(ExtensionModel):
     deprecated_message: str | None = Field(
         None, description='Deprecation message with migration guidance'
     )
-    choices: list | None = Field(
-        None, description='Valid choices for enum-like settings'
+    choices: list[Any] | None = Field(
+        default=None, description='Valid choices for enum-like settings'
     )
 
 
@@ -84,7 +84,7 @@ class ConfigSourcesSpec(ExtensionModel):
 
 class ProfileSpec(ExtensionModel):
     name: str = Field(
-        ..., description="Profile name (e.g., 'development', 'production')"
+        default=..., description="Profile name (e.g., 'development', 'production')"
     )
     description: str | None = Field(None, description='What this profile is for')
     inherits: str | None = Field(None, description='Base profile to inherit from')

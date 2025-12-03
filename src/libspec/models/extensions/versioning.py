@@ -48,8 +48,8 @@ class VersioningMethodFields(ExtensionModel):
 
 
 class DeprecationSpec(ExtensionModel):
-    target: str = Field(..., description='What is deprecated (cross-reference)')
-    since: str = Field(..., description='Version when deprecated')
+    target: str = Field(default=..., description='What is deprecated (cross-reference)')
+    since: str = Field(default=..., description='Version when deprecated')
     removed_in: str | None = Field(
         None, description='Version when removed (or planned removal)'
     )
@@ -61,8 +61,8 @@ class DeprecationSpec(ExtensionModel):
 
 
 class BreakingChangeSpec(ExtensionModel):
-    version: str = Field(..., description='Version containing the breaking change')
-    change: str = Field(..., description='Description of what changed')
+    version: str = Field(default=..., description='Version containing the breaking change')
+    change: str = Field(default=..., description='Description of what changed')
     affected: list[str] | None = Field(
         None, description='Affected APIs (cross-references)'
     )

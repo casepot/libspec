@@ -137,8 +137,8 @@ class SerializationErrorKind(Enum):
 class TypeMappingSpec(ExtensionModel):
     """Mapping between Python types and serialization types."""
 
-    python_type: str = Field(..., description="Python type to map")
-    serialized_type: str = Field(..., description="Type in serialized format")
+    python_type: str = Field(default=..., description="Python type to map")
+    serialized_type: str = Field(default=..., description="Type in serialized format")
     bidirectional: bool | None = Field(
         True, description="Whether mapping works both ways"
     )
@@ -149,8 +149,8 @@ class TypeMappingSpec(ExtensionModel):
 class CoercionRuleSpec(ExtensionModel):
     """Type coercion rule for deserialization."""
 
-    from_type: str = Field(..., description="Source type")
-    to_type: str = Field(..., description="Target type")
+    from_type: str = Field(default=..., description="Source type")
+    to_type: str = Field(default=..., description="Target type")
     behavior: CoercionBehavior | None = Field(None, description="Coercion behavior")
     lossy: bool | None = Field(
         None, description="Whether coercion may lose information"
@@ -161,8 +161,8 @@ class CoercionRuleSpec(ExtensionModel):
 class EncoderSpec(ExtensionModel):
     """Custom encoder specification."""
 
-    name: str = Field(..., description="Encoder name")
-    type: str = Field(..., description="Type this encoder handles")
+    name: str = Field(default=..., description="Encoder name")
+    type: str = Field(default=..., description="Type this encoder handles")
     function: str | None = Field(None, description="Encoder function reference")
     method: str | None = Field(None, description="Encoder method on the type")
     priority: int | None = Field(
@@ -174,8 +174,8 @@ class EncoderSpec(ExtensionModel):
 class DecoderSpec(ExtensionModel):
     """Custom decoder specification."""
 
-    name: str = Field(..., description="Decoder name")
-    type: str = Field(..., description="Type this decoder produces")
+    name: str = Field(default=..., description="Decoder name")
+    type: str = Field(default=..., description="Type this decoder produces")
     function: str | None = Field(None, description="Decoder function reference")
     factory: str | None = Field(None, description="Factory method on the type")
     priority: int | None = Field(
@@ -187,7 +187,7 @@ class DecoderSpec(ExtensionModel):
 class TypeHandlerSpec(ExtensionModel):
     """Combined encoder/decoder for a type."""
 
-    type: str = Field(..., description="Type this handler manages")
+    type: str = Field(default=..., description="Type this handler manages")
     encoder: EncoderSpec | None = None
     decoder: DecoderSpec | None = None
     strategy: EncodingStrategy | None = Field(None, description="Encoding strategy")
@@ -199,7 +199,7 @@ class TypeHandlerSpec(ExtensionModel):
 class EncoderRegistrySpec(ExtensionModel):
     """Registry of custom encoders."""
 
-    name: str = Field(..., description="Registry name")
+    name: str = Field(default=..., description="Registry name")
     encoders: list[EncoderSpec] | None = Field(None, description="Registered encoders")
     fallback: str | None = Field(None, description="Fallback encoder reference")
     strict: bool | None = Field(
@@ -210,7 +210,7 @@ class EncoderRegistrySpec(ExtensionModel):
 class DecoderRegistrySpec(ExtensionModel):
     """Registry of custom decoders."""
 
-    name: str = Field(..., description="Registry name")
+    name: str = Field(default=..., description="Registry name")
     decoders: list[DecoderSpec] | None = Field(None, description="Registered decoders")
     fallback: str | None = Field(None, description="Fallback decoder reference")
     strict: bool | None = Field(
@@ -221,8 +221,8 @@ class DecoderRegistrySpec(ExtensionModel):
 class SerializerOptionSpec(ExtensionModel):
     """Configuration option for a serializer."""
 
-    name: str = Field(..., description="Option name")
-    type: str = Field(..., description="Option type")
+    name: str = Field(default=..., description="Option name")
+    type: str = Field(default=..., description="Option type")
     default: str | None = Field(None, description="Default value (as string)")
     description: str | None = Field(None, description="What this option controls")
     choices: list[str] | None = Field(None, description="Valid choices")
@@ -231,8 +231,8 @@ class SerializerOptionSpec(ExtensionModel):
 class SerializerSpec(ExtensionModel):
     """Serializer definition."""
 
-    name: str = Field(..., description="Serializer name")
-    format: SerializationFormat = Field(..., description="Output format")
+    name: str = Field(default=..., description="Serializer name")
+    format: SerializationFormat = Field(default=..., description="Output format")
     type: str | None = Field(None, description="Serializer class reference")
     serialize_method: str | None = Field(
         None, description="Method to serialize objects"
@@ -279,8 +279,8 @@ class SerializerSpec(ExtensionModel):
 class SchemaFieldSpec(ExtensionModel):
     """Field in a generated schema."""
 
-    name: str = Field(..., description="Field name")
-    type: str = Field(..., description="Field type in schema")
+    name: str = Field(default=..., description="Field name")
+    type: str = Field(default=..., description="Field type in schema")
     required: bool | None = Field(True, description="Whether field is required")
     nullable: bool | None = Field(None, description="Whether field can be null")
     default: str | None = Field(None, description="Default value")
@@ -291,8 +291,8 @@ class SchemaFieldSpec(ExtensionModel):
 class SchemaSpec(ExtensionModel):
     """Schema definition for serialization."""
 
-    name: str = Field(..., description="Schema name")
-    format: SchemaFormat = Field(..., description="Schema format")
+    name: str = Field(default=..., description="Schema name")
+    format: SchemaFormat = Field(default=..., description="Schema format")
     type: str | None = Field(None, description="Python type this schema represents")
     version: str | None = Field(None, description="Schema version")
     fields: list[SchemaFieldSpec] | None = Field(None, description="Schema fields")
@@ -348,7 +348,7 @@ class SerializationSettingsSpec(ExtensionModel):
 class SerializationErrorSpec(ExtensionModel):
     """Serialization error specification."""
 
-    kind: SerializationErrorKind = Field(..., description="Error kind")
+    kind: SerializationErrorKind = Field(default=..., description="Error kind")
     exception: str | None = Field(None, description="Exception class raised")
     message_template: str | None = Field(None, description="Error message template")
     recoverable: bool | None = Field(

@@ -11,9 +11,9 @@ This module defines models for testing-related specifications:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import Field, confloat, conint
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
@@ -208,7 +208,7 @@ class SequenceSpec(ExtensionModel):
     pattern: str | None = Field(
         default=None, description="Pattern with {n} placeholder"
     )
-    start: conint(ge=1) | None = Field(default=1, description="Starting value")
+    start: Annotated[int, Field(ge=1)] | None = Field(default=1, description="Starting value")
 
 
 class FactorySpec(ExtensionModel):
@@ -279,7 +279,7 @@ class CoverageTargetSpec(ExtensionModel):
     """A coverage target definition."""
 
     path: str | None = Field(default=None, description="Path or module")
-    minimum: confloat(ge=0.0, le=100.0) | None = Field(
+    minimum: Annotated[float, Field(ge=0.0, le=100.0)] | None = Field(
         default=None, description="Minimum coverage percentage"
     )
 
@@ -452,7 +452,7 @@ class PytestCovConfig(ExtensionModel):
     omit: list[str] = Field(
         default_factory=list, description="Patterns to omit from coverage"
     )
-    fail_under: confloat(ge=0.0, le=100.0) | None = Field(
+    fail_under: Annotated[float, Field(ge=0.0, le=100.0)] | None = Field(
         default=None, description="Minimum coverage percentage to pass"
     )
     branch: bool | None = Field(

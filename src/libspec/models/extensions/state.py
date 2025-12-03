@@ -9,8 +9,9 @@ This module defines models for state management:
 from __future__ import annotations
 
 from enum import Enum
+from typing import Annotated
 
-from pydantic import Field, conint
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
@@ -25,7 +26,7 @@ class StoreType(Enum):
 
 
 class ReducerSpec(ExtensionModel):
-    name: str = Field(..., description='Reducer name')
+    name: str = Field(default=..., description='Reducer name')
     function: str | None = Field(None, description='Reducer function reference')
     handles: list[str] | None = Field(
         None, description='Action types this reducer handles'
@@ -35,7 +36,7 @@ class ReducerSpec(ExtensionModel):
 
 
 class SliceSpec(ExtensionModel):
-    name: str = Field(..., description='Slice name')
+    name: str = Field(default=..., description='Slice name')
     path: str | None = Field(None, description='Path in state tree')
     state_type: str | None = Field(None, description='Slice state type')
     reducers: list[ReducerSpec] | None = Field(None, description='Slice reducers')
@@ -55,7 +56,7 @@ class MachineStateType(Enum):
 
 
 class MachineStateSpec(ExtensionModel):
-    name: str = Field(..., description='State name')
+    name: str = Field(default=..., description='State name')
     type: MachineStateType | None = Field(None, description='State type')
     entry: list[str] | None = Field(None, description='Entry actions')
     exit: list[str] | None = Field(None, description='Exit actions')
@@ -72,7 +73,7 @@ class MachineStateSpec(ExtensionModel):
 
 
 class MachineEventSpec(ExtensionModel):
-    name: str = Field(..., description='Event name')
+    name: str = Field(default=..., description='Event name')
     payload_type: str | None = Field(None, description='Event payload type')
     description: str | None = None
 
@@ -90,7 +91,7 @@ class TransitionSpec(ExtensionModel):
 
 
 class GuardSpec(ExtensionModel):
-    name: str = Field(..., description='Guard name')
+    name: str = Field(default=..., description='Guard name')
     function: str | None = Field(None, description='Guard function reference')
     condition: str | None = Field(None, description='Condition description')
 
@@ -104,7 +105,7 @@ class MachineActionType(Enum):
 
 
 class MachineActionSpec(ExtensionModel):
-    name: str = Field(..., description='Action name')
+    name: str = Field(default=..., description='Action name')
     function: str | None = Field(None, description='Action function reference')
     type: MachineActionType | None = Field(None, description='Action type')
     description: str | None = None
@@ -118,7 +119,7 @@ class ServiceType(Enum):
 
 
 class ServiceSpec(ExtensionModel):
-    name: str = Field(..., description='Service name')
+    name: str = Field(default=..., description='Service name')
     type: ServiceType | None = Field(None, description='Service type')
     src: str | None = Field(None, description='Service source/function reference')
     on_done: str | None = Field(None, description='Transition on success')
@@ -126,7 +127,7 @@ class ServiceSpec(ExtensionModel):
 
 
 class ActionSpec(ExtensionModel):
-    name: str = Field(..., description='Action type name')
+    name: str = Field(default=..., description='Action type name')
     type: str | None = Field(None, description='Action creator type reference')
     payload_type: str | None = Field(None, description='Payload type')
     creator: str | None = Field(None, description='Action creator function reference')
@@ -137,7 +138,7 @@ class ActionSpec(ExtensionModel):
 
 
 class SelectorSpec(ExtensionModel):
-    name: str = Field(..., description='Selector name')
+    name: str = Field(default=..., description='Selector name')
     function: str | None = Field(None, description='Selector function reference')
     input_selectors: list[str] | None = Field(
         None, description='Input selectors (for memoization)'
@@ -155,9 +156,9 @@ class Intercept(Enum):
 
 
 class StateMiddlewareSpec(ExtensionModel):
-    name: str = Field(..., description='Middleware name')
+    name: str = Field(default=..., description='Middleware name')
     type: str | None = Field(None, description='Middleware type reference')
-    order: conint(ge=0) | None = Field(None, description='Execution order')
+    order: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Execution order')
     intercepts: list[Intercept] | None = Field(
         None, description='What this middleware intercepts'
     )
@@ -184,7 +185,7 @@ class PersistenceSpec(ExtensionModel):
     key: str | None = Field(None, description='Storage key')
     whitelist: list[str] | None = Field(None, description='Paths to persist')
     blacklist: list[str] | None = Field(None, description='Paths to exclude')
-    version: conint(ge=0) | None = Field(None, description='Persistence version')
+    version: Annotated[int, Field(ge=0)] | None = Field(default=None, description='Persistence version')
     migrate: str | None = Field(None, description='Migration function reference')
 
 
@@ -195,7 +196,7 @@ class StateTypeFields(ExtensionModel):
 
 
 class StoreSpec(ExtensionModel):
-    name: str = Field(..., description='Store name')
+    name: str = Field(default=..., description='Store name')
     type: StoreType | None = Field(None, description='Store implementation type')
     state_type: str | None = Field(None, description='State type reference')
     initial_state: str | None = Field(
@@ -211,10 +212,10 @@ class StoreSpec(ExtensionModel):
 
 
 class StateMachineSpec(ExtensionModel):
-    name: str = Field(..., description='State machine name')
-    type: str | None = Field(None, description='State machine class reference')
-    states: list[MachineStateSpec] = Field(..., description='State definitions')
-    initial: str = Field(..., description='Initial state name')
+    name: str = Field(default=..., description='State machine name')
+    type: str | None = Field(default=None, description='State machine class reference')
+    states: list[MachineStateSpec] = Field(default=..., description='State definitions')
+    initial: str = Field(default=..., description='Initial state name')
     context_type: str | None = Field(None, description='Context/extended state type')
     events: list[MachineEventSpec] | None = Field(None, description='Event definitions')
     transitions: list[TransitionSpec] | None = Field(

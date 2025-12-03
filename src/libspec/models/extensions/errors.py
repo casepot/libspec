@@ -16,7 +16,7 @@ from libspec.models.base import ExtensionModel
 
 
 class ErrorHierarchyNode(ExtensionModel):
-    type: str = Field(..., description='Exception class name')
+    type: str = Field(default=..., description='Exception class name')
     base: str | None = Field(
         None, description="Base class (e.g., 'Exception', 'RuntimeError')"
     )
@@ -27,8 +27,8 @@ class ErrorHierarchyNode(ExtensionModel):
 
 
 class ExceptionField(ExtensionModel):
-    name: str = Field(..., description='Field name')
-    type: str = Field(..., description='Field type')
+    name: str = Field(default=..., description='Field name')
+    type: str = Field(default=..., description='Field type')
     description: str | None = Field(None, description='What this field contains')
 
 
@@ -40,17 +40,17 @@ class Severity(Enum):
 
 
 class ErrorCode(ExtensionModel):
-    code: str = Field(..., description="Error code (e.g., 'E001', 'AUTH_FAILED')")
-    type: str | None = Field(None, description='Associated exception type')
-    category: str | None = Field(None, description='Error category for grouping')
-    description: str = Field(..., description='Human-readable description')
+    code: str = Field(default=..., description="Error code (e.g., 'E001', 'AUTH_FAILED')")
+    type: str | None = Field(default=None, description='Associated exception type')
+    category: str | None = Field(default=None, description='Error category for grouping')
+    description: str = Field(default=..., description='Human-readable description')
     docs_url: AnyUrl | None = Field(None, description='URL to detailed documentation')
     severity: Severity | None = Field(None, description='Error severity level')
 
 
 class ExceptionSpec(ExtensionModel):
-    type: str = Field(..., description='Exception class name')
-    module: str = Field(..., description='Module where exception is defined')
+    type: str = Field(default=..., description='Exception class name')
+    module: str = Field(default=..., description='Module where exception is defined')
     base: str | None = Field(None, description='Base exception class')
     description: str | None = Field(None, description='When this exception is raised')
     fields: list[ExceptionField] | None = Field(

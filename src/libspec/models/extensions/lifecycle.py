@@ -17,7 +17,6 @@ from pydantic import (
     Field,
     NonNegativeInt,
     ValidationInfo,
-    conlist,
     field_validator,
     model_validator,
 )
@@ -154,7 +153,7 @@ class DeprecationNoticeEvidence(EvidenceBase):
 
     type: Literal["deprecation_notice"]
     reference: NonEmptyStr
-    date: date_type  # Required for deprecation notices
+    date: date_type = Field(..., description="Date of the deprecation notice")  # type: ignore[assignment]  # Required - valid Pydantic pattern
 
 
 class CustomEvidence(EvidenceBase):
@@ -305,7 +304,7 @@ class LifecycleFields(ExtensionModel):
 
     lifecycle_state: str | None = None
     workflow: str | None = None  # Workflow override (uses default if not set)
-    state_evidence: conlist(EvidenceSpec, min_length=1) = Field(default_factory=list)
+    state_evidence: Annotated[list[EvidenceSpec], Field(min_length=1)] = Field(default_factory=list)
 
 
 class LifecycleLibraryFields(ExtensionModel):

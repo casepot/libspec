@@ -8,10 +8,11 @@ This module defines models for command-line interface specifications:
 
 from __future__ import annotations
 
+import re
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import Field, conint
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 
@@ -23,7 +24,7 @@ class ExampleSpec(ExtensionModel):
 
 
 class ExitCodeSpec(ExtensionModel):
-    code: conint(ge=0, le=255) = Field(..., description='Exit code value')
+    code: Annotated[int, Field(ge=0, le=255)] = Field(default=..., description='Exit code value')
     name: str | None = Field(None, description='Exit code name')
     description: str | None = Field(None, description='When this code is returned')
 
@@ -71,7 +72,7 @@ class Color(Enum):
 
 
 class HelpFormattingSpec(ExtensionModel):
-    max_width: conint(ge=1) | None = Field(None, description='Maximum help text width')
+    max_width: Annotated[int, Field(ge=1)] | None = Field(default=None, description='Maximum help text width')
     show_default: bool | None = Field(
         None, description='Show defaults in help by default'
     )
@@ -103,7 +104,7 @@ class ContextSettingsSpec(ExtensionModel):
 
 
 class ArgumentSpec(ExtensionModel):
-    name: str = Field(..., description='Argument name')
+    name: str = Field(default=..., description='Argument name')
     type: str | None = Field(None, description='Argument type')
     required: bool | None = Field(True, description='Whether argument is required')
     default: Any | None = Field(None, description='Default value')
@@ -117,7 +118,7 @@ class ArgumentSpec(ExtensionModel):
 
 
 class OptionSpec(ExtensionModel):
-    name: str = Field(..., description="Long option name (e.g., '--verbose')")
+    name: str = Field(default=..., description="Long option name (e.g., '--verbose')")
     short: str | None = Field(None, description="Short option name (e.g., '-v')")
     type: str | None = Field(None, description='Option type')
     required: bool | None = Field(False, description='Whether option is required')
@@ -128,7 +129,7 @@ class OptionSpec(ExtensionModel):
         None, description='Whether to count occurrences (e.g., -vvv)'
     )
     multiple: bool | None = Field(None, description='Whether option can be repeated')
-    choices: list | None = Field(None, description='Valid choices')
+    choices: list[Any] | None = Field(default=None, description='Valid choices')
     metavar: str | None = Field(None, description='Display name in help')
     help: str | None = Field(None, description='Help text')
     hidden: bool | None = Field(None, description='Whether option is hidden from help')
@@ -150,7 +151,7 @@ class OptionSpec(ExtensionModel):
 
 
 class CommandSpec(ExtensionModel):
-    name: str = Field(..., description='Command name')
+    name: str = Field(default=..., description='Command name')
     aliases: list[str] | None = Field(None, description='Command aliases')
     handler: str | None = Field(None, description='Handler function reference')
     arguments: list[ArgumentSpec] | None = Field(
@@ -168,6 +169,24 @@ class CommandSpec(ExtensionModel):
     deprecated_message: str | None = Field(None, description='Deprecation message')
     examples: list[ExampleSpec] | None = Field(None, description='Usage examples')
     context_settings: ContextSettingsSpec | None = None
+
+    @model_validator(mode='after')
+    def validate_command_name(self) -> 'CommandSpec':
+        """Validate command name is lowercase alphanumeric with hyphens."""
+        # CLI command names should be lowercase with hyphens (kebab-case)
+        if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', self.name):
+            raise ValueError(
+                f"Command name {self.name!r} must be lowercase alphanumeric with hyphens "
+                "(e.g., 'my-command', 'init', 'list-all')"
+            )
+        # Validate aliases follow same pattern
+        if self.aliases:
+            for alias in self.aliases:
+                if not re.match(r'^[a-z][a-z0-9]*(-[a-z0-9]+)*$', alias):
+                    raise ValueError(
+                        f"Command alias {alias!r} must be lowercase alphanumeric with hyphens"
+                    )
+        return self
 
 
 class CLILibraryFields(ExtensionModel):

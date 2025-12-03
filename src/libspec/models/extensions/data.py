@@ -9,8 +9,9 @@ This module defines models for data processing and transformation:
 from __future__ import annotations
 
 from enum import Enum
+from typing import Annotated
 
-from pydantic import Field, conint
+from pydantic import Field
 
 from libspec.models.base import ExtensionModel
 
@@ -35,13 +36,13 @@ class DTypeCategory(Enum):
 
 
 class DTypeSpec(ExtensionModel):
-    name: str = Field(..., description='Data type name')
+    name: str = Field(default=..., description='Data type name')
     category: DTypeCategory | None = Field(None, description='Type category')
     numpy_equivalent: str | None = Field(None, description='Equivalent NumPy dtype')
     python_type: str | None = Field(None, description='Python type for scalar values')
     nullable: bool | None = Field(None, description='Whether null values are supported')
-    bit_width: conint(ge=1) | None = Field(
-        None, description='Bit width (for numeric types)'
+    bit_width: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Bit width (for numeric types)'
     )
     signed: bool | None = Field(None, description='Whether signed (for integer types)')
     precision: str | None = Field(
@@ -80,8 +81,8 @@ class TransformCategory(Enum):
 
 
 class TransformSpec(ExtensionModel):
-    name: str = Field(..., description='Transform name')
-    category: TransformCategory = Field(..., description='Transform category')
+    name: str = Field(default=..., description='Transform name')
+    category: TransformCategory = Field(default=..., description='Transform category')
     method: str | None = Field(None, description='Method reference')
     input_shape: str | None = Field(
         None, description="Expected input shape (e.g., '1D', '2D', 'any')"
@@ -124,7 +125,7 @@ class ErrorHandling(Enum):
 
 
 class PipelineStage(ExtensionModel):
-    name: str = Field(..., description='Stage name')
+    name: str = Field(default=..., description='Stage name')
     transform: str | None = Field(None, description='Transform to apply')
     inputs: list[str] | None = Field(None, description='Input names (for DAG)')
     output: str | None = Field(None, description='Output name')
@@ -132,7 +133,7 @@ class PipelineStage(ExtensionModel):
 
 
 class IOFormatSpec(ExtensionModel):
-    format: str = Field(..., description="Format name (e.g., 'csv', 'parquet', 'json')")
+    format: str = Field(default=..., description="Format name (e.g., 'csv', 'parquet', 'json')")
     read_method: str | None = Field(None, description='Method for reading this format')
     write_method: str | None = Field(None, description='Method for writing this format')
     streaming: bool | None = Field(
@@ -217,14 +218,14 @@ class Backend(Enum):
 
 class ParallelismSpec(ExtensionModel):
     backend: Backend | None = Field(None, description='Parallelism backend')
-    default_threads: conint(ge=1) | None = Field(
-        None, description='Default thread count'
+    default_threads: Annotated[int, Field(ge=1)] | None = Field(
+        default=None, description='Default thread count'
     )
     auto_parallel: bool | None = Field(
         None, description='Whether operations auto-parallelize'
     )
-    min_size_for_parallel: conint(ge=0) | None = Field(
-        None, description='Minimum data size for parallel execution'
+    min_size_for_parallel: Annotated[int, Field(ge=0)] | None = Field(
+        default=None, description='Minimum data size for parallel execution'
     )
     parallel_operations: list[str] | None = Field(
         None, description='Operations that support parallelism'
@@ -302,7 +303,7 @@ class DTypeBehaviorSpec(ExtensionModel):
 
 
 class PipelineSpec(ExtensionModel):
-    name: str = Field(..., description='Pipeline name')
+    name: str = Field(default=..., description='Pipeline name')
     type: PipelineType | None = Field(None, description='Pipeline type')
     stages: list[PipelineStage] | None = Field(None, description='Pipeline stages')
     error_handling: ErrorHandling | None = Field(

@@ -11,7 +11,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from libspec.models.base import ExtensionModel
 
@@ -33,9 +33,9 @@ class OnDelete(Enum):
 
 
 class ColumnSpec(ExtensionModel):
-    name: str = Field(..., description='Column name')
+    name: str = Field(default=..., description='Column name')
     type: str = Field(
-        ..., description="Column type (e.g., 'Integer', 'String(255)', 'JSON')"
+        default=..., description="Column type (e.g., 'Integer', 'String(255)', 'JSON')"
     )
     nullable: bool | None = Field(True, description='Whether column allows NULL')
     primary_key: bool | None = Field(None, description='Whether this is a primary key')
@@ -57,6 +57,27 @@ class ColumnSpec(ExtensionModel):
     comment: str | None = Field(None, description='Column comment')
     python_type: str | None = Field(None, description='Python type for this column')
 
+    @model_validator(mode='after')
+    def validate_column_constraints(self) -> 'ColumnSpec':
+        """Validate column constraint consistency."""
+        # Primary keys cannot also be foreign keys (in the same column definition)
+        if self.primary_key and self.foreign_key:
+            raise ValueError(
+                f"Column {self.name!r} cannot be both a primary key and a foreign key. "
+                "Use a composite primary key with a separate foreign key constraint instead."
+            )
+        # Primary keys should not be nullable
+        if self.primary_key and self.nullable:
+            raise ValueError(
+                f"Primary key column {self.name!r} cannot be nullable"
+            )
+        # on_update/on_delete only make sense with foreign_key
+        if (self.on_update or self.on_delete) and not self.foreign_key:
+            raise ValueError(
+                f"Column {self.name!r} has on_update/on_delete without foreign_key"
+            )
+        return self
+
 
 class RelationshipType(Enum):
     one_to_one = 'one_to_one'
@@ -76,9 +97,9 @@ class Lazy(Enum):
 
 
 class RelationshipSpec(ExtensionModel):
-    name: str = Field(..., description='Relationship attribute name')
-    type: RelationshipType = Field(..., description='Relationship type')
-    target: str = Field(..., description='Target model name')
+    name: str = Field(default=..., description='Relationship attribute name')
+    type: RelationshipType = Field(default=..., description='Relationship type')
+    target: str = Field(default=..., description='Target model name')
     back_populates: str | None = Field(
         None, description='Back-reference attribute on target'
     )
@@ -96,8 +117,8 @@ class RelationshipSpec(ExtensionModel):
 
 
 class IndexSpec(ExtensionModel):
-    name: str | None = Field(None, description='Index name')
-    columns: list[str] = Field(..., description='Columns in the index')
+    name: str | None = Field(default=None, description='Index name')
+    columns: list[str] = Field(default=..., description='Columns in the index')
     unique: bool | None = Field(None, description='Whether index is unique')
     type: str | None = Field(
         None, description="Index type (e.g., 'btree', 'hash', 'gin', 'gist')"
@@ -122,8 +143,8 @@ class Initially(Enum):
 
 
 class ConstraintSpec(ExtensionModel):
-    name: str | None = Field(None, description='Constraint name')
-    type: ConstraintType = Field(..., description='Constraint type')
+    name: str | None = Field(default=None, description='Constraint name')
+    type: ConstraintType = Field(default=..., description='Constraint type')
     columns: list[str] | None = Field(None, description='Columns involved')
     expression: str | None = Field(None, description='Constraint expression')
     deferrable: bool | None = Field(
@@ -181,7 +202,7 @@ class Pattern(Enum):
 
 
 class QueryPatternSpec(ExtensionModel):
-    name: str = Field(..., description='Pattern name')
+    name: str = Field(default=..., description='Pattern name')
     pattern: Pattern | None = Field(None, description='Query pattern type')
     method: str | None = Field(None, description='Method reference')
     description: str | None = Field(None, description='Pattern description')
@@ -218,7 +239,7 @@ class Name(Enum):
 
 
 class DatabaseSupportSpec(ExtensionModel):
-    name: Name = Field(..., description='Database name')
+    name: Name = Field(default=..., description='Database name')
     dialect: str | None = Field(None, description='SQLAlchemy dialect')
     min_version: str | None = Field(None, description='Minimum supported version')
     features: list[str] | None = Field(
@@ -228,7 +249,7 @@ class DatabaseSupportSpec(ExtensionModel):
 
 
 class ModelSpec(ExtensionModel):
-    name: str = Field(..., description='Model class name')
+    name: str = Field(default=..., description='Model class name')
     table: str | None = Field(None, description='Database table name')
     schema_: str | None = Field(
         None, alias='schema', description='Database schema (if applicable)'
