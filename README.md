@@ -20,6 +20,8 @@ pip install libspec[cli]
 
 ## Quick Example
 
+A minimal spec defining one type with a dependency:
+
 ```json
 {
   "$schema": "libspec/1.0",
@@ -127,15 +129,13 @@ libspec validate --strict && libspec lint --strict
 
 ## Maturity Tracking
 
-Every entity can have a `maturity` field tracking its development stage:
+Every entity can have a `maturity` field tracking its development stage. The eight levels in order:
 
-```
-idea → specified → designed → implemented → tested → documented → released → deprecated
-```
+`idea` → `specified` → `designed` → `implemented` → `tested` → `documented` → `released` → `deprecated`
 
 ### Requirements & Dependencies
 
-The `requires` field declares dependencies with optional maturity constraints:
+The `requires` field declares dependencies with optional maturity constraints. For example, a type that depends on other types being at certain maturity levels:
 
 ```json
 {
@@ -200,34 +200,34 @@ Extensions add optional, domain-specific fields to core entities. Enable them in
 
 ### Domain Extensions
 
-Model specific technical domains:
+Model specific technical domains. Each extension adds new fields to core entities:
 
-| Extension | Purpose | Key Additions |
-|-----------|---------|---------------|
-| `async` | Async/concurrent systems | Lifecycle states, cancellation, sync primitives |
-| `web` | Web frameworks | Routes, middleware, dependencies |
-| `data` | Data processing | Transforms, dtypes, lazy evaluation |
-| `cli` | Command-line tools | Commands, arguments, options, exit codes |
-| `orm` | Database ORMs | Models, relationships, migrations |
-| `events` | Event-driven systems | Events, handlers, sagas |
-| `state` | State machines | States, transitions, guards |
-| `testing` | Test frameworks | Fixtures, markers, factories |
-| `plugins` | Extensible systems | Extension points, hooks, registries |
-| `config` | Configuration | Settings, sources, profiles, secrets |
-| `serialization` | Serialization | Formats, encoders, type mappings |
+| Extension | Purpose | Fields Added |
+|-----------|---------|--------------|
+| `async` | Async/concurrent systems | `async_lifecycle`, `cancellation_safe`, `sync_primitives` |
+| `web` | Web frameworks | `routes[]`, `middleware[]`, `dependencies[]` |
+| `data` | Data processing | `transforms[]`, `dtype`, `lazy` |
+| `cli` | Command-line tools | `commands[]`, `arguments[]`, `exit_codes[]` |
+| `orm` | Database ORMs | `table`, `relationships[]`, `migrations[]` |
+| `events` | Event-driven systems | `events[]`, `handlers[]`, `sagas[]` |
+| `state` | State machines | `states[]`, `transitions[]`, `guards[]` |
+| `testing` | Test frameworks | `fixtures[]`, `markers[]`, `factories[]` |
+| `plugins` | Extensible systems | `extension_points[]`, `hooks[]`, `registry` |
+| `config` | Configuration | `settings[]`, `sources[]`, `profiles[]` |
+| `serialization` | Serialization | `formats[]`, `encoders[]`, `type_mappings[]` |
 
 ### Concern Extensions
 
-Cross-cutting aspects for any library:
+Cross-cutting aspects that apply to any library:
 
-| Extension | Purpose | Key Additions |
-|-----------|---------|---------------|
-| `errors` | Error handling | Exception hierarchy, error codes, recovery |
-| `perf` | Performance | Complexity, benchmarks, scaling |
-| `safety` | Safety guarantees | Thread safety, reentrancy, memory |
-| `versioning` | API evolution | Deprecations, breaking changes, migrations |
-| `observability` | Debugging | Logging, metrics, tracing, health checks |
-| `lifecycle` | Development workflow | Gates, evidence, workflow definitions |
+| Extension | Purpose | Fields Added |
+|-----------|---------|--------------|
+| `errors` | Error handling | `error_codes[]`, `recovery_strategies[]`, `exception_hierarchy` |
+| `perf` | Performance | `complexity`, `benchmarks[]`, `scaling` |
+| `safety` | Safety guarantees | `thread_safe`, `reentrant`, `memory_safety` |
+| `versioning` | API evolution | `deprecated_in`, `removed_in`, `migration_guide` |
+| `observability` | Debugging | `logs[]`, `metrics[]`, `traces[]`, `health_checks[]` |
+| `lifecycle` | Development workflow | `workflows[]`, `maturity_gates[]`, `maturity_evidence[]` |
 
 ### Compatibility
 
@@ -242,18 +242,7 @@ All extensions compose freely. Recommended combinations:
 
 ## Pydantic-First Architecture
 
-libspec uses Pydantic models as the **single source of truth**. JSON schemas are generated artifacts, never edited directly.
-
-### Key Types
-
-Models use 30+ constrained types with pattern validation:
-
-| Type | Pattern | Example |
-|------|---------|---------|
-| `KebabCaseId` | `^[a-z][a-z0-9]*(-[a-z0-9]+)*$` | `user-auth`, `retry-logic` |
-| `PascalCaseName` | `^[A-Z][a-zA-Z0-9]*$` | `Connection`, `HttpClient` |
-| `CrossReference` | `#/types/X`, `lib#/functions/Y` | `#/types/Handler/methods/run` |
-| `EntityMaturity` | enum | `idea`, `implemented`, `released` |
+libspec uses Pydantic models as the **single source of truth**. JSON schemas are generated artifacts, never edited directly. Models use 30+ constrained types with pattern validation to enforce naming conventions and reference formats.
 
 ### Strict Mode
 
@@ -272,11 +261,13 @@ strict_models = true
 
 Strict mode adds: type coercion rejection, duplicate detection, bounded numeric validation, and path existence checks.
 
-### Development
+### For Contributors
+
+If you're modifying libspec's Pydantic models, regenerate the JSON schemas:
 
 ```bash
 uv run python tools/generate_schema.py        # Regenerate schemas from models
-uv run python tools/generate_schema.py --check  # CI: verify schemas are current
+uv run python tools/generate_schema.py --check  # CI: verify schemas match models
 ```
 
 ---
