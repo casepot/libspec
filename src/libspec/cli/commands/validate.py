@@ -32,6 +32,10 @@ def validate(ctx: Context, strict: bool) -> None:
     For semantic checks (naming, completeness), use 'lint'.
 
     \b
+    Note: Spec loading performs Pydantic validation first (exit code 1 on error).
+    This command runs additional JSON Schema validation (exit code 3 with --strict).
+
+    \b
     Examples:
         libspec validate
         libspec validate --strict && echo "Valid!"
@@ -87,6 +91,10 @@ def lint(
       - Naming (N): Kebab-case IDs, PascalCase types
       - Completeness (C): Features without steps
       - Consistency (X): Dangling refs, duplicates
+      - Version (V): Python version compatibility
+      - Lifecycle (L): Lifecycle workflow validation
+      - Maturity (M): Maturity/status alignment
+      - Extension (E): Extension-specific validation
 
     \b
     Configure in pyproject.toml:

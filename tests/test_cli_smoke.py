@@ -33,3 +33,19 @@ def test_refs_accept_library_prefix():
     spec = str(FIXTURES / "minimal.json")
     result = run_cmd(["--spec", spec, "--text", "refs", "#/library/types/Greeter"])
     assert "Greeter" in result.output
+
+
+def test_refs_nested_method():
+    """Test that nested method refs like #/types/Request/methods/with_headers resolve correctly."""
+    spec = str(FIXTURES / "http-client.json")
+    result = run_cmd(["--spec", spec, "refs", "#/types/Request/methods/with_headers"])
+    data = json.loads(result.output)
+    assert data["result"]["resolved"]["name"] == "with_headers"
+    assert "signature" in data["result"]["resolved"]
+
+
+def test_refs_nested_method_text():
+    """Test nested method refs in text mode."""
+    spec = str(FIXTURES / "http-client.json")
+    result = run_cmd(["--spec", spec, "--text", "refs", "#/types/Request/methods/with_headers"])
+    assert "with_headers" in result.output

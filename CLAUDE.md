@@ -47,11 +47,14 @@ Core API in `src/libspec/__init__.py`: `get_schema_path()`, `validate_spec()`, `
 
 ### CLI (`src/libspec/cli/`)
 
-Click-based CLI with command groups:
-- **inspect**: `info`, `types`, `functions`, `features`, `modules`, `principles`
-- **query**: `query` (jq expressions), `refs` (resolve cross-references), `search`
-- **validate**: `validate` (JSON Schema), `lint` (semantic rules)
-- **analyze**: `coverage`, `deps`, `surface`
+Click-based CLI with flat command structure (commands are top-level, not grouped):
+- **Inspection**: `info`, `types`, `functions`, `features`, `modules`, `principles`
+- **Query**: `query` (jq expressions), `refs` (resolve cross-references), `search`
+- **Validation**: `validate` (JSON Schema), `lint` (semantic rules)
+- **Analysis**: `coverage`, `deps`, `surface`, `lifecycle`
+- **Navigation**: `next`, `blocked`, `navigate gaps`, `navigate progress`
+
+Note: Global flags (`--text`, `--no-meta`, `--spec`, `--config`, `--strict-models`) must precede the command name.
 
 Key files:
 - `app.py` - CLI entry point, command registration, `Context` class
@@ -68,8 +71,11 @@ Rule-based linting with categories:
 - `C` (completeness): Missing signatures, empty enums
 - `X` (consistency): Dangling refs, duplicates
 - `V` (version): Python version compatibility
+- `L` (lifecycle): Lifecycle workflow validation
+- `M` (maturity): Maturity/status alignment
+- `E` (extension): Extension-specific validation
 
-`LintRule` base class in `base.py`. Rules in `rules/` subdirectory (structural.py, naming.py, completeness.py, consistency.py, version.py).
+`LintRule` base class in `base.py`. Rules in `rules/` subdirectory.
 
 Configure in pyproject.toml under `[tool.libspec.lint]`.
 

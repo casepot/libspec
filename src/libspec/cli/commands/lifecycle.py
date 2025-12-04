@@ -236,10 +236,14 @@ def lifecycle(
     Analyze entity lifecycle states and transitions.
 
     \b
+    Works with the core maturity field on all entities. When the lifecycle
+    extension is enabled, also reports workflow gates and blocked items.
+
+    \b
     Reports:
-      - Counts by state across all workflows
-      - Blocked items missing required gates
-      - Invalid transitions detected
+      - Counts by state (maturity) across all tracked entities
+      - By workflow breakdown (if lifecycle extension enabled)
+      - Blocked items missing required gates (if workflows defined)
 
     \b
     Examples:
@@ -250,12 +254,6 @@ def lifecycle(
         libspec lifecycle --workflow standard
     """
     spec = ctx.get_spec()
-
-    # Check if lifecycle extension is enabled
-    if "lifecycle" not in spec.extensions:
-        raise click.ClickException(
-            "Lifecycle extension not enabled. Add 'lifecycle' to extensions array."
-        )
 
     entities = collect_entities_with_lifecycle(spec.data)
     workflows_def = spec.workflows

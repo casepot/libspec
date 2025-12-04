@@ -44,7 +44,7 @@ class Context:
 pass_context = click.make_pass_decorator(Context)
 
 
-@click.group()
+@click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--spec",
     "-s",
@@ -73,7 +73,7 @@ pass_context = click.make_pass_decorator(Context)
     default=None,
     help="Enable strict Pydantic parsing (no coercion, extra fields rejected)",
 )
-@click.version_option(version="0.1.0", prog_name="libspec")
+@click.version_option("0.1.0", "-v", "--version", prog_name="libspec")
 @click.pass_context
 def cli(
     ctx: click.Context,
@@ -90,9 +90,14 @@ def cli(
     Use --text for compact, token-efficient output.
 
     \b
+    Note: Global flags (--spec, --text, --no-meta, --config, --strict-models)
+    must precede the command name: libspec --text types (not: libspec types --text)
+
+    \b
     Examples:
         libspec info                    # Overview of your spec
         libspec types --kind protocol   # List all protocols
+        libspec --text types            # Text output (global flag before command)
         libspec query '.library.types[] | select(.kind=="class")'
         libspec lint --strict           # Lint and fail on issues
     """
@@ -107,7 +112,7 @@ def cli(
     )
 
 
-# Import and register command groups (must be after cli definition to avoid circular imports)
+# Import and register commands (must be after cli definition to avoid circular imports)
 from libspec.cli.commands import analyze, inspect, lifecycle, navigate, query, validate  # noqa: E402
 
 cli.add_command(inspect.info)  # type: ignore[has-type]

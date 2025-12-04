@@ -63,27 +63,45 @@ def resolve_ref(spec_data: dict[str, Any], ref: str) -> tuple[Any, list[str | in
             # If more parts, traverse deeper
             if len(parts) > 2:
                 current = item
-                for part in parts[2:]:
+                remaining = parts[2:]
+                idx = 0
+                while idx < len(remaining):
+                    part = remaining[idx]
                     if isinstance(current, dict):
                         if part in current:
                             current = current[part]
                             json_path.append(part)
-                        else:
-                            # Try as array lookup by name
-                            arr = current.get(part, [])
-                            if isinstance(arr, list) and len(parts) > parts.index(part) + 1:
-                                next_name = parts[parts.index(part) + 1]
-                                for j, elem in enumerate(arr):
-                                    if elem.get("name") == next_name:
+                            # If we navigated to a list, consume next part as element lookup
+                            if isinstance(current, list) and idx + 1 < len(remaining):
+                                next_name = remaining[idx + 1]
+                                found = False
+                                for j, elem in enumerate(current):
+                                    elem_name = elem.get("name") or elem.get("id")
+                                    if elem_name == next_name:
                                         current = elem
-                                        json_path.extend([part, j])
+                                        json_path.append(j)
+                                        idx += 1  # Skip the name part
+                                        found = True
                                         break
-                                else:
+                                if not found:
                                     return None
-                            else:
-                                return None
+                        else:
+                            return None
+                    elif isinstance(current, list):
+                        # Direct array element lookup by name/id
+                        found = False
+                        for j, elem in enumerate(current):
+                            elem_name = elem.get("name") or elem.get("id")
+                            if elem_name == part:
+                                current = elem
+                                json_path.append(j)
+                                found = True
+                                break
+                        if not found:
+                            return None
                     else:
                         return None
+                    idx += 1
                 return current, json_path
             return item, json_path
 
@@ -110,6 +128,8 @@ def query(ctx: Context, expression: str, raw: bool, compact: bool) -> None:
         feature-ids     → .library.features[].id
         modules         → .library.modules[].path
         extensions      → .extensions
+        name            → .library.name
+        version         → .library.version
 
     \b
     Examples:

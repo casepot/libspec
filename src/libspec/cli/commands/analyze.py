@@ -211,8 +211,8 @@ def deps(
     for t in spec.types:
         name = t.name
         refs = extract_refs_from_type(t)
-        # Filter to only types that exist in this spec
-        type_deps[name] = refs & type_names
+        # Filter to only types that exist in this spec, exclude self-references
+        type_deps[name] = (refs & type_names) - {name}
 
     # Build module dependency graph
     module_deps: dict[str, list[str]] = {}
