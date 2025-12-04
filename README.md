@@ -45,6 +45,47 @@ pip install libspec[cli]
 
 ---
 
+## Core Schema
+
+A libspec file describes your library through six entity types:
+
+```
+Library (root)
+├── modules[]      → Package structure and exports
+├── types[]        → Classes, protocols, enums, type aliases
+├── functions[]    → Standalone functions and decorators
+├── features[]     → Behavioral specifications
+└── principles[]   → Design philosophy
+```
+
+### Entity Types
+
+| Entity | Role | Key Fields |
+|--------|------|------------|
+| **TypeDef** | Describes classes, protocols, enums, dataclasses, and type aliases. The primary building blocks of your API surface. | `name`, `kind`, `module`, `methods[]`, `properties[]`, `generic_params[]` |
+| **FunctionDef** | Describes standalone functions, decorators, context managers, and generators. Captures signatures, exceptions, and behavior. | `name`, `kind`, `signature`, `module`, `raises[]`, `returns` |
+| **Feature** | Behavioral specifications that cut across types and functions. Useful for documenting capabilities, acceptance criteria, and test scenarios. | `id`, `category`, `summary`, `steps[]`, `references[]` |
+| **Module** | Maps your package structure. Declares what each module exports and its dependencies on other modules. | `path`, `exports[]`, `depends_on[]`, `internal` |
+| **Principle** | Captures design philosophy and rationale. Documents the "why" behind architectural decisions and anti-patterns to avoid. | `id`, `title`, `rationale`, `anti_patterns[]` |
+
+**TypeDef kinds**: `class`, `protocol`, `enum`, `dataclass`, `namedtuple`, `typeddict`, `type_alias`, `abc`
+
+**FunctionDef kinds**: `function`, `decorator`, `context_manager`, `generator`, `async_generator`
+
+### Cross-References
+
+Entities reference each other using `#/` paths—in `requires` fields for dependencies, `references` for documentation links, and anywhere you need to connect parts of your spec. The syntax follows JSON Pointer style:
+
+- `#/types/Name` — reference a type
+- `#/functions/name` — reference a function
+- `#/features/feature-id` — reference a feature
+- `#/types/Name/methods/method` — reference a method on a type
+- `otherlib#/types/Name` — reference into another spec
+
+Lint rule X001 validates that all references resolve to existing entities.
+
+---
+
 ## CLI: Query & Navigate Your Spec
 
 All commands output JSON by default—pipe to `jq` for extraction. Use `--text` for compact output.
@@ -236,31 +277,6 @@ Strict mode adds: type coercion rejection, duplicate detection, bounded numeric 
 ```bash
 uv run python tools/generate_schema.py        # Regenerate schemas from models
 uv run python tools/generate_schema.py --check  # CI: verify schemas are current
-```
-
----
-
-## Core Schema
-
-| Entity | Purpose |
-|--------|---------|
-| **Library** | Root container: name, version, tagline |
-| **Module** | Package structure, exports, dependencies |
-| **TypeDef** | Classes, protocols, enums, dataclasses, type aliases |
-| **FunctionDef** | Functions, decorators, context managers |
-| **Feature** | Behavioral specifications with test steps |
-| **Principle** | Design philosophy, rationale, anti-patterns |
-
-### Cross-References
-
-Link entities within or across specs:
-
-```
-#/types/Connection                    # Type in same spec
-#/types/Connection/methods/send       # Method on type
-#/functions/spawn                     # Function
-#/features/retry-on-failure           # Feature
-otherlib#/types/Client                # Type in another spec
 ```
 
 ---
