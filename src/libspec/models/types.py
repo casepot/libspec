@@ -80,10 +80,15 @@ NonEmptyStr = Annotated[str, StringConstraints(min_length=1)]
 """Generic non-empty string for required text fields."""
 
 # Cross-reference format with strict validation
+# Entity names can be:
+#   - PascalCase for types (TypeName)
+#   - snake_case for functions (function_name)
+#   - kebab-case for features/principles (feature-id)
+#   - dotted for modules (mylib.submodule)
 CrossReference = Annotated[
     str,
     StringConstraints(
-        pattern=r"^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+        pattern=r"^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
         min_length=1,
     ),
 ]

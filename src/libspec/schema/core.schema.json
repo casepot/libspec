@@ -108,7 +108,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+              "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
               "type": "string"
             },
             {
@@ -387,7 +387,7 @@
           "description": "Related types, functions, or features",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
             "type": "string"
           },
           "title": "References",
@@ -695,7 +695,7 @@
           "description": "Related types or functions (cross-references)",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
             "type": "string"
           },
           "title": "Related",
@@ -1081,7 +1081,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+              "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
               "type": "string"
             },
             {
@@ -1796,7 +1796,7 @@
         "ref": {
           "description": "Reference to required entity (#/types/X, #/functions/Y, etc.)",
           "minLength": 1,
-          "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+          "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
           "title": "Ref",
           "type": "string"
         }
@@ -1918,7 +1918,7 @@
           "description": "Base classes or protocols",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
             "type": "string"
           },
           "title": "Bases",
@@ -2066,7 +2066,7 @@
           "description": "Related types or functions (cross-references)",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
             "type": "string"
           },
           "title": "Related",

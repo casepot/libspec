@@ -1,0 +1,447 @@
+{
+  "$schema": "libspec/1.0",
+  "extensions": ["lifecycle"],
+  "library": {
+    "name": "edge_cases",
+    "version": "0.1.0",
+    "tagline": "Edge case testing for navigation and lifecycle",
+    "default_workflow": "strict",
+    "workflows": [
+      {
+        "name": "strict",
+        "description": "Strict workflow with multiple gates per transition",
+        "maturity_gates": [
+          {
+            "from_maturity": "idea",
+            "to_maturity": "specified",
+            "gates": [{"type": "approval", "required": true}]
+          },
+          {
+            "from_maturity": "specified",
+            "to_maturity": "designed",
+            "gates": [
+              {"type": "design_doc", "required": true},
+              {"type": "approval", "required": true}
+            ]
+          },
+          {
+            "from_maturity": "designed",
+            "to_maturity": "implemented",
+            "gates": [
+              {"type": "pr_merged", "required": true}
+            ]
+          },
+          {
+            "from_maturity": "implemented",
+            "to_maturity": "tested",
+            "gates": [
+              {"type": "tests_passing", "required": true},
+              {"type": "benchmark", "required": false}
+            ]
+          },
+          {
+            "from_maturity": "tested",
+            "to_maturity": "documented",
+            "gates": [{"type": "docs_updated", "required": true}]
+          },
+          {
+            "from_maturity": "documented",
+            "to_maturity": "released",
+            "gates": [{"type": "approval", "required": true}]
+          },
+          {
+            "from_maturity": "released",
+            "to_maturity": "deprecated",
+            "gates": [
+              {"type": "deprecation_notice", "required": true},
+              {"type": "migration_guide", "required": true}
+            ]
+          }
+        ]
+      }
+    ],
+    "modules": [
+      {"path": "edge_cases", "description": "Root module", "exports": ["Core", "Diamond", "deep_chain"]},
+      {"path": "edge_cases.diamond", "description": "Diamond dependency pattern"},
+      {"path": "edge_cases.chain", "description": "Deep requirement chains"},
+      {"path": "edge_cases.terminal", "description": "Terminal state entities"},
+      {"path": "edge_cases._internal", "description": "Internal module", "internal": true}
+    ],
+    "types": [
+      {
+        "name": "Core",
+        "kind": "class",
+        "module": "edge_cases",
+        "docstring": "Core type with no requirements - foundation",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/1"},
+          {"type": "tests", "path": "tests/test_core.py"},
+          {"type": "docs", "url": "https://docs.edge.dev/core"},
+          {"type": "approval", "approver": "lead", "date": "2024-01-01"}
+        ],
+        "methods": [
+          {"name": "process", "signature": "(self, data: Any) -> Any", "description": "Process data"}
+        ]
+      },
+
+      {
+        "name": "DiamondBase",
+        "kind": "protocol",
+        "module": "edge_cases.diamond",
+        "docstring": "Base of diamond - required by both Left and Right",
+        "maturity": "tested",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/10"},
+          {"type": "tests", "path": "tests/test_diamond.py"}
+        ],
+        "methods": [
+          {"name": "base_op", "signature": "(self) -> None", "description": "Base operation"}
+        ]
+      },
+      {
+        "name": "DiamondLeft",
+        "kind": "class",
+        "module": "edge_cases.diamond",
+        "docstring": "Left branch of diamond",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/DiamondBase", "min_maturity": "designed"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/11"}
+        ],
+        "methods": [
+          {"name": "left_op", "signature": "(self) -> str", "description": "Left operation"}
+        ]
+      },
+      {
+        "name": "DiamondRight",
+        "kind": "class",
+        "module": "edge_cases.diamond",
+        "docstring": "Right branch of diamond",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/DiamondBase", "min_maturity": "designed"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/12"}
+        ],
+        "methods": [
+          {"name": "right_op", "signature": "(self) -> int", "description": "Right operation"}
+        ]
+      },
+      {
+        "name": "DiamondTop",
+        "kind": "class",
+        "module": "edge_cases.diamond",
+        "docstring": "Top of diamond - requires both Left and Right (which both require Base)",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/DiamondLeft", "min_maturity": "implemented"},
+          {"ref": "#/types/DiamondRight", "min_maturity": "implemented"},
+          {"ref": "#/types/DiamondBase", "min_maturity": "tested", "reason": "Direct dependency on base for type safety"}
+        ],
+        "methods": [
+          {"name": "combine", "signature": "(self, left: DiamondLeft, right: DiamondRight) -> Any", "description": "Combine left and right"}
+        ]
+      },
+
+      {
+        "name": "ChainLevel0",
+        "kind": "class",
+        "module": "edge_cases.chain",
+        "docstring": "Base of 5-level deep chain",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/20"},
+          {"type": "tests", "path": "tests/test_chain.py"},
+          {"type": "docs", "url": "https://docs.edge.dev/chain"},
+          {"type": "approval", "approver": "lead", "date": "2024-02-01"}
+        ],
+        "methods": [
+          {"name": "level0", "signature": "(self) -> int", "description": "Level 0 op"}
+        ]
+      },
+      {
+        "name": "ChainLevel1",
+        "kind": "class",
+        "module": "edge_cases.chain",
+        "docstring": "Level 1 of chain",
+        "maturity": "tested",
+        "requires": [
+          {"ref": "#/types/ChainLevel0", "min_maturity": "tested"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/21"},
+          {"type": "tests", "path": "tests/test_chain.py"}
+        ],
+        "methods": [
+          {"name": "level1", "signature": "(self, base: ChainLevel0) -> int", "description": "Level 1 op"}
+        ]
+      },
+      {
+        "name": "ChainLevel2",
+        "kind": "class",
+        "module": "edge_cases.chain",
+        "docstring": "Level 2 of chain",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/ChainLevel1", "min_maturity": "implemented"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/22"}
+        ],
+        "methods": [
+          {"name": "level2", "signature": "(self, prev: ChainLevel1) -> int", "description": "Level 2 op"}
+        ]
+      },
+      {
+        "name": "ChainLevel3",
+        "kind": "class",
+        "module": "edge_cases.chain",
+        "docstring": "Level 3 of chain - BLOCKED: requires Level2 at tested but it's only implemented",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/ChainLevel2", "min_maturity": "tested", "reason": "Need stable API"}
+        ],
+        "methods": [
+          {"name": "level3", "signature": "(self, prev: ChainLevel2) -> int", "description": "Level 3 op"}
+        ]
+      },
+      {
+        "name": "ChainLevel4",
+        "kind": "class",
+        "module": "edge_cases.chain",
+        "docstring": "Level 4 - top of chain, blocked by Level3",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/ChainLevel3", "min_maturity": "designed"}
+        ],
+        "methods": [
+          {"name": "level4", "signature": "(self, prev: ChainLevel3) -> int", "description": "Level 4 op"}
+        ]
+      },
+
+      {
+        "name": "DeprecatedType",
+        "kind": "class",
+        "module": "edge_cases.terminal",
+        "docstring": "A deprecated type - terminal state",
+        "maturity": "deprecated",
+        "maturity_evidence": [
+          {"type": "deprecation_notice", "reference": "CHANGELOG.md", "date": "2024-06-01"},
+          {"type": "migration_guide", "reference": "docs/migration.md"}
+        ],
+        "methods": [
+          {"name": "old_method", "signature": "(self) -> None", "description": "Deprecated method", "maturity": "deprecated"}
+        ]
+      },
+      {
+        "name": "ReleasedStable",
+        "kind": "class",
+        "module": "edge_cases.terminal",
+        "docstring": "A released type - near terminal, only deprecation possible",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/50"},
+          {"type": "tests", "path": "tests/test_terminal.py"},
+          {"type": "docs", "url": "https://docs.edge.dev/stable"},
+          {"type": "approval", "approver": "lead", "date": "2024-03-01"}
+        ],
+        "methods": [
+          {"name": "stable_method", "signature": "(self) -> str", "description": "Stable method"}
+        ]
+      },
+
+      {
+        "name": "NoMaturity",
+        "kind": "class",
+        "module": "edge_cases",
+        "docstring": "Type without maturity field set - should be handled gracefully",
+        "methods": [
+          {"name": "unknown", "signature": "(self) -> None", "description": "Unknown state method"}
+        ]
+      },
+
+      {
+        "name": "InternalHelper",
+        "kind": "class",
+        "module": "edge_cases._internal",
+        "docstring": "Internal helper type",
+        "maturity": "implemented",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/99"}
+        ],
+        "methods": [
+          {"name": "help", "signature": "(self) -> None", "description": "Helper method"}
+        ]
+      },
+
+      {
+        "name": "MixedMethodMaturity",
+        "kind": "class",
+        "module": "edge_cases",
+        "docstring": "Type with methods at different maturity levels",
+        "maturity": "tested",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/60"},
+          {"type": "tests", "path": "tests/test_mixed.py"}
+        ],
+        "methods": [
+          {"name": "stable_method", "signature": "(self) -> str", "description": "Stable tested method", "maturity": "released"},
+          {"name": "new_method", "signature": "(self) -> int", "description": "New method still being designed", "maturity": "designed"},
+          {"name": "experimental", "signature": "(self) -> Any", "description": "Experimental method", "maturity": "idea"}
+        ]
+      },
+
+      {
+        "name": "MultiRequirement",
+        "kind": "class",
+        "module": "edge_cases",
+        "docstring": "Type with many requirements at different levels - stress test",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/Core", "min_maturity": "released"},
+          {"ref": "#/types/DiamondBase", "min_maturity": "tested"},
+          {"ref": "#/types/DiamondTop", "min_maturity": "designed"},
+          {"ref": "#/types/ChainLevel1", "min_maturity": "tested"},
+          {"ref": "#/types/ReleasedStable", "min_maturity": "released"},
+          {"ref": "#/functions/deep_chain", "min_maturity": "implemented"}
+        ],
+        "methods": [
+          {"name": "multi", "signature": "(self) -> None", "description": "Uses many dependencies"}
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "deep_chain",
+        "kind": "function",
+        "module": "edge_cases.chain",
+        "signature": "(level: int) -> ChainLevel0 | ChainLevel1 | ChainLevel2 | ChainLevel3 | ChainLevel4",
+        "description": "Factory for chain levels",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/ChainLevel0", "min_maturity": "implemented"},
+          {"ref": "#/types/ChainLevel1", "min_maturity": "implemented"},
+          {"ref": "#/types/ChainLevel2", "min_maturity": "implemented"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/edge/pull/25"}
+        ]
+      },
+      {
+        "name": "combine_diamond",
+        "kind": "function",
+        "module": "edge_cases.diamond",
+        "signature": "(left: DiamondLeft, right: DiamondRight) -> DiamondTop",
+        "description": "Combine diamond branches",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/DiamondLeft", "min_maturity": "tested", "reason": "Need stable left branch"},
+          {"ref": "#/types/DiamondRight", "min_maturity": "tested", "reason": "Need stable right branch"},
+          {"ref": "#/types/DiamondTop", "min_maturity": "implemented"}
+        ]
+      },
+      {
+        "name": "no_requirements",
+        "kind": "function",
+        "module": "edge_cases",
+        "signature": "() -> None",
+        "description": "Function with no requirements - always ready",
+        "maturity": "idea"
+      },
+      {
+        "name": "deprecated_helper",
+        "kind": "function",
+        "module": "edge_cases.terminal",
+        "signature": "(x: Any) -> Any",
+        "description": "Deprecated helper function",
+        "maturity": "deprecated",
+        "maturity_evidence": [
+          {"type": "deprecation_notice", "reference": "CHANGELOG.md", "date": "2024-06-01"},
+          {"type": "migration_guide", "reference": "docs/migration.md"}
+        ]
+      }
+    ],
+    "features": [
+      {
+        "id": "diamond-dependency",
+        "category": "ARCHITECTURE",
+        "summary": "Diamond dependency pattern support",
+        "description": "Support for diamond-shaped dependency graphs where multiple paths lead to the same base",
+        "status": "implemented",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/DiamondTop", "min_maturity": "tested"},
+          {"ref": "#/functions/combine_diamond", "min_maturity": "tested"}
+        ],
+        "references": ["#/types/DiamondBase", "#/types/DiamondLeft", "#/types/DiamondRight", "#/types/DiamondTop"]
+      },
+      {
+        "id": "deep-chains",
+        "category": "ARCHITECTURE",
+        "summary": "Deep requirement chain support",
+        "description": "Support for deeply nested requirement chains",
+        "status": "planned",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/ChainLevel4", "min_maturity": "implemented"}
+        ],
+        "references": ["#/types/ChainLevel0", "#/types/ChainLevel1", "#/types/ChainLevel2", "#/types/ChainLevel3", "#/types/ChainLevel4"]
+      },
+      {
+        "id": "terminal-states",
+        "category": "LIFECYCLE",
+        "summary": "Terminal state handling",
+        "description": "Proper handling of released and deprecated entities",
+        "status": "tested",
+        "maturity": "tested",
+        "requires": [
+          {"ref": "#/types/ReleasedStable", "min_maturity": "released"},
+          {"ref": "#/types/DeprecatedType", "min_maturity": "deprecated"}
+        ],
+        "steps": [
+          "Verify released entities cannot advance except to deprecated",
+          "Verify deprecated entities are terminal",
+          "Check deprecation evidence is present"
+        ],
+        "references": ["#/types/ReleasedStable", "#/types/DeprecatedType"]
+      },
+      {
+        "id": "maturity-status-sync",
+        "category": "VALIDATION",
+        "summary": "Maturity and status field synchronization",
+        "description": "Test that maturity and status fields are validated for consistency",
+        "status": "planned",
+        "maturity": "tested",
+        "steps": [
+          "Check M001 lint rule fires on mismatch",
+          "Verify planned status with tested maturity is flagged"
+        ]
+      },
+      {
+        "id": "no-maturity-feature",
+        "category": "EDGE_CASES",
+        "summary": "Feature without maturity field",
+        "description": "Feature that only has status, no maturity - should be handled gracefully",
+        "status": "implemented"
+      },
+      {
+        "id": "all-requirements-met",
+        "category": "EDGE_CASES",
+        "summary": "Feature with all requirements satisfied",
+        "description": "Feature where all required entities meet their min_maturity - should show as ready",
+        "status": "implemented",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/Core", "min_maturity": "released"},
+          {"ref": "#/types/ChainLevel0", "min_maturity": "released"},
+          {"ref": "#/types/DiamondBase", "min_maturity": "tested"}
+        ],
+        "references": ["#/types/Core", "#/types/ChainLevel0", "#/types/DiamondBase"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,205 @@
+{
+  "$schema": "libspec/1.0",
+  "library": {
+    "name": "circular_test",
+    "version": "0.1.0",
+    "tagline": "Tests for circular dependency detection (X004)",
+    "types": [
+      {
+        "name": "SelfRef",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Self-referential requirement - simplest cycle",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/SelfRef", "min_maturity": "implemented", "reason": "Requires itself - impossible!"}
+        ],
+        "methods": [
+          {"name": "recurse", "signature": "(self) -> SelfRef", "description": "Returns self type"}
+        ]
+      },
+
+      {
+        "name": "CycleA",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Part of A -> B -> C -> A cycle",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/CycleB", "min_maturity": "designed"}
+        ],
+        "methods": [
+          {"name": "a_method", "signature": "(self) -> None", "description": "A method"}
+        ]
+      },
+      {
+        "name": "CycleB",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Part of A -> B -> C -> A cycle",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/CycleC", "min_maturity": "designed"}
+        ],
+        "methods": [
+          {"name": "b_method", "signature": "(self) -> None", "description": "B method"}
+        ]
+      },
+      {
+        "name": "CycleC",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Part of A -> B -> C -> A cycle - closes the loop",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/CycleA", "min_maturity": "designed"}
+        ],
+        "methods": [
+          {"name": "c_method", "signature": "(self) -> None", "description": "C method"}
+        ]
+      },
+
+      {
+        "name": "LongCycle1",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Start of 5-node cycle",
+        "maturity": "specified",
+        "requires": [{"ref": "#/types/LongCycle2", "min_maturity": "specified"}],
+        "methods": [{"name": "m1", "signature": "(self) -> None", "description": "Method 1"}]
+      },
+      {
+        "name": "LongCycle2",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Node 2 of 5-node cycle",
+        "maturity": "specified",
+        "requires": [{"ref": "#/types/LongCycle3", "min_maturity": "specified"}],
+        "methods": [{"name": "m2", "signature": "(self) -> None", "description": "Method 2"}]
+      },
+      {
+        "name": "LongCycle3",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Node 3 of 5-node cycle",
+        "maturity": "specified",
+        "requires": [{"ref": "#/types/LongCycle4", "min_maturity": "specified"}],
+        "methods": [{"name": "m3", "signature": "(self) -> None", "description": "Method 3"}]
+      },
+      {
+        "name": "LongCycle4",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Node 4 of 5-node cycle",
+        "maturity": "specified",
+        "requires": [{"ref": "#/types/LongCycle5", "min_maturity": "specified"}],
+        "methods": [{"name": "m4", "signature": "(self) -> None", "description": "Method 4"}]
+      },
+      {
+        "name": "LongCycle5",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Node 5 of 5-node cycle - closes back to 1",
+        "maturity": "specified",
+        "requires": [{"ref": "#/types/LongCycle1", "min_maturity": "specified"}],
+        "methods": [{"name": "m5", "signature": "(self) -> None", "description": "Method 5"}]
+      },
+
+      {
+        "name": "IndependentCycleX",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Part of independent X <-> Y cycle",
+        "maturity": "idea",
+        "requires": [{"ref": "#/types/IndependentCycleY", "min_maturity": "idea"}],
+        "methods": [{"name": "x", "signature": "(self) -> None", "description": "X"}]
+      },
+      {
+        "name": "IndependentCycleY",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Part of independent X <-> Y cycle",
+        "maturity": "idea",
+        "requires": [{"ref": "#/types/IndependentCycleX", "min_maturity": "idea"}],
+        "methods": [{"name": "y", "signature": "(self) -> None", "description": "Y"}]
+      },
+
+      {
+        "name": "NotACycle1",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Linear chain, not a cycle: 1 -> 2 -> 3 (no back edge)",
+        "maturity": "tested",
+        "requires": [{"ref": "#/types/NotACycle2", "min_maturity": "tested"}],
+        "maturity_evidence": [{"type": "tests", "path": "tests/test_not_cycle.py"}],
+        "methods": [{"name": "n1", "signature": "(self) -> None", "description": "N1"}]
+      },
+      {
+        "name": "NotACycle2",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Middle of linear chain",
+        "maturity": "tested",
+        "requires": [{"ref": "#/types/NotACycle3", "min_maturity": "implemented"}],
+        "maturity_evidence": [{"type": "tests", "path": "tests/test_not_cycle.py"}],
+        "methods": [{"name": "n2", "signature": "(self) -> None", "description": "N2"}]
+      },
+      {
+        "name": "NotACycle3",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "End of linear chain - no outgoing requirements",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "tests", "path": "tests/test_not_cycle.py"},
+          {"type": "docs", "url": "https://docs.example.com"}
+        ],
+        "methods": [{"name": "n3", "signature": "(self) -> None", "description": "N3"}]
+      },
+
+      {
+        "name": "FuncTypeCycle",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Type in cycle with function: Type -> Func -> Type",
+        "maturity": "designed",
+        "requires": [{"ref": "#/functions/func_cycle_a", "min_maturity": "designed"}],
+        "methods": [{"name": "use_func", "signature": "(self) -> None", "description": "Uses the cyclic function"}]
+      },
+
+      {
+        "name": "FeatureTypeCycleType",
+        "kind": "class",
+        "module": "circular_test",
+        "docstring": "Type in cycle with feature: Type -> Feature -> Type",
+        "maturity": "designed",
+        "requires": [{"ref": "#/features/feature-type-cycle", "min_maturity": "specified"}],
+        "methods": [{"name": "use_feature", "signature": "(self) -> None", "description": "Implements the cyclic feature"}]
+      }
+    ],
+    "functions": [
+      {
+        "name": "func_cycle_a",
+        "kind": "function",
+        "module": "circular_test",
+        "signature": "() -> None",
+        "description": "Function in cycle with type",
+        "maturity": "designed",
+        "requires": [{"ref": "#/types/FuncTypeCycle", "min_maturity": "designed"}]
+      }
+    ],
+    "features": [
+      {
+        "id": "feature-type-cycle",
+        "category": "TESTING",
+        "summary": "Feature involved in cycle with type",
+        "description": "This feature requires a type that requires this feature",
+        "status": "planned",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/FeatureTypeCycleType", "min_maturity": "designed"}
+        ]
+      }
+    ]
+  }
+}
