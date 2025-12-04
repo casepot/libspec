@@ -7,7 +7,7 @@ A schema system for documenting Python library interfaces, tracking development 
 libspec provides a structured, machine-readable format for describing Python libraries. Unlike documentation generators that extract from code, libspec lets you **specify intent first**—what your library should be—then track progress toward that specification.
 
 ```bash
-pip install libspec[cli]
+pip install libspec
 ```
 
 **Core capabilities:**
@@ -15,7 +15,7 @@ pip install libspec[cli]
 - **Specify** types, functions, features, and their contracts
 - **Track** development maturity from idea through release
 - **Navigate** what's ready to implement, what's blocked, and why
-- **Validate** specs with 40+ semantic lint rules
+- **Validate** specs with 48 semantic lint rules across 8 categories
 - **Extend** with domain-specific semantics (async, web, data, etc.)
 
 ## Quick Example
@@ -49,6 +49,8 @@ A minimal spec defining one type with a dependency:
 
 ## Core Schema
 
+Specs are JSON files (YAML not supported). The CLI looks for `libspec.json`, `specs/libspec.json`, or `spec/libspec.json` by default, or specify with `--spec path/to/spec.json`.
+
 A libspec file describes your library through six entity types:
 
 ```
@@ -72,7 +74,7 @@ Library (root)
 
 **TypeDef kinds**: `class`, `protocol`, `enum`, `dataclass`, `namedtuple`, `typeddict`, `type_alias`, `abc`
 
-**FunctionDef kinds**: `function`, `decorator`, `context_manager`, `generator`, `async_generator`
+**FunctionDef kinds**: `function`, `decorator`, `context_manager`, `async_context_manager`, `generator`, `async_generator`, `coroutine`, `staticmethod`, `classmethod`, `property`
 
 ### Cross-References
 
@@ -125,6 +127,21 @@ libspec validate --strict && libspec lint --strict
 | **Analyze** | `coverage`, `deps`, `surface` | Coverage gaps, dependencies, API surface |
 | **Navigate** | `next`, `blocked`, `gaps`, `progress` | Development workflow |
 
+### Lint Rule Categories
+
+| Category | Focus |
+|----------|-------|
+| **S** (Structural) | Missing descriptions, empty types |
+| **N** (Naming) | kebab-case IDs, PascalCase types, snake_case functions |
+| **C** (Completeness) | Missing signatures, module paths, enum values |
+| **X** (Consistency) | Dangling refs, duplicates, circular dependencies |
+| **V** (Version) | Python version compatibility, typing features |
+| **M** (Maturity) | Maturity/status alignment |
+| **L** (Lifecycle) | Workflow states, evidence, transitions |
+| **E** (Extensions) | Cross-extension semantic validation |
+
+Use `libspec lint --list-rules` to see all rules.
+
 ---
 
 ## Maturity Tracking
@@ -132,6 +149,8 @@ libspec validate --strict && libspec lint --strict
 Every entity can have a `maturity` field tracking its development stage. The eight levels in order:
 
 `idea` → `specified` → `designed` → `implemented` → `tested` → `documented` → `released` → `deprecated`
+
+**Note:** Features also have a `status` field (`planned`, `implemented`, `tested`) for simpler tracking. The `maturity` field is more granular—lint rule M001 warns if they're inconsistent.
 
 ### Requirements & Dependencies
 
@@ -278,7 +297,7 @@ uv run python tools/generate_schema.py --check  # CI: verify schemas match model
 - [CLI Reference](docs/cli.md) — All commands, options, lint rules
 - [Extensions Reference](docs/extensions.md) — Domain and concern extensions
 - [Lifecycle Extension](docs/lifecycle.md) — Workflows, gates, evidence
-- [Examples](docs/examples/) — Sample specifications
+- [Examples](docs/examples/) — Sample specs: `minimal.json`, `http-client.json`, `data-pipeline.json`, `lifecycle.json`
 
 ## License
 
