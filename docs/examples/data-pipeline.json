@@ -1,0 +1,324 @@
+{
+  "$schema": "libspec/1.0",
+  "extensions": ["lifecycle"],
+  "library": {
+    "name": "dataflow",
+    "version": "0.1.0",
+    "tagline": "A composable data pipeline library (early development)",
+    "default_workflow": "mvp",
+    "workflows": [
+      {
+        "name": "mvp",
+        "description": "Minimal viable product workflow",
+        "maturity_gates": [
+          {
+            "from_maturity": "designed",
+            "to_maturity": "implemented",
+            "gates": [{"type": "pr_merged", "required": true}]
+          },
+          {
+            "from_maturity": "implemented",
+            "to_maturity": "tested",
+            "gates": [{"type": "tests_passing", "required": true}]
+          }
+        ]
+      }
+    ],
+    "types": [
+      {
+        "name": "Pipeline",
+        "kind": "class",
+        "module": "dataflow",
+        "docstring": "A composable data transformation pipeline",
+        "maturity": "tested",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/1"},
+          {"type": "tests", "path": "tests/test_pipeline.py"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, name: str)", "description": "Create a pipeline"},
+          {"name": "add_stage", "signature": "(self, stage: Stage) -> Pipeline", "description": "Add a stage"},
+          {"name": "run", "signature": "(self, data: Any) -> Any", "description": "Execute pipeline"}
+        ]
+      },
+      {
+        "name": "Stage",
+        "kind": "protocol",
+        "module": "dataflow",
+        "docstring": "Protocol for pipeline stages",
+        "maturity": "tested",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/1"},
+          {"type": "tests", "path": "tests/test_stage.py"}
+        ],
+        "methods": [
+          {"name": "process", "signature": "(self, data: Any) -> Any", "description": "Process data"}
+        ]
+      },
+      {
+        "name": "MapStage",
+        "kind": "class",
+        "module": "dataflow.stages",
+        "docstring": "Apply a function to each item",
+        "maturity": "tested",
+        "requires": [
+          {"ref": "#/types/Stage", "min_maturity": "designed"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/5"},
+          {"type": "tests", "path": "tests/test_stages.py"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, fn: Callable[[T], U])"},
+          {"name": "process", "signature": "(self, data: Iterable[T]) -> Iterator[U]"}
+        ]
+      },
+      {
+        "name": "FilterStage",
+        "kind": "class",
+        "module": "dataflow.stages",
+        "docstring": "Filter items by predicate",
+        "maturity": "tested",
+        "requires": [
+          {"ref": "#/types/Stage", "min_maturity": "designed"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/5"},
+          {"type": "tests", "path": "tests/test_stages.py"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, predicate: Callable[[T], bool])"},
+          {"name": "process", "signature": "(self, data: Iterable[T]) -> Iterator[T]"}
+        ]
+      },
+      {
+        "name": "BatchStage",
+        "kind": "class",
+        "module": "dataflow.stages",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/Stage", "min_maturity": "designed"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/8"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, size: int)"},
+          {"name": "process", "signature": "(self, data: Iterable[T]) -> Iterator[list[T]]"}
+        ]
+      },
+      {
+        "name": "AggregateStage",
+        "kind": "class",
+        "module": "dataflow.stages",
+        "maturity": "designed",
+        "requires": [
+          {"ref": "#/types/Stage", "min_maturity": "designed"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, fn: Callable[[Iterable[T]], U])"},
+          {"name": "process", "signature": "(self, data: Iterable[T]) -> U"}
+        ]
+      },
+      {
+        "name": "Source",
+        "kind": "protocol",
+        "module": "dataflow.io",
+        "docstring": "Protocol for data sources",
+        "maturity": "implemented",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/10"}
+        ],
+        "methods": [
+          {"name": "read", "signature": "(self) -> Iterator[T]", "description": "Read data from source"}
+        ]
+      },
+      {
+        "name": "Sink",
+        "kind": "protocol",
+        "module": "dataflow.io",
+        "docstring": "Protocol for data sinks",
+        "maturity": "implemented",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/10"}
+        ],
+        "methods": [
+          {"name": "write", "signature": "(self, data: Iterator[T]) -> None", "description": "Write data to sink"}
+        ]
+      },
+      {
+        "name": "FileSource",
+        "kind": "class",
+        "module": "dataflow.io",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/Source", "min_maturity": "implemented"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/12"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, path: str)"},
+          {"name": "read", "signature": "(self) -> Iterator[bytes]"}
+        ]
+      },
+      {
+        "name": "FileSink",
+        "kind": "class",
+        "module": "dataflow.io",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/Sink", "min_maturity": "implemented"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/12"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, path: str)"},
+          {"name": "write", "signature": "(self, data: Iterator[bytes]) -> None"}
+        ]
+      },
+      {
+        "name": "DatabaseSource",
+        "kind": "class",
+        "module": "dataflow.io",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/Source", "min_maturity": "tested"}
+        ]
+      },
+      {
+        "name": "DatabaseSink",
+        "kind": "class",
+        "module": "dataflow.io",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/Sink", "min_maturity": "tested"}
+        ]
+      },
+      {
+        "name": "ParallelPipeline",
+        "kind": "class",
+        "module": "dataflow.parallel",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/Pipeline", "min_maturity": "tested"},
+          {"ref": "#/types/Source", "min_maturity": "tested"},
+          {"ref": "#/types/Sink", "min_maturity": "tested"}
+        ]
+      },
+      {
+        "name": "StreamingPipeline",
+        "kind": "class",
+        "module": "dataflow.streaming",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/Pipeline", "min_maturity": "tested"}
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "run_pipeline",
+        "module": "dataflow",
+        "signature": "(pipeline: Pipeline, source: Source, sink: Sink) -> None",
+        "description": "Run a pipeline from source to sink",
+        "maturity": "tested",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/15"},
+          {"type": "tests", "path": "tests/test_runner.py"}
+        ]
+      },
+      {
+        "name": "compose",
+        "module": "dataflow",
+        "signature": "(*stages: Stage) -> Stage",
+        "description": "Compose multiple stages into one",
+        "maturity": "implemented",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/dataflow/pull/16"}
+        ]
+      },
+      {
+        "name": "parallel_map",
+        "module": "dataflow.parallel",
+        "signature": "(fn: Callable[[T], U], workers: int = 4) -> Stage",
+        "description": "Map function in parallel across workers",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/ParallelPipeline", "min_maturity": "designed"}
+        ]
+      }
+    ],
+    "features": [
+      {
+        "id": "basic-pipeline",
+        "category": "CORE",
+        "summary": "Create and run data transformation pipelines",
+        "status": "tested",
+        "maturity": "tested",
+        "refs": ["#/types/Pipeline", "#/types/Stage", "#/functions/run_pipeline"]
+      },
+      {
+        "id": "stage-composition",
+        "category": "CORE",
+        "summary": "Compose stages with map, filter, batch, aggregate",
+        "status": "implemented",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/MapStage", "min_maturity": "tested"},
+          {"ref": "#/types/FilterStage", "min_maturity": "tested"},
+          {"ref": "#/types/BatchStage", "min_maturity": "tested"},
+          {"ref": "#/types/AggregateStage", "min_maturity": "tested"}
+        ],
+        "refs": ["#/types/MapStage", "#/types/FilterStage", "#/types/BatchStage", "#/types/AggregateStage"]
+      },
+      {
+        "id": "file-io",
+        "category": "IO",
+        "summary": "Read and write pipelines to files",
+        "status": "implemented",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/FileSource", "min_maturity": "tested"},
+          {"ref": "#/types/FileSink", "min_maturity": "tested"}
+        ],
+        "refs": ["#/types/FileSource", "#/types/FileSink"]
+      },
+      {
+        "id": "database-io",
+        "category": "IO",
+        "summary": "Read and write pipelines to databases",
+        "status": "planned",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/DatabaseSource", "min_maturity": "implemented"},
+          {"ref": "#/types/DatabaseSink", "min_maturity": "implemented"}
+        ],
+        "refs": ["#/types/DatabaseSource", "#/types/DatabaseSink"]
+      },
+      {
+        "id": "parallel-execution",
+        "category": "PERFORMANCE",
+        "summary": "Run pipelines in parallel across multiple workers",
+        "status": "planned",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/ParallelPipeline", "min_maturity": "implemented"}
+        ],
+        "refs": ["#/types/ParallelPipeline", "#/functions/parallel_map"]
+      },
+      {
+        "id": "streaming",
+        "category": "PERFORMANCE",
+        "summary": "Process infinite streams with backpressure",
+        "status": "planned",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/StreamingPipeline", "min_maturity": "implemented"}
+        ],
+        "refs": ["#/types/StreamingPipeline"]
+      }
+    ]
+  }
+}

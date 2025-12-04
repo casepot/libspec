@@ -1,0 +1,495 @@
+{
+  "$schema": "libspec/1.0",
+  "extensions": ["lifecycle", "async"],
+  "library": {
+    "name": "httpx_lite",
+    "version": "0.3.0",
+    "tagline": "A lightweight async HTTP client library",
+    "default_workflow": "api-dev",
+    "workflows": [
+      {
+        "name": "api-dev",
+        "description": "API development workflow with design review gates",
+        "maturity_gates": [
+          {
+            "from_maturity": "idea",
+            "to_maturity": "specified",
+            "gates": []
+          },
+          {
+            "from_maturity": "specified",
+            "to_maturity": "designed",
+            "gates": [{"type": "design_doc", "required": true}]
+          },
+          {
+            "from_maturity": "designed",
+            "to_maturity": "implemented",
+            "gates": [{"type": "pr_merged", "required": true}]
+          },
+          {
+            "from_maturity": "implemented",
+            "to_maturity": "tested",
+            "gates": [{"type": "tests_passing", "required": true}]
+          },
+          {
+            "from_maturity": "tested",
+            "to_maturity": "documented",
+            "gates": [{"type": "docs_updated", "required": true}]
+          },
+          {
+            "from_maturity": "documented",
+            "to_maturity": "released",
+            "gates": [{"type": "approval", "required": false}]
+          }
+        ],
+        "evidence_types": [
+          {
+            "name": "api_review",
+            "description": "API design review sign-off",
+            "required_fields": ["reference", "author"]
+          }
+        ]
+      }
+    ],
+    "modules": [
+      {"path": "httpx_lite", "description": "Main package"},
+      {"path": "httpx_lite.core", "description": "Core HTTP primitives"},
+      {"path": "httpx_lite.client", "description": "Client implementations"},
+      {"path": "httpx_lite.auth", "description": "Authentication handlers"},
+      {"path": "httpx_lite.middleware", "description": "Request/response middleware"},
+      {"path": "httpx_lite.retry", "description": "Retry and backoff logic"}
+    ],
+    "types": [
+      {
+        "name": "Request",
+        "kind": "class",
+        "module": "httpx_lite.core",
+        "docstring": "Immutable HTTP request object with method, URL, headers, and body",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/001-request-model.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/1"},
+          {"type": "tests", "path": "tests/test_request.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/request/"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, method: str, url: URL, headers: Headers | None = None, body: bytes | None = None)", "description": "Create a new request"},
+          {"name": "with_headers", "signature": "(self, headers: Headers) -> Request", "description": "Return copy with updated headers"},
+          {"name": "with_body", "signature": "(self, body: bytes) -> Request", "description": "Return copy with new body"}
+        ]
+      },
+      {
+        "name": "Response",
+        "kind": "class",
+        "module": "httpx_lite.core",
+        "docstring": "HTTP response with status, headers, and streaming body support",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/002-response-model.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/2"},
+          {"type": "tests", "path": "tests/test_response.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/response/"}
+        ],
+        "methods": [
+          {"name": "json", "signature": "(self) -> Any", "description": "Parse response body as JSON"},
+          {"name": "text", "signature": "(self) -> str", "description": "Decode response body as text"},
+          {"name": "iter_bytes", "signature": "(self) -> AsyncIterator[bytes]", "description": "Stream response body"}
+        ]
+      },
+      {
+        "name": "URL",
+        "kind": "class",
+        "module": "httpx_lite.core",
+        "docstring": "Parsed URL with query parameter manipulation",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/003-url-model.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/3"},
+          {"type": "tests", "path": "tests/test_url.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/url/"}
+        ],
+        "methods": [
+          {"name": "with_params", "signature": "(self, params: dict[str, str]) -> URL", "description": "Return URL with added query params"},
+          {"name": "join", "signature": "(self, path: str) -> URL", "description": "Join a path to this URL"}
+        ]
+      },
+      {
+        "name": "Headers",
+        "kind": "class",
+        "module": "httpx_lite.core",
+        "docstring": "Case-insensitive header collection with multi-value support",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/003-url-model.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/4"},
+          {"type": "tests", "path": "tests/test_headers.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/headers/"}
+        ],
+        "methods": [
+          {"name": "get", "signature": "(self, name: str, default: str | None = None) -> str | None", "description": "Get header value"},
+          {"name": "get_list", "signature": "(self, name: str) -> list[str]", "description": "Get all values for header"}
+        ]
+      },
+      {
+        "name": "AsyncClient",
+        "kind": "class",
+        "module": "httpx_lite.client",
+        "docstring": "Async HTTP client with connection pooling and middleware support",
+        "maturity": "tested",
+        "requires": [
+          {"ref": "#/types/Request", "min_maturity": "released"},
+          {"ref": "#/types/Response", "min_maturity": "released"},
+          {"ref": "#/types/ConnectionPool", "min_maturity": "tested"}
+        ],
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/010-async-client.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/10"},
+          {"type": "tests", "path": "tests/test_async_client.py"}
+        ],
+        "methods": [
+          {"name": "request", "signature": "(self, method: str, url: str, **kwargs) -> Response", "description": "Send an HTTP request"},
+          {"name": "get", "signature": "(self, url: str, **kwargs) -> Response", "description": "Send GET request"},
+          {"name": "post", "signature": "(self, url: str, **kwargs) -> Response", "description": "Send POST request"},
+          {"name": "close", "signature": "(self) -> None", "description": "Close client and release connections"}
+        ]
+      },
+      {
+        "name": "SyncClient",
+        "kind": "class",
+        "module": "httpx_lite.client",
+        "docstring": "Synchronous HTTP client wrapping AsyncClient",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/AsyncClient", "min_maturity": "tested"}
+        ],
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/011-sync-client.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/15"}
+        ],
+        "methods": [
+          {"name": "request", "signature": "(self, method: str, url: str, **kwargs) -> Response", "description": "Send an HTTP request"},
+          {"name": "get", "signature": "(self, url: str, **kwargs) -> Response", "description": "Send GET request"},
+          {"name": "post", "signature": "(self, url: str, **kwargs) -> Response", "description": "Send POST request"}
+        ]
+      },
+      {
+        "name": "ConnectionPool",
+        "kind": "class",
+        "module": "httpx_lite.core",
+        "docstring": "HTTP/1.1 and HTTP/2 connection pool with keep-alive",
+        "maturity": "tested",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/005-connection-pool.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/5"},
+          {"type": "tests", "path": "tests/test_pool.py"}
+        ],
+        "methods": [
+          {"name": "acquire", "signature": "(self, url: URL) -> Connection", "description": "Get connection from pool"},
+          {"name": "release", "signature": "(self, conn: Connection) -> None", "description": "Return connection to pool"}
+        ]
+      },
+      {
+        "name": "Middleware",
+        "kind": "protocol",
+        "module": "httpx_lite.middleware",
+        "docstring": "Protocol for request/response middleware",
+        "maturity": "documented",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/020-middleware.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/20"},
+          {"type": "tests", "path": "tests/test_middleware.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/middleware/"}
+        ],
+        "methods": [
+          {"name": "process_request", "signature": "(self, request: Request) -> Request", "description": "Transform outgoing request"},
+          {"name": "process_response", "signature": "(self, response: Response) -> Response", "description": "Transform incoming response"}
+        ]
+      },
+      {
+        "name": "AuthHandler",
+        "kind": "protocol",
+        "module": "httpx_lite.auth",
+        "docstring": "Protocol for authentication handlers",
+        "maturity": "designed",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/030-auth.md"}
+        ],
+        "methods": [
+          {"name": "authenticate", "signature": "(self, request: Request) -> Request", "description": "Add auth to request"},
+          {"name": "handle_401", "signature": "(self, response: Response) -> Request | None", "description": "Handle auth challenge"}
+        ]
+      },
+      {
+        "name": "BasicAuth",
+        "kind": "class",
+        "module": "httpx_lite.auth",
+        "docstring": "HTTP Basic authentication",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/AuthHandler", "min_maturity": "designed"}
+        ],
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/030-auth.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/31"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, username: str, password: str)", "description": "Create basic auth handler"}
+        ]
+      },
+      {
+        "name": "BearerAuth",
+        "kind": "class",
+        "module": "httpx_lite.auth",
+        "docstring": "Bearer token authentication",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/AuthHandler", "min_maturity": "designed"}
+        ],
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/030-auth.md"},
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/32"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, token: str)", "description": "Create bearer auth handler"}
+        ]
+      },
+      {
+        "name": "OAuth2",
+        "kind": "class",
+        "module": "httpx_lite.auth",
+        "docstring": "OAuth 2.0 authentication with token refresh",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/AuthHandler", "min_maturity": "designed"},
+          {"ref": "#/types/AsyncClient", "min_maturity": "tested", "reason": "Needs client for token refresh requests"}
+        ],
+        "methods": [
+          {"name": "__init__", "signature": "(self, client_id: str, client_secret: str, token_url: str)", "description": "Create OAuth2 handler"},
+          {"name": "refresh_token", "signature": "(self) -> str", "description": "Refresh the access token"}
+        ]
+      },
+      {
+        "name": "RetryConfig",
+        "kind": "class",
+        "module": "httpx_lite.retry",
+        "docstring": "Configuration for retry behavior with exponential backoff",
+        "maturity": "designed",
+        "maturity_evidence": [
+          {"type": "design_doc", "reference": "docs/adr/040-retry.md"}
+        ],
+        "properties": [
+          {"name": "max_retries", "type": "int", "description": "Maximum retry attempts"},
+          {"name": "backoff_factor", "type": "float", "description": "Exponential backoff multiplier"},
+          {"name": "retry_statuses", "type": "set[int]", "description": "HTTP statuses to retry"}
+        ]
+      },
+      {
+        "name": "RetryMiddleware",
+        "kind": "class",
+        "module": "httpx_lite.retry",
+        "docstring": "Middleware that retries failed requests",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/Middleware", "min_maturity": "released"},
+          {"ref": "#/types/RetryConfig", "min_maturity": "implemented"}
+        ]
+      },
+      {
+        "name": "CacheMiddleware",
+        "kind": "class",
+        "module": "httpx_lite.middleware",
+        "docstring": "HTTP caching middleware following RFC 7234",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/Middleware", "min_maturity": "released"}
+        ]
+      },
+      {
+        "name": "RateLimiter",
+        "kind": "class",
+        "module": "httpx_lite.middleware",
+        "docstring": "Rate limiting middleware with token bucket algorithm",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/Middleware", "min_maturity": "released"}
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "get",
+        "module": "httpx_lite",
+        "signature": "(url: str, **kwargs) -> Response",
+        "description": "Convenience function for GET requests",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/50"},
+          {"type": "tests", "path": "tests/test_api.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/quickstart/"}
+        ]
+      },
+      {
+        "name": "post",
+        "module": "httpx_lite",
+        "signature": "(url: str, **kwargs) -> Response",
+        "description": "Convenience function for POST requests",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/50"},
+          {"type": "tests", "path": "tests/test_api.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/quickstart/"}
+        ]
+      },
+      {
+        "name": "request",
+        "module": "httpx_lite",
+        "signature": "(method: str, url: str, **kwargs) -> Response",
+        "description": "Send an HTTP request with any method",
+        "maturity": "released",
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/50"},
+          {"type": "tests", "path": "tests/test_api.py"},
+          {"type": "docs", "url": "https://httpx-lite.readthedocs.io/quickstart/"}
+        ]
+      },
+      {
+        "name": "stream",
+        "module": "httpx_lite",
+        "signature": "(method: str, url: str, **kwargs) -> AsyncIterator[bytes]",
+        "description": "Stream response body for large downloads",
+        "maturity": "tested",
+        "requires": [
+          {"ref": "#/types/AsyncClient", "min_maturity": "tested"}
+        ],
+        "maturity_evidence": [
+          {"type": "pr", "url": "https://github.com/org/httpx-lite/pull/55"},
+          {"type": "tests", "path": "tests/test_streaming.py"}
+        ]
+      }
+    ],
+    "features": [
+      {
+        "id": "basic-requests",
+        "category": "CORE",
+        "summary": "Send HTTP requests and receive responses",
+        "status": "tested",
+        "maturity": "released",
+        "refs": ["#/types/Request", "#/types/Response", "#/functions/get", "#/functions/post"],
+        "steps": [
+          "Create request with method and URL",
+          "Send request via client",
+          "Receive response with status and body"
+        ]
+      },
+      {
+        "id": "connection-pooling",
+        "category": "PERFORMANCE",
+        "summary": "Reuse connections for better performance",
+        "status": "tested",
+        "maturity": "tested",
+        "refs": ["#/types/ConnectionPool", "#/types/AsyncClient"],
+        "steps": [
+          "Client maintains pool of connections",
+          "Connections are reused for same host",
+          "Idle connections are cleaned up"
+        ]
+      },
+      {
+        "id": "middleware-pipeline",
+        "category": "EXTENSIBILITY",
+        "summary": "Transform requests/responses with middleware",
+        "status": "implemented",
+        "maturity": "documented",
+        "refs": ["#/types/Middleware"],
+        "steps": [
+          "Register middleware with client",
+          "Middleware processes request before send",
+          "Middleware processes response after receive"
+        ]
+      },
+      {
+        "id": "authentication",
+        "category": "SECURITY",
+        "summary": "Support for various authentication methods",
+        "status": "implemented",
+        "maturity": "implemented",
+        "requires": [
+          {"ref": "#/types/BasicAuth", "min_maturity": "tested"},
+          {"ref": "#/types/BearerAuth", "min_maturity": "tested"}
+        ],
+        "refs": ["#/types/AuthHandler", "#/types/BasicAuth", "#/types/BearerAuth"],
+        "steps": [
+          "Configure auth handler on client",
+          "Auth automatically added to requests",
+          "Handle 401 challenges automatically"
+        ]
+      },
+      {
+        "id": "oauth2-flow",
+        "category": "SECURITY",
+        "summary": "Full OAuth 2.0 flow with token refresh",
+        "status": "planned",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/features/authentication", "min_maturity": "tested"},
+          {"ref": "#/types/OAuth2", "min_maturity": "implemented"}
+        ],
+        "refs": ["#/types/OAuth2"],
+        "steps": [
+          "Configure OAuth2 with client credentials",
+          "Automatically obtain access token",
+          "Refresh token before expiration"
+        ]
+      },
+      {
+        "id": "retry-logic",
+        "category": "RELIABILITY",
+        "summary": "Automatic retry with exponential backoff",
+        "status": "planned",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/RetryConfig", "min_maturity": "implemented"},
+          {"ref": "#/types/RetryMiddleware", "min_maturity": "implemented"}
+        ],
+        "refs": ["#/types/RetryConfig", "#/types/RetryMiddleware"],
+        "steps": [
+          "Configure retry policy",
+          "Failed requests automatically retried",
+          "Exponential backoff between retries"
+        ]
+      },
+      {
+        "id": "http-caching",
+        "category": "PERFORMANCE",
+        "summary": "Cache responses per HTTP caching rules",
+        "status": "planned",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/CacheMiddleware", "min_maturity": "implemented"}
+        ],
+        "refs": ["#/types/CacheMiddleware"],
+        "steps": [
+          "Enable caching middleware",
+          "Cacheable responses stored",
+          "Cache headers respected"
+        ]
+      },
+      {
+        "id": "rate-limiting",
+        "category": "RELIABILITY",
+        "summary": "Client-side rate limiting",
+        "status": "planned",
+        "maturity": "idea",
+        "requires": [
+          {"ref": "#/types/RateLimiter", "min_maturity": "implemented"}
+        ],
+        "refs": ["#/types/RateLimiter"],
+        "steps": [
+          "Configure rate limit",
+          "Requests throttled to limit",
+          "Backpressure when limit reached"
+        ]
+      }
+    ]
+  }
+}

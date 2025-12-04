@@ -4,15 +4,60 @@
   "library": {
     "name": "mylib",
     "version": "0.1.0",
-    "tagline": "A library with lifecycle extension",
+    "tagline": "A library demonstrating lifecycle tracking",
+    "default_workflow": "standard",
+    "workflows": [
+      {
+        "name": "standard",
+        "description": "Standard API lifecycle workflow",
+        "maturity_gates": [
+          {
+            "from_maturity": "specified",
+            "to_maturity": "designed",
+            "gates": [{"type": "design_doc", "required": true}]
+          },
+          {
+            "from_maturity": "designed",
+            "to_maturity": "implemented",
+            "gates": [{"type": "pr_merged", "required": true}]
+          },
+          {
+            "from_maturity": "implemented",
+            "to_maturity": "tested",
+            "gates": [{"type": "tests_passing", "required": true}]
+          },
+          {
+            "from_maturity": "tested",
+            "to_maturity": "documented",
+            "gates": [{"type": "docs_updated", "required": true}]
+          },
+          {
+            "from_maturity": "documented",
+            "to_maturity": "released",
+            "gates": [{"type": "approval"}]
+          }
+        ],
+        "evidence_types": []
+      }
+    ],
     "types": [
       {
         "name": "Greeter",
         "kind": "class",
         "module": "mylib",
         "docstring": "A simple greeter class",
-        "lifecycle_state": "stable",
-        "state_evidence": [
+        "maturity": "tested",
+        "maturity_evidence": [
+          {
+            "type": "design_doc",
+            "reference": "docs/design/greeter.md",
+            "date": "2024-01-10"
+          },
+          {
+            "type": "pr",
+            "url": "https://github.com/org/mylib/pull/1",
+            "date": "2024-01-15"
+          },
           {
             "type": "tests",
             "path": "tests/test_greeter.py",
@@ -26,6 +71,62 @@
             "description": "Return a greeting for the given name"
           }
         ]
+      },
+      {
+        "name": "Connection",
+        "kind": "class",
+        "module": "mylib.network",
+        "docstring": "Manages network connections",
+        "maturity": "designed",
+        "maturity_evidence": [
+          {
+            "type": "design_doc",
+            "reference": "docs/design/connection.md",
+            "date": "2024-02-01"
+          }
+        ]
+      },
+      {
+        "name": "WebSocketHandler",
+        "kind": "class",
+        "module": "mylib.network",
+        "docstring": "Handles WebSocket communication",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/Connection", "min_maturity": "implemented", "reason": "WebSocket needs working connection"}
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "format_message",
+        "module": "mylib.utils",
+        "signature": "(template: str, **kwargs) -> str",
+        "description": "Format a message template with arguments",
+        "maturity": "released",
+        "maturity_evidence": [
+          {
+            "type": "design_doc",
+            "reference": "docs/design/utils.md"
+          },
+          {
+            "type": "pr",
+            "url": "https://github.com/org/mylib/pull/5"
+          },
+          {
+            "type": "tests",
+            "path": "tests/test_utils.py"
+          },
+          {
+            "type": "docs",
+            "url": "https://mylib.readthedocs.io/en/latest/utils.html"
+          },
+          {
+            "type": "approval",
+            "reference": "https://github.com/org/mylib/issues/10#issuecomment-123",
+            "author": "tech-lead"
+          }
+        ]
       }
     ],
     "features": [
@@ -33,9 +134,21 @@
         "id": "greet-user",
         "category": "CORE",
         "summary": "Greet a user by name",
-        "status": "implemented",
-        "lifecycle_state": "stable",
+        "status": "tested",
+        "maturity": "tested",
         "steps": ["Call greet with a name", "Verify greeting is returned"]
+      },
+      {
+        "id": "websocket-support",
+        "category": "NETWORKING",
+        "summary": "WebSocket communication support",
+        "status": "planned",
+        "maturity": "specified",
+        "requires": [
+          {"ref": "#/types/Connection", "min_maturity": "implemented"},
+          {"ref": "#/types/WebSocketHandler", "min_maturity": "designed"}
+        ],
+        "steps": ["Establish WebSocket connection", "Send and receive messages"]
       }
     ]
   }

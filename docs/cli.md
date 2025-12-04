@@ -334,6 +334,130 @@ See [Lifecycle Extension](lifecycle.md) for full documentation.
 
 ---
 
+### Navigation Commands
+
+Navigation commands answer development workflow questions: "What's next?", "What's blocked?", "Where are gaps?"
+
+These commands work with or without the lifecycle extension. With just the core `maturity` field, they track development progress. With the lifecycle extension enabled, they also check workflow gates.
+
+#### `libspec next`
+
+Show entities ready to advance to the next maturity level.
+
+```bash
+libspec next                      # All ready entities
+libspec next -t type              # Only types
+libspec next -m designed          # Currently at designed maturity
+libspec next --limit 5            # Top 5 results
+libspec next --module 'mylib\.core'  # Filter by module (regex)
+```
+
+| Option | Description |
+|--------|-------------|
+| `-t, --type TYPE` | Filter by entity type (type/function/feature/method/all) |
+| `-m, --maturity LEVEL` | Filter by current maturity level |
+| `-w, --workflow NAME` | Filter by workflow (requires lifecycle extension) |
+| `--module REGEX` | Filter by module path (regex) |
+| `--limit N` | Limit number of results |
+
+**Text output:**
+```
+NEXT feature user-auth (specified -> designed)
+NEXT type Connection (designed -> implemented)
+---
+2 entities ready to advance
+```
+
+#### `libspec blocked`
+
+Show entities blocked from advancing by unsatisfied gates or requirements.
+
+```bash
+libspec blocked                   # All blocked entities
+libspec blocked -t feature        # Only blocked features
+libspec blocked -g tests_passing  # Blocked by specific gate
+libspec blocked --by-requirement  # Group by what's blocking them
+```
+
+| Option | Description |
+|--------|-------------|
+| `-t, --type TYPE` | Filter by entity type |
+| `-m, --maturity LEVEL` | Filter by current maturity level |
+| `-g, --gate TYPE` | Filter by missing gate type (requires lifecycle) |
+| `--by-requirement` | Group output by blocking requirement |
+| `--limit N` | Limit number of results |
+
+**Text output:**
+```
+BLOCKED feature websocket-support (specified)
+  - requires '#/types/Connection' at 'designed' (currently: idea)
+  - gate: design_doc not satisfied
+---
+1 entity blocked
+```
+
+**Grouped output (`--by-requirement`):**
+```
+gate: tests_passing not satisfied:
+  - SyncClient
+  - BasicAuth
+  - BearerAuth
+requires '#/types/Middleware' at 'released' (currently: 'documented'):
+  - RetryMiddleware
+  - CacheMiddleware
+  - RateLimiter
+---
+6 entities blocked
+```
+
+#### `libspec navigate gaps`
+
+Show entities missing expected information for their development stage.
+
+```bash
+libspec navigate gaps             # All gaps
+libspec navigate gaps -t type     # Only type gaps
+libspec navigate gaps -i docstring  # Missing docstrings
+libspec navigate gaps -s tested   # Gaps in tested entities
+```
+
+| Option | Description |
+|--------|-------------|
+| `-t, --type TYPE` | Filter by entity type |
+| `-s, --state STATE` | Filter by maturity/lifecycle state |
+| `-i, --issue TYPE` | Filter by gap type: `signature`, `docstring`, `tests`, `evidence` |
+
+**Gap types:**
+- `signature` – Methods/functions without signature
+- `docstring` – Types without docstring
+- `tests` – Entities marked tested but no test evidence
+- `evidence` – Missing required evidence for current state
+
+#### `libspec navigate progress`
+
+Show development progress summary as a dashboard.
+
+```bash
+libspec navigate progress                 # Full progress
+libspec navigate progress -t type         # Only types
+libspec navigate progress --format compact  # One-line summary
+```
+
+| Option | Description |
+|--------|-------------|
+| `-w, --workflow NAME` | Filter by workflow |
+| `-t, --type TYPE` | Filter by entity type |
+| `--format FORMAT` | Output format: `table`, `compact`, `json` |
+
+**Compact output:**
+```
+idea: 2 | specified: 3 | designed: 5 | implemented: 8 | tested: 6 | released: 4
+---
+28 tracked, 5 ready, 3 blocked
+```
+
+---
+
 ## Lint Rules
 
 Rules are organized by category:
@@ -343,7 +467,8 @@ Rules are organized by category:
 | Structural | `S` | Missing descriptions, empty types |
 | Naming | `N` | Kebab-case IDs, PascalCase types |
 | Completeness | `C` | Features without steps, missing signatures |
-| Consistency | `X` | Dangling refs, duplicates |
+| Consistency | `X` | Dangling refs, duplicates, circular deps, requirements |
+| Maturity | `M` | Maturity/status alignment |
 | Lifecycle | `L` | Lifecycle states, transitions, evidence |
 
 ### Available Rules
@@ -368,6 +493,8 @@ Rules are organized by category:
 | X001 | error | Dangling cross-reference |
 | X002 | error | Duplicate type name |
 | X003 | error | Duplicate feature ID |
+| X004 | error | Circular dependency in requires chain |
+| X005 | warning | Required entity below min_maturity |
 | X006 | warning | Feature marked tested but has no steps |
 | L001 | error | Invalid lifecycle state (not in workflow) |
 | L002 | warning | Missing required evidence for lifecycle state |
@@ -378,6 +505,7 @@ Rules are organized by category:
 | L007 | error | Custom evidence references undefined type |
 | L008 | warning | Evidence missing required field for type |
 | L009 | info | Test evidence path doesn't look like a test file |
+| M001 | warning | Feature maturity inconsistent with status field |
 
 ### Configuration
 

@@ -20,6 +20,7 @@ from typing_extensions import Self
 from .base import ExtensibleModel, LibspecModel
 from .types import (
     CrossReference,
+    EntityMaturity,
     ExportOrigin,
     ExtensionName,
     FeatureStatus,
@@ -200,6 +201,37 @@ class DeprecationInfo(LibspecModel):
             context="deprecation"
         )
         return self
+
+
+class Requirement(LibspecModel):
+    """A dependency requirement with optional maturity constraint.
+
+    Used to express that an entity depends on another entity,
+    optionally requiring a minimum maturity level before this entity
+    can advance in its own development.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Requirement",
+            "examples": [
+                {"ref": "#/types/Connection", "min_maturity": "designed"},
+                {"ref": "#/functions/validate_input", "reason": "Needed for input handling"},
+            ],
+        }
+    )
+
+    ref: CrossReference = Field(
+        description="Reference to required entity (#/types/X, #/functions/Y, etc.)"
+    )
+    min_maturity: EntityMaturity | None = Field(
+        default=None,
+        description="Minimum maturity level required for this dependency (e.g., 'designed')",
+    )
+    reason: str | None = Field(
+        default=None,
+        description="Why this requirement exists",
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -464,6 +496,10 @@ class Method(ExtensibleModel):
         default=None,
         description="Deprecation information if this method is deprecated (PEP 702)",
     )
+    maturity: EntityMaturity | None = Field(
+        default=None,
+        description="Development maturity stage of this method",
+    )
 
     @field_validator("signature")
     @classmethod
@@ -620,6 +656,14 @@ class TypeDef(ExtensibleModel):
     typed_dict_closed: bool | None = Field(
         default=None,
         description="For TypedDict: whether extra keys are forbidden (PEP 728, Python 3.13+)",
+    )
+    maturity: EntityMaturity | None = Field(
+        default=None,
+        description="Development maturity stage of this type",
+    )
+    requires: list["Requirement"] = Field(
+        default_factory=list,
+        description="Entities that must be at specified maturity before this can advance",
     )
 
     @model_validator(mode="after")
@@ -782,6 +826,14 @@ class FunctionDef(ExtensibleModel):
         default=None,
         description="Deprecation information if this function is deprecated (PEP 702)",
     )
+    maturity: EntityMaturity | None = Field(
+        default=None,
+        description="Development maturity stage of this function",
+    )
+    requires: list[Requirement] = Field(
+        default_factory=list,
+        description="Entities that must be at specified maturity before this can advance",
+    )
 
     @field_validator("signature")
     @classmethod
@@ -794,7 +846,6 @@ class FunctionDef(ExtensibleModel):
                 stacklevel=2,
             )
         return v
-
 
     @model_validator(mode="after")
     def validate_yield_consistency(self) -> Self:
@@ -869,6 +920,14 @@ class Feature(ExtensibleModel):
     )
     v1_planned: bool | None = Field(
         default=None, description="Whether planned for v1.0 release"
+    )
+    maturity: EntityMaturity | None = Field(
+        default=None,
+        description="Development maturity stage of this feature",
+    )
+    requires: list[Requirement] = Field(
+        default_factory=list,
+        description="Entities that must be at specified maturity before this can advance",
     )
 
 

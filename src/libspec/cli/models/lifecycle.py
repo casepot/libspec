@@ -6,6 +6,8 @@ enabling IDE autocomplete and static type checking without runtime overhead.
 
 from typing import Literal, TypedDict
 
+from libspec.models.types import EntityMaturity
+
 # -----------------------------------------------------------------------------
 # Evidence Types
 # -----------------------------------------------------------------------------
@@ -148,6 +150,15 @@ class DevTransitionSpec(TypedDict, total=False):
     description: str
 
 
+class MaturityGate(TypedDict, total=False):
+    """A gate for transitioning between maturity levels."""
+
+    from_maturity: EntityMaturity  # Required
+    to_maturity: EntityMaturity  # Required
+    gates: list[GateSpec]
+    description: str
+
+
 class EvidenceTypeSpec(TypedDict, total=False):
     """Custom evidence type definition for a workflow."""
 
@@ -159,13 +170,19 @@ class EvidenceTypeSpec(TypedDict, total=False):
 
 
 class WorkflowSpec(TypedDict, total=False):
-    """A named workflow defining development lifecycle states and transitions."""
+    """A named workflow defining development lifecycle states and transitions.
+
+    Supports both legacy state-based and maturity-based workflows.
+    """
 
     name: str  # Required
     description: str
-    states: list[DevStateSpec]  # Required
-    initial_state: str  # Required
+    # Legacy state-based workflow fields
+    states: list[DevStateSpec]
+    initial_state: str
     transitions: list[DevTransitionSpec]
+    # Maturity-based workflow gates (recommended)
+    maturity_gates: list[MaturityGate]
     allow_skip: bool  # Default: False
     evidence_types: list[EvidenceTypeSpec]
 
@@ -176,11 +193,18 @@ class WorkflowSpec(TypedDict, total=False):
 
 
 class LifecycleFields(TypedDict, total=False):
-    """Fields added to entities when lifecycle extension is active."""
+    """Fields added to entities when lifecycle extension is active.
 
-    lifecycle_state: str
+    The maturity field on core entities is the primary state tracker.
+    This extension adds workflow orchestration and evidence tracking.
+    """
+
     workflow: str  # Workflow override
-    state_evidence: list[EvidenceSpec]
+    # Maturity-based evidence (recommended)
+    maturity_evidence: list[EvidenceSpec]
+    # Legacy fields (backward compatibility)
+    lifecycle_state: str  # Use core maturity field instead
+    state_evidence: list[EvidenceSpec]  # Use maturity_evidence instead
 
 
 # -----------------------------------------------------------------------------
@@ -201,12 +225,19 @@ class LifecycleLibraryFields(TypedDict, total=False):
 
 
 class LifecycleEntity(TypedDict):
-    """An entity with lifecycle tracking (collected for reporting)."""
+    """An entity with lifecycle tracking (collected for reporting).
+
+    Supports both maturity-based (core) and lifecycle_state-based (legacy) tracking.
+    """
 
     entity_type: Literal["type", "function", "feature", "method"]
     name: str
     ref: str  # JSON pointer reference
-    lifecycle_state: str
+    # Maturity-based tracking (core field)
+    maturity: str | None
+    maturity_evidence: list[EvidenceSpec]
+    # Legacy fields (backward compatibility)
+    lifecycle_state: str | None
     workflow: str | None
     state_evidence: list[EvidenceSpec]
 

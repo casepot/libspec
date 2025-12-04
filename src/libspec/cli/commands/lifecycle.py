@@ -1,4 +1,9 @@
-"""Lifecycle commands: lifecycle report and analysis."""
+"""Lifecycle commands: lifecycle report and analysis.
+
+This module supports both:
+- Maturity-based tracking (core maturity field)
+- Legacy lifecycle_state tracking
+"""
 
 from collections import defaultdict
 from typing import Any
@@ -11,9 +16,16 @@ from libspec.cli.models.lifecycle import (
     DevTransitionSpec,
     GateStatus,
     LifecycleEntity,
+    MaturityGate,
     WorkflowSpec,
 )
 from libspec.cli.output import make_envelope, output_json
+
+# Maturity level ordering for progression checks
+MATURITY_ORDER = [
+    "idea", "specified", "designed", "implemented",
+    "tested", "documented", "released", "deprecated"
+]
 
 
 def get_entity_workflow(entity: LifecycleEntity, spec: dict[str, Any]) -> str | None:
@@ -22,6 +34,28 @@ def get_entity_workflow(entity: LifecycleEntity, spec: dict[str, Any]) -> str | 
         return workflow
     default: str | None = spec.get("library", {}).get("default_workflow")
     return default
+
+
+def get_next_maturity(current: str) -> str | None:
+    """Get the next maturity level in progression."""
+    if current not in MATURITY_ORDER:
+        return None
+    idx = MATURITY_ORDER.index(current)
+    if idx < len(MATURITY_ORDER) - 1:
+        return MATURITY_ORDER[idx + 1]
+    return None
+
+
+def get_maturity_gate(
+    from_maturity: str,
+    to_maturity: str,
+    workflow: WorkflowSpec,
+) -> MaturityGate | None:
+    """Get the maturity gate for a transition if defined."""
+    for gate in workflow.get("maturity_gates", []):
+        if gate.get("from_maturity") == from_maturity and gate.get("to_maturity") == to_maturity:
+            return gate
+    return None
 
 
 def get_workflow_spec(workflow_name: str, spec: dict[str, Any]) -> WorkflowSpec | None:
@@ -45,13 +79,24 @@ def get_valid_next_states(current_state: str, workflow: WorkflowSpec) -> list[st
     return next_states
 
 
+def get_entity_evidence(entity: LifecycleEntity) -> list[dict[str, Any]]:
+    """Get evidence from entity, preferring maturity_evidence over state_evidence."""
+    evidence = entity.get("maturity_evidence", [])
+    if not evidence:
+        evidence = entity.get("state_evidence", [])
+    return evidence
+
+
 def check_gates_satisfied(
     entity: LifecycleEntity,
-    transition: DevTransitionSpec,
+    transition: DevTransitionSpec | MaturityGate,
 ) -> list[GateStatus]:
-    """Check which gates are satisfied/unsatisfied for a transition."""
+    """Check which gates are satisfied/unsatisfied for a transition.
+
+    Works with both legacy DevTransitionSpec and new MaturityGate.
+    """
     gates = transition.get("gates", [])
-    evidence_list = entity.get("state_evidence", [])
+    evidence_list = get_entity_evidence(entity)
 
     # Build set of evidence types, including custom type names
     evidence_types: set[str] = set()
@@ -93,17 +138,24 @@ def check_gates_satisfied(
 
 
 def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[LifecycleEntity]:
-    """Collect all entities that have lifecycle_state set."""
+    """Collect all entities that have maturity or lifecycle_state set.
+
+    Supports both:
+    - Maturity-based tracking (core maturity field)
+    - Legacy lifecycle_state tracking
+    """
     entities: list[LifecycleEntity] = []
     library = spec.get("library", {})
 
     # Types
     for t in library.get("types", []):
-        if "lifecycle_state" in t:
+        if "maturity" in t or "lifecycle_state" in t:
             entities.append({
                 "entity_type": "type",
                 "name": t.get("name"),
                 "ref": f"#/types/{t.get('name')}",
+                "maturity": t.get("maturity"),
+                "maturity_evidence": t.get("maturity_evidence", []),
                 "lifecycle_state": t.get("lifecycle_state"),
                 "workflow": t.get("workflow"),
                 "state_evidence": t.get("state_evidence", []),
@@ -111,11 +163,13 @@ def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[LifecycleEntit
 
     # Functions
     for f in library.get("functions", []):
-        if "lifecycle_state" in f:
+        if "maturity" in f or "lifecycle_state" in f:
             entities.append({
                 "entity_type": "function",
                 "name": f.get("name"),
                 "ref": f"#/functions/{f.get('name')}",
+                "maturity": f.get("maturity"),
+                "maturity_evidence": f.get("maturity_evidence", []),
                 "lifecycle_state": f.get("lifecycle_state"),
                 "workflow": f.get("workflow"),
                 "state_evidence": f.get("state_evidence", []),
@@ -123,11 +177,13 @@ def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[LifecycleEntit
 
     # Features
     for feat in library.get("features", []):
-        if "lifecycle_state" in feat:
+        if "maturity" in feat or "lifecycle_state" in feat:
             entities.append({
                 "entity_type": "feature",
                 "name": feat.get("id"),
                 "ref": f"#/features/{feat.get('id')}",
+                "maturity": feat.get("maturity"),
+                "maturity_evidence": feat.get("maturity_evidence", []),
                 "lifecycle_state": feat.get("lifecycle_state"),
                 "workflow": feat.get("workflow"),
                 "state_evidence": feat.get("state_evidence", []),
@@ -136,17 +192,27 @@ def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[LifecycleEntit
     # Methods in types
     for t in library.get("types", []):
         for m in t.get("methods", []):
-            if "lifecycle_state" in m:
+            if "maturity" in m or "lifecycle_state" in m:
                 entities.append({
                     "entity_type": "method",
                     "name": f"{t.get('name')}.{m.get('name')}",
                     "ref": f"#/types/{t.get('name')}/methods/{m.get('name')}",
+                    "maturity": m.get("maturity"),
+                    "maturity_evidence": m.get("maturity_evidence", []),
                     "lifecycle_state": m.get("lifecycle_state"),
                     "workflow": m.get("workflow"),
                     "state_evidence": m.get("state_evidence", []),
                 })
 
     return entities
+
+
+def get_entity_state(entity: LifecycleEntity) -> str | None:
+    """Get state from entity, preferring maturity over lifecycle_state."""
+    state = entity.get("maturity")
+    if not state:
+        state = entity.get("lifecycle_state")
+    return state
 
 
 @click.command()
@@ -202,7 +268,8 @@ def lifecycle(
             if (e.get("workflow") or default_workflow) == workflow
         ]
     if state:
-        entities = [e for e in entities if e.get("lifecycle_state") == state]
+        # Filter by state (supports both maturity and lifecycle_state)
+        entities = [e for e in entities if get_entity_state(e) == state]
 
     # Compute statistics
     by_state: dict[str, int] = defaultdict(int)
@@ -211,7 +278,8 @@ def lifecycle(
     blocked_items: list[BlockedItem] = []
 
     for entity in entities:
-        entity_state = entity.get("lifecycle_state", "unknown")
+        # Use get_entity_state to support both maturity and lifecycle_state
+        entity_state = get_entity_state(entity) or "unknown"
         entity_workflow = entity.get("workflow") or default_workflow
         entity_type = entity.get("entity_type")
 
@@ -222,32 +290,55 @@ def lifecycle(
             by_entity_type[entity_type] += 1
 
         # Check for blocked items
-        if entity_workflow:
-            wf = get_workflow_spec(entity_workflow, spec.data)
-            if wf:
-                next_states = get_valid_next_states(entity_state, wf)
-                for next_state in next_states:
-                    # Find the transition
-                    for t in wf.get("transitions", []):
-                        if (
-                            t.get("from_state") == entity_state
-                            and t.get("to_state") == next_state
-                        ):
-                            gate_status = check_gates_satisfied(entity, t)
-                            unsatisfied = [
-                                g for g in gate_status
-                                if g["required"] and not g["satisfied"]
-                            ]
-                            if unsatisfied:
-                                blocked_items.append({
-                                    "entity": entity["ref"],
-                                    "name": entity["name"],
-                                    "current_state": entity_state,
-                                    "blocked_transition": next_state,
-                                    "unsatisfied_gates": [
-                                        g["gate"] for g in unsatisfied
-                                    ],
-                                })
+        wf = get_workflow_spec(entity_workflow, spec.data) if entity_workflow else None
+
+        # Check maturity-based gates first
+        if entity.get("maturity"):
+            next_maturity = get_next_maturity(entity_state)
+            if next_maturity and wf:
+                gate = get_maturity_gate(entity_state, next_maturity, wf)
+                if gate:
+                    gate_status = check_gates_satisfied(entity, gate)
+                    unsatisfied = [
+                        g for g in gate_status
+                        if g["required"] and not g["satisfied"]
+                    ]
+                    if unsatisfied:
+                        blocked_items.append({
+                            "entity": entity["ref"],
+                            "name": entity["name"],
+                            "current_state": entity_state,
+                            "blocked_transition": next_maturity,
+                            "unsatisfied_gates": [
+                                g["gate"] for g in unsatisfied
+                            ],
+                        })
+
+        # Also check legacy state-based transitions
+        elif wf and entity.get("lifecycle_state"):
+            next_states = get_valid_next_states(entity_state, wf)
+            for next_state in next_states:
+                # Find the transition
+                for t in wf.get("transitions", []):
+                    if (
+                        t.get("from_state") == entity_state
+                        and t.get("to_state") == next_state
+                    ):
+                        gate_status = check_gates_satisfied(entity, t)
+                        unsatisfied = [
+                            g for g in gate_status
+                            if g["required"] and not g["satisfied"]
+                        ]
+                        if unsatisfied:
+                            blocked_items.append({
+                                "entity": entity["ref"],
+                                "name": entity["name"],
+                                "current_state": entity_state,
+                                "blocked_transition": next_state,
+                                "unsatisfied_gates": [
+                                    g["gate"] for g in unsatisfied
+                                ],
+                            })
 
     # Build result
     result: dict[str, Any] = {

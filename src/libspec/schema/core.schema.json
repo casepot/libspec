@@ -137,6 +137,21 @@
       "title": "DeprecationInfo",
       "type": "object"
     },
+    "EntityMaturity": {
+      "description": "Development maturity stage of an entity.\n\nUniversal progression tracking for types, functions, features, and methods.\nThis is the single source of truth for \"how developed is this entity?\"\n\nStages represent increasing maturity:\n- idea: Rough concept, may change significantly\n- specified: Behavior described, acceptance criteria clear\n- designed: Shape defined (signatures, contracts, types)\n- implemented: Code exists\n- tested: Tests exist and pass\n- documented: User-facing docs exist\n- released: Part of a public release\n- deprecated: Marked for removal",
+      "enum": [
+        "idea",
+        "specified",
+        "designed",
+        "implemented",
+        "tested",
+        "documented",
+        "released",
+        "deprecated"
+      ],
+      "title": "EntityMaturity",
+      "type": "string"
+    },
     "EnumValue": {
       "additionalProperties": false,
       "description": "An enum member value.",
@@ -356,6 +371,18 @@
           "title": "Id",
           "type": "string"
         },
+        "maturity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityMaturity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Development maturity stage of this feature"
+        },
         "references": {
           "description": "Related types, functions, or features",
           "items": {
@@ -364,6 +391,14 @@
             "type": "string"
           },
           "title": "References",
+          "type": "array"
+        },
+        "requires": {
+          "description": "Entities that must be at specified maturity before this can advance",
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Requires",
           "type": "array"
         },
         "status": {
@@ -555,6 +590,18 @@
             "context_manager"
           ]
         },
+        "maturity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityMaturity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Development maturity stage of this function"
+        },
         "module": {
           "description": "Module where this function is defined",
           "examples": [
@@ -652,6 +699,14 @@
             "type": "string"
           },
           "title": "Related",
+          "type": "array"
+        },
+        "requires": {
+          "description": "Entities that must be at specified maturity before this can advance",
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Requires",
           "type": "array"
         },
         "returns": {
@@ -1049,6 +1104,18 @@
           "default": null,
           "description": "Whether this method uses @override decorator (PEP 698, Python 3.12+)",
           "title": "Is Override"
+        },
+        "maturity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityMaturity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Development maturity stage of this method"
         },
         "name": {
           "description": "Method name",
@@ -1687,6 +1754,59 @@
       "title": "Raises Clause",
       "type": "object"
     },
+    "Requirement": {
+      "additionalProperties": false,
+      "description": "A dependency requirement with optional maturity constraint.\n\nUsed to express that an entity depends on another entity,\noptionally requiring a minimum maturity level before this entity\ncan advance in its own development.",
+      "examples": [
+        {
+          "min_maturity": "designed",
+          "ref": "#/types/Connection"
+        },
+        {
+          "reason": "Needed for input handling",
+          "ref": "#/functions/validate_input"
+        }
+      ],
+      "properties": {
+        "min_maturity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityMaturity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimum maturity level required for this dependency (e.g., 'designed')"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why this requirement exists",
+          "title": "Reason"
+        },
+        "ref": {
+          "description": "Reference to required entity (#/types/X, #/functions/Y, etc.)",
+          "minLength": 1,
+          "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_]*$",
+          "title": "Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref"
+      ],
+      "title": "Requirement",
+      "type": "object"
+    },
     "ReturnSpec": {
       "additionalProperties": false,
       "description": "Return value specification.",
@@ -1876,6 +1996,18 @@
             "dataclass"
           ]
         },
+        "maturity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityMaturity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Development maturity stage of this type"
+        },
         "methods": {
           "description": "Instance methods",
           "items": {
@@ -1938,6 +2070,14 @@
             "type": "string"
           },
           "title": "Related",
+          "type": "array"
+        },
+        "requires": {
+          "description": "Entities that must be at specified maturity before this can advance",
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Requires",
           "type": "array"
         },
         "static_methods": {

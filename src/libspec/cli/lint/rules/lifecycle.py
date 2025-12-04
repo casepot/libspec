@@ -1,4 +1,9 @@
-"""Lifecycle lint rules (L001-L099)."""
+"""Lifecycle lint rules (L001-L099).
+
+Rules for validating lifecycle extension usage, including both:
+- Legacy state-based workflows (lifecycle_state, state_evidence)
+- Maturity-based workflows (maturity field, maturity_evidence)
+"""
 
 from typing import Any, Iterator
 
@@ -6,6 +11,12 @@ from typing_extensions import override
 
 from libspec.cli.lint.base import LintIssue, LintRule, Severity
 from libspec.cli.lint.registry import RuleRegistry
+
+# Valid maturity levels for maturity-based validation
+VALID_MATURITY_LEVELS = {
+    "idea", "specified", "designed", "implemented",
+    "tested", "documented", "released", "deprecated"
+}
 
 
 def get_workflow_for_entity(
@@ -27,6 +38,24 @@ def get_workflow_for_entity(
 def get_workflow_states(workflow: dict[str, Any]) -> set[str]:
     """Get all state names in a workflow."""
     return {s.get("name") for s in workflow.get("states", []) if s.get("name")}
+
+
+def get_entity_evidence(entity: dict[str, Any]) -> list[dict[str, Any]]:
+    """Get evidence from entity, checking both maturity_evidence and state_evidence."""
+    # Prefer maturity_evidence, fall back to state_evidence for legacy support
+    evidence = entity.get("maturity_evidence", [])
+    if not evidence:
+        evidence = entity.get("state_evidence", [])
+    return evidence
+
+
+def get_entity_state(entity: dict[str, Any]) -> str | None:
+    """Get state from entity, checking both maturity and lifecycle_state."""
+    # Prefer maturity, fall back to lifecycle_state for legacy support
+    state = entity.get("maturity")
+    if not state:
+        state = entity.get("lifecycle_state")
+    return state
 
 
 @RuleRegistry.register
@@ -165,8 +194,8 @@ class MissingRequiredEvidence(LintRule):
             if not required_evidence:
                 return
 
-            # Check what evidence exists
-            evidence = entity.get("state_evidence", [])
+            # Check what evidence exists (support both maturity_evidence and state_evidence)
+            evidence = get_entity_evidence(entity)
             evidence_types = {e.get("type") for e in evidence}
 
             missing = [req for req in required_evidence if req not in evidence_types]
@@ -391,36 +420,45 @@ EVIDENCE_REQUIRED_FIELDS: dict[str, list[str]] = {
 
 def iter_entities_with_evidence(
     spec: dict[str, Any],
-) -> Iterator[tuple[str, int, str, dict[str, Any], int, dict[str, Any]]]:
-    """Yield (entity_type, index, name/id, entity, evidence_index, evidence)."""
+) -> Iterator[tuple[str, int, str, dict[str, Any], int, dict[str, Any], str]]:
+    """Yield (entity_type, index, name/id, entity, evidence_index, evidence, evidence_field).
+
+    Checks both maturity_evidence and state_evidence fields for backward compatibility.
+    """
     library = spec.get("library", {})
 
     for i, t in enumerate(library.get("types", [])):
-        for j, ev in enumerate(t.get("state_evidence", [])):
-            yield ("types", i, t.get("name", "?"), t, j, ev)
+        # Check maturity_evidence first, then state_evidence
+        for field in ("maturity_evidence", "state_evidence"):
+            for j, ev in enumerate(t.get(field, [])):
+                yield ("types", i, t.get("name", "?"), t, j, ev, field)
 
     for i, f in enumerate(library.get("functions", [])):
-        for j, ev in enumerate(f.get("state_evidence", [])):
-            yield ("functions", i, f.get("name", "?"), f, j, ev)
+        for field in ("maturity_evidence", "state_evidence"):
+            for j, ev in enumerate(f.get(field, [])):
+                yield ("functions", i, f.get("name", "?"), f, j, ev, field)
 
     for i, feat in enumerate(library.get("features", [])):
-        for j, ev in enumerate(feat.get("state_evidence", [])):
-            yield ("features", i, feat.get("id", "?"), feat, j, ev)
+        for field in ("maturity_evidence", "state_evidence"):
+            for j, ev in enumerate(feat.get(field, [])):
+                yield ("features", i, feat.get("id", "?"), feat, j, ev, field)
 
     # Methods in types
     for ti, t in enumerate(library.get("types", [])):
         for mi, m in enumerate(t.get("methods", [])):
-            for j, ev in enumerate(m.get("state_evidence", [])):
-                tname = t.get("name", "?")
-                mname = m.get("name", "?")
-                yield (
-                    f"types[{ti}].methods",
-                    mi,
-                    f"{tname}.{mname}",
-                    m,
-                    j,
-                    ev,
-                )
+            for field in ("maturity_evidence", "state_evidence"):
+                for j, ev in enumerate(m.get(field, [])):
+                    tname = t.get("name", "?")
+                    mname = m.get("name", "?")
+                    yield (
+                        f"types[{ti}].methods",
+                        mi,
+                        f"{tname}.{mname}",
+                        m,
+                        j,
+                        ev,
+                        field,
+                    )
 
 
 @RuleRegistry.register
@@ -441,7 +479,7 @@ class InvalidEvidenceReference(LintRule):
         severity = self.get_severity(config)
         custom_types = get_custom_evidence_types(spec)
 
-        for entity_type, idx, name, _entity, ev_idx, evidence in iter_entities_with_evidence(spec):
+        for entity_type, idx, name, _entity, ev_idx, evidence, ev_field in iter_entities_with_evidence(spec):
             ev_type = evidence.get("type")
 
             # PR evidence should have valid URL
@@ -452,7 +490,7 @@ class InvalidEvidenceReference(LintRule):
                         rule=self.id,
                         severity=severity,
                         message=f"PR evidence for '{name}' has invalid URL: {url}",
-                        path=f"$.library.{entity_type}[{idx}].state_evidence[{ev_idx}].url",
+                        path=f"$.library.{entity_type}[{idx}].{ev_field}[{ev_idx}].url",
                         ref=f"#/{entity_type}/{name}",
                     )
 
@@ -464,7 +502,7 @@ class InvalidEvidenceReference(LintRule):
                         rule=self.id,
                         severity=severity,
                         message=f"Docs evidence for '{name}' has invalid URL: {url}",
-                        path=f"$.library.{entity_type}[{idx}].state_evidence[{ev_idx}].url",
+                        path=f"$.library.{entity_type}[{idx}].{ev_field}[{ev_idx}].url",
                         ref=f"#/{entity_type}/{name}",
                     )
 
@@ -485,7 +523,7 @@ class InvalidEvidenceReference(LintRule):
                                     f"Custom evidence '{type_name}' for '{name}' "
                                     f"reference doesn't match pattern: {ref_pattern}"
                                 ),
-                                path=f"$.library.{entity_type}[{idx}].state_evidence[{ev_idx}].reference",
+                                path=f"$.library.{entity_type}[{idx}].{ev_field}[{ev_idx}].reference",
                                 ref=f"#/{entity_type}/{name}",
                             )
 
@@ -502,7 +540,7 @@ class InvalidEvidenceReference(LintRule):
                                     f"Custom evidence '{type_name}' for '{name}' "
                                     f"URL doesn't match pattern: {url_pattern}"
                                 ),
-                                path=f"$.library.{entity_type}[{idx}].state_evidence[{ev_idx}].url",
+                                path=f"$.library.{entity_type}[{idx}].{ev_field}[{ev_idx}].url",
                                 ref=f"#/{entity_type}/{name}",
                             )
 
@@ -525,7 +563,7 @@ class UndefinedCustomEvidenceType(LintRule):
         severity = self.get_severity(config)
         custom_types = get_custom_evidence_types(spec)
 
-        for entity_type, idx, name, _entity, ev_idx, evidence in iter_entities_with_evidence(spec):
+        for entity_type, idx, name, _entity, ev_idx, evidence, ev_field in iter_entities_with_evidence(spec):
             ev_type = evidence.get("type")
 
             if ev_type == "custom":
@@ -538,7 +576,7 @@ class UndefinedCustomEvidenceType(LintRule):
                             f"Custom evidence for '{name}' references undefined "
                             f"type '{type_name}'"
                         ),
-                        path=f"$.library.{entity_type}[{idx}].state_evidence[{ev_idx}].type_name",
+                        path=f"$.library.{entity_type}[{idx}].{ev_field}[{ev_idx}].type_name",
                         ref=f"#/{entity_type}/{name}",
                     )
 
@@ -561,7 +599,7 @@ class EvidenceMissingRequiredField(LintRule):
         severity = self.get_severity(config)
         custom_types = get_custom_evidence_types(spec)
 
-        for entity_type, idx, name, _entity, ev_idx, evidence in iter_entities_with_evidence(spec):
+        for entity_type, idx, name, _entity, ev_idx, evidence, ev_field in iter_entities_with_evidence(spec):
             ev_type = evidence.get("type")
             if not ev_type:
                 continue
@@ -587,7 +625,7 @@ class EvidenceMissingRequiredField(LintRule):
                             f"Evidence type '{ev_type}' for '{name}' "
                             f"missing required field '{field}'"
                         ),
-                        path=f"$.library.{entity_type}[{idx}].state_evidence[{ev_idx}]",
+                        path=f"$.library.{entity_type}[{idx}].{ev_field}[{ev_idx}]",
                         ref=f"#/{entity_type}/{name}",
                     )
 
@@ -623,7 +661,7 @@ class InvalidTestPathPattern(LintRule):
 
         severity = self.get_severity(config)
 
-        for entity_type, idx, name, _entity, ev_idx, evidence in iter_entities_with_evidence(spec):
+        for entity_type, idx, name, _entity, ev_idx, evidence, ev_field in iter_entities_with_evidence(spec):
             ev_type = evidence.get("type")
 
             if ev_type == "tests":
@@ -642,6 +680,6 @@ class InvalidTestPathPattern(LintRule):
                                 f"Test evidence for '{name}' has path '{path}' "
                                 "which doesn't match common test file patterns"
                             ),
-                            path=f"$.library.{entity_type}[{idx}].state_evidence[{ev_idx}].path",
+                            path=f"$.library.{entity_type}[{idx}].{ev_field}[{ev_idx}].path",
                             ref=f"#/{entity_type}/{name}",
                         )

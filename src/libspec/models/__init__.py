@@ -33,6 +33,7 @@ from .core import (
     Principle,
     Property,
     RaisesClause,
+    Requirement,
     ReturnSpec,
     TypeDef,
     YieldSpec,
@@ -64,6 +65,7 @@ from .extensions import (
     GateSpec,
     LifecycleFields,
     LifecycleLibraryFields,
+    MaturityGate,
     MigrationGuideEvidence,
     ObservabilityLibraryFields,
     ORMLibraryFields,
@@ -92,6 +94,7 @@ from .types import (
     ByteSize,
     CommandName,
     ConfigKey,
+    EntityMaturity,
     ExceptionTypeName,
     ExecutionOrder,
     ExtensionName,
@@ -150,6 +153,8 @@ __all__ = [
     "RaisesClause",
     "OverloadSpec",
     "DeprecationInfo",
+    # Dependency tracking
+    "Requirement",
     # Module components
     "Export",
     # Enums
@@ -157,6 +162,7 @@ __all__ = [
     "FunctionKind",
     "ParameterKind",
     "FeatureStatus",
+    "EntityMaturity",
     "GenericVariance",
     "ExtensionName",
     # Constrained types
@@ -203,6 +209,7 @@ __all__ = [
     "GateSpec",
     "DevStateSpec",
     "DevTransitionSpec",
+    "MaturityGate",
     "EvidenceTypeSpec",
     "WorkflowSpec",
     "LifecycleFields",

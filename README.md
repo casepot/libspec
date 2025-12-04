@@ -9,6 +9,8 @@ libspec provides a structured, machine-readable format for describing Python lib
 - **Systematic querying** of interfaces (types, functions, methods)
 - **Machine validation** of specification files
 - **Behavioral specifications** linked to testable assertions
+- **Development tracking** with maturity levels and dependency requirements
+- **Navigation commands** to find what's ready, blocked, or has gaps
 - **Domain-specific extensions** for async, web, data, CLI, and more
 - **Cross-cutting concern extensions** for errors, performance, safety, etc.
 
@@ -75,6 +77,8 @@ The core schema captures universal library concepts:
 - **Types**: Classes, protocols, enums, dataclasses, type aliases
 - **Functions**: Functions, decorators, context managers
 - **Features**: Behavioral specifications with test steps
+- **Maturity**: Development stage tracking (idea → specified → designed → implemented → tested → documented → released)
+- **Requirements**: Dependency tracking with optional maturity constraints
 
 ### Domain Extensions
 
@@ -119,14 +123,27 @@ Internal:   #/types/Handle
 External:   other_lib#/types/SomeType
 ```
 
+## Navigation Commands
+
+The CLI provides navigation commands for development workflow:
+
+```bash
+libspec next                  # What's ready to advance?
+libspec blocked               # What's stuck and why?
+libspec blocked --by-requirement  # Group by what's blocking
+libspec navigate gaps         # What's missing docstrings/tests?
+libspec navigate progress     # Dashboard of maturity distribution
+```
+
+These commands work with the core `maturity` field. Enable the `lifecycle` extension to add workflow gates and evidence requirements for transitions.
+
 ## Documentation
 
-- [Core Schema Reference](docs/core.md)
-- [Extension Reference](docs/extensions/)
-- [Lifecycle Extension](docs/lifecycle.md)
-- [CLI Reference](docs/cli.md)
-- [Usage Guide](docs/usage.md)
-- [Examples](docs/examples/)
+- [Core Schema Reference](docs/core.md) - Types, functions, features, maturity, requirements
+- [Extensions Reference](docs/extensions.md) - Domain and concern extensions
+- [Lifecycle Extension](docs/lifecycle.md) - Workflow gates and evidence
+- [CLI Reference](docs/cli.md) - Commands, validation, linting, navigation
+- [Examples](docs/examples/) - Sample specifications
 
 ## License
 

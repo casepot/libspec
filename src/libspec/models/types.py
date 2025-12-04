@@ -453,6 +453,33 @@ class FeatureStatus(str, Enum):
     TESTED = "tested"
 
 
+class EntityMaturity(str, Enum):
+    """Development maturity stage of an entity.
+
+    Universal progression tracking for types, functions, features, and methods.
+    This is the single source of truth for "how developed is this entity?"
+
+    Stages represent increasing maturity:
+    - idea: Rough concept, may change significantly
+    - specified: Behavior described, acceptance criteria clear
+    - designed: Shape defined (signatures, contracts, types)
+    - implemented: Code exists
+    - tested: Tests exist and pass
+    - documented: User-facing docs exist
+    - released: Part of a public release
+    - deprecated: Marked for removal
+    """
+
+    IDEA = "idea"
+    SPECIFIED = "specified"
+    DESIGNED = "designed"
+    IMPLEMENTED = "implemented"
+    TESTED = "tested"
+    DOCUMENTED = "documented"
+    RELEASED = "released"
+    DEPRECATED = "deprecated"
+
+
 class GenericVariance(str, Enum):
     """Variance of a generic type parameter."""
 

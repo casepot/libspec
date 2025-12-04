@@ -142,6 +142,8 @@ Type definitions: classes, protocols, enums, dataclasses, type aliases.
 | `construction` | Constructor | No | Constructor specification |
 | `related` | string[] | No | Cross-references to related entities |
 | `example` | string | No | Usage example |
+| `maturity` | EntityMaturity | No | Development maturity stage (idea, specified, designed, implemented, tested, documented, released, deprecated) |
+| `requires` | Requirement[] | No | Dependencies on other entities with optional maturity constraints |
 
 ### Example: Class
 
@@ -259,6 +261,7 @@ Method definition.
 | `postconditions` | string[] | No | Guaranteed state after call |
 | `raises` | RaisesClause[] | No | Exceptions that may be raised |
 | `inherited_from` | string | No | Base class (if inherited) |
+| `maturity` | EntityMaturity | No | Development maturity stage |
 
 ---
 
@@ -311,6 +314,8 @@ Top-level function definition.
 | `deterministic` | boolean | No | Same inputs → same outputs? |
 | `related` | string[] | No | Cross-references |
 | `example` | string | No | Usage example |
+| `maturity` | EntityMaturity | No | Development maturity stage |
+| `requires` | Requirement[] | No | Dependencies on other entities with optional maturity constraints |
 
 ### Example
 
@@ -348,6 +353,8 @@ Behavioral specification with test steps.
 | `status` | enum | No | `planned`, `implemented`, `tested` (default: planned) |
 | `breaking_since` | string? | No | Version where breaking (null if never) |
 | `v1_planned` | string[] | No | Features planned for v1 |
+| `maturity` | EntityMaturity | No | Development maturity stage |
+| `requires` | Requirement[] | No | Dependencies on other entities with optional maturity constraints |
 
 ### Example
 
@@ -365,6 +372,72 @@ Behavioral specification with test steps.
   "references": ["#/types/ActorId", "#/functions/spawn"],
   "status": "planned"
 }
+```
+
+---
+
+## EntityMaturity
+
+Development maturity stage for tracking entity progress. This is a core field available on all entities without requiring any extension.
+
+| Value | Description |
+|-------|-------------|
+| `idea` | Rough concept, may change significantly |
+| `specified` | Behavior described, acceptance criteria clear |
+| `designed` | Shape defined (signatures, contracts, types) |
+| `implemented` | Code exists |
+| `tested` | Tests exist and pass |
+| `documented` | User-facing docs exist |
+| `released` | Part of a public release |
+| `deprecated` | Marked for removal |
+
+### Example
+
+```json
+{
+  "name": "Connection",
+  "kind": "class",
+  "module": "mylib.network",
+  "maturity": "designed",
+  "docstring": "Manages network connections"
+}
+```
+
+---
+
+## Requirement
+
+Dependency on another entity with optional maturity constraints. Used to track what must be ready before an entity can progress.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ref` | string | Yes | Cross-reference to required entity (`#/types/X`, `#/functions/Y`, `#/features/Z`) |
+| `min_maturity` | EntityMaturity | No | Minimum maturity level required for the dependency |
+| `reason` | string | No | Why this requirement exists |
+
+### Example
+
+```json
+{
+  "name": "WebSocketHandler",
+  "kind": "class",
+  "module": "mylib.network",
+  "maturity": "specified",
+  "requires": [
+    {"ref": "#/types/Connection", "min_maturity": "designed"},
+    {"ref": "#/types/MessageCodec", "min_maturity": "implemented", "reason": "Needs working codec for message framing"}
+  ]
+}
+```
+
+### Usage with Navigation Commands
+
+The `requires` field enables the navigation commands to determine what's blocked:
+
+```bash
+libspec blocked              # Show entities blocked by unsatisfied requirements
+libspec blocked --by-requirement  # Group by what's blocking them
+libspec next                 # Show entities ready to advance (requirements satisfied)
 ```
 
 ---

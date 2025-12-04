@@ -1,23 +1,103 @@
 # Lifecycle Extension
 
-The `lifecycle` extension tracks entity development maturity through defined workflows with states, transitions, gate criteria, and evidence tracking.
+The `lifecycle` extension adds workflow orchestration on top of libspec's core maturity tracking. It enables gate criteria, evidence tracking, and formal workflow definitions.
 
-## Overview
+## Architecture
 
-APIs evolve through predictable stages: conception, design, implementation, testing, documentation, release, and eventually deprecation. The lifecycle extension makes this progression explicit and trackable.
+Libspec uses a layered approach to development tracking:
 
-**Key features:**
-- Define custom workflows with named states
-- Track transitions with required gates (evidence)
-- Attach evidence (PRs, design docs, test files) to entities
-- Query entities by lifecycle state
-- Lint rules for validation
+```
++-----------------------------------------------------+
+|  Lifecycle Extension (Optional Layer)               |
+|  -------------------------------------------        |
+|  - Workflows define HOW to progress through maturity|
+|  - Gates: evidence/approval required per transition |
+|  - Evidence tracking for auditing/compliance        |
+|  - Answers: "Can this entity advance?"              |
++-----------------------------------------------------+
+|  Core: maturity field (Always Available)            |
+|  -------------------------------------------        |
+|  - Universal "WHERE is this in development"         |
+|  - Fixed enum progression                           |
+|  - No extension needed                              |
+|  - Answers: "How developed is this?"                |
++-----------------------------------------------------+
+```
 
-## Schema Structure
+**Key insight**: `maturity` is the core field tracking development stage. The `lifecycle` extension adds workflow orchestration (gates, evidence) around maturity transitions.
 
-### Library-Level Fields
+---
 
-Enable the extension and define workflows:
+## Core Maturity Field
+
+Every entity (type, function, feature, method) can have a `maturity` field tracking its development stage. This is a **core field** - no extension required.
+
+### Maturity Levels
+
+| Level | Description |
+|-------|-------------|
+| `idea` | Rough concept, may change significantly |
+| `specified` | Behavior described, acceptance criteria clear |
+| `designed` | Shape defined (signatures, contracts, types) |
+| `implemented` | Code exists |
+| `tested` | Tests exist and pass |
+| `documented` | User-facing docs exist |
+| `released` | Part of a public release |
+| `deprecated` | Marked for removal |
+
+### Usage Without Lifecycle Extension
+
+```json
+{
+  "$schema": "libspec/1.0",
+  "library": {
+    "name": "mylib",
+    "version": "0.1.0",
+    "types": [
+      {
+        "name": "Connection",
+        "kind": "class",
+        "maturity": "designed",
+        "docstring": "Manages network connections"
+      },
+      {
+        "name": "MessageCodec",
+        "kind": "protocol",
+        "maturity": "implemented",
+        "docstring": "Protocol for encoding/decoding messages"
+      }
+    ]
+  }
+}
+```
+
+### Dependency Tracking with `requires`
+
+Entities can declare dependencies on other entities with optional maturity requirements:
+
+```json
+{
+  "name": "WebSocketHandler",
+  "kind": "class",
+  "maturity": "specified",
+  "requires": [
+    {"ref": "#/types/Connection", "min_maturity": "designed"},
+    {"ref": "#/types/MessageCodec", "min_maturity": "implemented"}
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ref` | string | Reference to required entity (`#/types/X`, `#/functions/Y`) |
+| `min_maturity` | string | Minimum maturity level required (optional) |
+| `reason` | string | Why this requirement exists (optional) |
+
+---
+
+## Lifecycle Extension
+
+Enable the lifecycle extension to add workflow orchestration:
 
 ```json
 {
@@ -27,81 +107,91 @@ Enable the extension and define workflows:
     "name": "mylib",
     "version": "0.1.0",
     "default_workflow": "standard",
-    "workflows": [
-      {
-        "name": "standard",
-        "description": "Standard API lifecycle",
-        "initial_state": "idea",
-        "states": [...],
-        "transitions": [...],
-        "allow_skip": false
-      }
-    ]
+    "workflows": [...]
   }
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `default_workflow` | string | Name of workflow applied to entities without explicit workflow |
-| `workflows` | array | List of workflow definitions |
+### Maturity-Based Workflows (Recommended)
 
-### Workflow Definition
+Define gates for transitions between maturity levels:
 
 ```json
 {
-  "name": "standard",
-  "description": "Standard API lifecycle workflow",
-  "initial_state": "idea",
-  "allow_skip": false,
-  "states": [
-    { "name": "idea", "order": 0, "description": "Initial concept" },
-    { "name": "drafted", "order": 1, "required_evidence": ["design_doc"] },
-    { "name": "reviewed", "order": 2 },
-    { "name": "approved", "order": 3, "required_evidence": ["approval"] },
-    { "name": "implemented", "order": 4, "required_evidence": ["pr"] },
-    { "name": "tested", "order": 5, "required_evidence": ["tests"] },
-    { "name": "documented", "order": 6, "required_evidence": ["docs"] },
-    { "name": "released", "order": 7 },
-    { "name": "deprecated", "order": 8, "terminal": true, "required_evidence": ["deprecation_notice"] },
-    { "name": "removed", "order": 9, "terminal": true, "required_evidence": ["migration_guide"] }
-  ],
-  "transitions": [
-    { "from_state": "idea", "to_state": "drafted", "gates": [{"type": "design_doc", "required": true}] },
-    { "from_state": "drafted", "to_state": "reviewed" },
-    { "from_state": "reviewed", "to_state": "approved", "gates": [{"type": "approval"}] },
-    { "from_state": "approved", "to_state": "implemented", "gates": [{"type": "pr_merged"}] },
-    { "from_state": "implemented", "to_state": "tested", "gates": [{"type": "tests_passing"}] },
-    { "from_state": "tested", "to_state": "documented", "gates": [{"type": "docs_updated"}] },
-    { "from_state": "documented", "to_state": "released" },
-    { "from_state": "released", "to_state": "deprecated", "gates": [{"type": "deprecation_notice"}] },
-    { "from_state": "deprecated", "to_state": "removed", "gates": [{"type": "migration_guide"}] }
+  "workflows": [{
+    "name": "standard",
+    "description": "Standard API lifecycle workflow",
+    "maturity_gates": [
+      {
+        "from_maturity": "specified",
+        "to_maturity": "designed",
+        "gates": [{"type": "design_doc", "required": true}]
+      },
+      {
+        "from_maturity": "designed",
+        "to_maturity": "implemented",
+        "gates": [{"type": "pr_merged", "required": true}]
+      },
+      {
+        "from_maturity": "implemented",
+        "to_maturity": "tested",
+        "gates": [{"type": "tests_passing", "required": true}]
+      },
+      {
+        "from_maturity": "tested",
+        "to_maturity": "documented",
+        "gates": [{"type": "docs_updated", "required": true}]
+      },
+      {
+        "from_maturity": "documented",
+        "to_maturity": "released",
+        "gates": [{"type": "approval"}]
+      },
+      {
+        "from_maturity": "released",
+        "to_maturity": "deprecated",
+        "gates": [{"type": "deprecation_notice", "required": true}]
+      }
+    ],
+    "evidence_types": []
+  }]
+}
+```
+
+#### MaturityGate Definition
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `from_maturity` | string | Source maturity level |
+| `to_maturity` | string | Target maturity level |
+| `gates` | array | Gate criteria that must be satisfied |
+| `description` | string | What this transition represents |
+
+### Entity Fields with Lifecycle
+
+```json
+{
+  "name": "DataProcessor",
+  "kind": "class",
+  "maturity": "tested",
+  "workflow": "standard",
+  "maturity_evidence": [
+    {"type": "design_doc", "reference": "docs/design/data-processor.md", "date": "2024-01-15"},
+    {"type": "pr", "url": "https://github.com/org/repo/pull/42"},
+    {"type": "tests", "path": "tests/test_data_processor.py"}
   ]
 }
 ```
 
-#### State Definition
-
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | string | State identifier (kebab-case) |
-| `description` | string | Human-readable description |
-| `order` | integer | Position in progression (for reporting) |
-| `terminal` | boolean | If true, no transitions out of this state |
-| `required_evidence` | array | Evidence types required for this state |
+| `maturity` | string | Current maturity level (core field) |
+| `workflow` | string | Workflow name (defaults to `default_workflow`) |
+| `maturity_evidence` | array | Evidence supporting current maturity |
 
-#### Transition Definition
+### Gate Types
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `from_state` | string | Source state name |
-| `to_state` | string | Target state name |
-| `gates` | array | Gate criteria that must be satisfied |
-| `description` | string | What this transition represents |
-
-#### Gate Types
-
-Gates represent evidence required to transition between states:
+Gates represent evidence required to transition between maturity levels:
 
 | Gate Type | Description |
 |-----------|-------------|
@@ -115,34 +205,7 @@ Gates represent evidence required to transition between states:
 | `migration_guide` | Migration guide published |
 | `custom` | Custom gate with validator |
 
-### Entity-Level Fields
-
-Lifecycle fields can be added to types, functions, features, and methods:
-
-```json
-{
-  "name": "DataProcessor",
-  "kind": "class",
-  "module": "mylib.core",
-  "docstring": "Processes data from various sources",
-  "lifecycle_state": "tested",
-  "workflow": "standard",
-  "state_evidence": [
-    { "type": "design_doc", "reference": "docs/design/data-processor.md", "date": "2024-01-15" },
-    { "type": "approval", "reference": "https://github.com/org/repo/issues/10#issuecomment-123", "author": "lead-dev" },
-    { "type": "pr", "url": "https://github.com/org/repo/pull/42" },
-    { "type": "tests", "path": "tests/test_data_processor.py" }
-  ]
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `lifecycle_state` | string | Current state in the workflow |
-| `workflow` | string | Optional workflow override (defaults to `default_workflow`) |
-| `state_evidence` | array | Evidence supporting current state |
-
-#### Evidence Types
+### Evidence Types
 
 Each evidence type has specific required fields:
 
@@ -158,22 +221,9 @@ Each evidence type has specific required fields:
 | `deprecation_notice` | `reference`, `date` | `description` | Deprecation announcement |
 | `custom` | `type_name` | `reference`, `url`, `path`, `description`, `date`, `author` | Custom type defined in workflow |
 
-**Example evidence entries:**
+### Custom Evidence Types
 
-```json
-{
-  "state_evidence": [
-    { "type": "pr", "url": "https://github.com/org/repo/pull/42", "date": "2024-01-20" },
-    { "type": "tests", "path": "tests/test_processor.py" },
-    { "type": "docs", "url": "https://docs.example.com/api/processor" },
-    { "type": "approval", "reference": "https://github.com/org/repo/issues/10#issuecomment-123", "author": "tech-lead" }
-  ]
-}
-```
-
-#### Custom Evidence Types
-
-Workflows can define custom evidence types with their own validation:
+Workflows can define custom evidence types:
 
 ```json
 {
@@ -191,216 +241,254 @@ Workflows can define custom evidence types with their own validation:
 }
 ```
 
-**EvidenceTypeSpec fields:**
+### Legacy State-Based Workflows
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Type name (snake_case) |
-| `description` | string | What this evidence represents |
-| `required_fields` | array | Required fields: `reference`, `url`, `path`, `author`, `date` |
-| `reference_pattern` | string | Regex pattern for validating `reference` field |
-| `url_pattern` | string | Regex pattern for validating `url` field |
-
-**Using custom evidence:**
+For backward compatibility, state-based workflows are still supported:
 
 ```json
 {
-  "state_evidence": [
-    {
-      "type": "custom",
-      "type_name": "security_review",
-      "reference": "https://jira.company.com/browse/SEC-1234",
-      "author": "security-team"
-    }
-  ]
+  "workflows": [{
+    "name": "legacy",
+    "initial_state": "idea",
+    "states": [
+      {"name": "idea", "order": 0},
+      {"name": "drafted", "order": 1},
+      {"name": "implemented", "order": 2}
+    ],
+    "transitions": [
+      {"from_state": "idea", "to_state": "drafted", "gates": [{"type": "design_doc"}]},
+      {"from_state": "drafted", "to_state": "implemented", "gates": [{"type": "pr_merged"}]}
+    ]
+  }]
 }
 ```
+
+Use `lifecycle_state` and `state_evidence` fields with legacy workflows:
+
+```json
+{
+  "name": "LegacyType",
+  "kind": "class",
+  "lifecycle_state": "drafted",
+  "state_evidence": [...]
+}
+```
+
+**Note**: Maturity-based workflows are recommended for new specs.
 
 ---
 
 ## CLI Commands
 
-### `libspec lifecycle`
+### Navigation Commands
 
-Analyze entity lifecycle states and transitions.
+Top-level commands for development workflow:
+
+#### `libspec next`
+
+Show entities ready to advance to next maturity level.
 
 ```bash
-libspec lifecycle                    # Full report
-libspec lifecycle --summary          # Just counts
-libspec lifecycle --blocked          # Show blocked items
-libspec lifecycle --state implemented
-libspec lifecycle --workflow standard
+libspec next                      # All ready entities
+libspec next -t type              # Only types
+libspec next -m designed          # Currently at designed
+libspec next --limit 5            # Top 5
 ```
 
 **Options:**
 
 | Option | Description |
 |--------|-------------|
-| `-w, --workflow TEXT` | Filter by workflow name |
-| `-s, --state TEXT` | Filter by lifecycle state |
-| `--blocked` | Show only blocked entities (missing required gates) |
-| `--summary` | Show summary statistics only |
+| `-t, --type TYPE` | Filter by entity type (type/function/feature/method/all) |
+| `-m, --maturity LEVEL` | Filter by current maturity |
+| `-w, --workflow NAME` | Filter by workflow (lifecycle mode) |
+| `--module REGEX` | Filter by module (regex) |
+| `--limit N` | Limit results |
 
-**JSON Output:**
-
-```json
-{
-  "total_tracked": 15,
-  "by_state": {"idea": 2, "implemented": 5, "released": 8},
-  "by_entity_type": {"type": 10, "function": 3, "feature": 2},
-  "by_workflow": {"standard": {"idea": 2, "implemented": 5, "released": 8}},
-  "blocked": [
-    {
-      "entity": "#/types/AsyncProcessor",
-      "name": "AsyncProcessor",
-      "current_state": "implemented",
-      "blocked_transition": "tested",
-      "unsatisfied_gates": ["tests_passing"]
-    }
-  ],
-  "entities": [...]
-}
-```
-
-**Text Output:**
+**Output:**
 
 ```
-Lifecycle tracked: 15 entities
-
-By state:
-  idea: 2
-  implemented: 5
-  released: 8
-
-Blocked: 1 items
-  AsyncProcessor: needs tests_passing
+NEXT feature user-auth (specified -> designed)
+NEXT type Connection (designed -> implemented)
 ---
-15 entities, 1 blocked
+2 entities ready to advance
 ```
 
-### `--lifecycle-state` Filter
+#### `libspec blocked`
 
-Inspect commands support filtering by lifecycle state:
+Show entities blocked by unsatisfied gates or requirements.
 
 ```bash
-libspec types --lifecycle-state implemented
-libspec functions --lifecycle-state tested
-libspec features --lifecycle-state released
+libspec blocked                   # All blocked
+libspec blocked -t feature        # Blocked features
+libspec blocked --by-requirement  # Group by blocker
+libspec blocked -g tests_passing  # Blocked by tests gate
 ```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-t, --type TYPE` | Filter by entity type |
+| `-m, --maturity LEVEL` | Filter by current maturity |
+| `-g, --gate TYPE` | Filter by missing gate type |
+| `--by-requirement` | Group by blocking requirement |
+| `--limit N` | Limit results |
+
+**Output:**
+
+```
+BLOCKED feature websocket-support (specified)
+  - requires: Connection at 'designed' (currently: idea)
+  - gate: design_doc not satisfied
+---
+1 entity blocked
+```
+
+#### `libspec navigate gaps`
+
+Show entities missing expected information for their stage.
+
+```bash
+libspec navigate gaps             # All gaps
+libspec navigate gaps -t type     # Type gaps only
+libspec navigate gaps -i tests    # Missing tests
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-t, --type TYPE` | Filter by entity type |
+| `-s, --state STATE` | Filter by lifecycle state |
+| `-i, --issue TYPE` | Filter by gap type (signature/docstring/tests/evidence) |
+
+#### `libspec navigate progress`
+
+Show development progress summary.
+
+```bash
+libspec navigate progress         # Full progress
+libspec navigate progress -t type # Types only
+libspec navigate progress --format compact
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-w, --workflow NAME` | Filter by workflow |
+| `-t, --type TYPE` | Filter by entity type |
+| `--format FORMAT` | Output format (table/compact/json) |
+
+**Output (compact):**
+
+```
+idea: 2 | specified: 3 | designed: 5 | implemented: 8 | tested: 6 | released: 4
+---
+28 tracked, 5 ready, 3 blocked
+```
+
+### `libspec lifecycle`
+
+Full lifecycle analysis (requires lifecycle extension).
+
+```bash
+libspec lifecycle                 # Full report
+libspec lifecycle --summary       # Just counts
+libspec lifecycle --blocked       # Blocked items
+libspec lifecycle --state tested  # Filter by state
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `-w, --workflow NAME` | Filter by workflow |
+| `-s, --state STATE` | Filter by maturity/lifecycle state |
+| `--blocked` | Show only blocked entities |
+| `--summary` | Show summary statistics only |
 
 ---
 
 ## Lint Rules
 
+### Maturity Rules
+
 | Rule | Severity | Description |
 |------|----------|-------------|
-| **L001** | error | Entity has `lifecycle_state` not defined in its workflow |
-| **L002** | warning | Entity missing required evidence for its lifecycle state |
+| **M001** | warning | Feature maturity inconsistent with status field |
+
+### Lifecycle Rules
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| **L001** | error | Entity state not defined in workflow |
+| **L002** | warning | Entity missing required evidence for state |
 | **L003** | error | Entity references undefined workflow |
-| **L004** | info | Feature `lifecycle_state` inconsistent with `status` field |
-| **L005** | error | Workflow has invalid initial_state or transition references |
-| **L006** | warning | Evidence reference format invalid for its type |
+| **L004** | info | Feature lifecycle_state inconsistent with status |
+| **L005** | error | Workflow has invalid state references |
+| **L006** | warning | Evidence reference format invalid |
 | **L007** | error | Custom evidence references undefined type |
-| **L008** | warning | Evidence missing required field for its type |
-| **L009** | info | Test evidence path doesn't look like a test file |
+| **L008** | warning | Evidence missing required field |
+| **L009** | info | Test evidence path doesn't look like test file |
 
-### Rule Details
+### Consistency Rules (requires tracking)
 
-**L001 - Invalid Lifecycle State**
+| Rule | Severity | Description |
+|------|----------|-------------|
+| **X004** | error | Circular dependency in requires chain |
+| **X005** | warning | Required entity below min_maturity |
 
-Triggers when an entity's `lifecycle_state` is not one of the states defined in its workflow.
+---
 
-```bash
-# Find invalid states
-libspec lint -r L001
+## Migration: lifecycle_state to maturity
+
+If you have an existing spec using `lifecycle_state`, migrate to `maturity`:
+
+### Before (Legacy)
+
+```json
+{
+  "name": "MyType",
+  "kind": "class",
+  "lifecycle_state": "implemented",
+  "state_evidence": [...]
+}
 ```
 
-**L002 - Missing Required Evidence**
+### After (Recommended)
 
-Triggers when an entity is in a state that requires evidence (per `required_evidence` in the state definition) but the evidence is missing from `state_evidence`.
-
-```bash
-# Check evidence requirements
-libspec lint -r L002
+```json
+{
+  "name": "MyType",
+  "kind": "class",
+  "maturity": "implemented",
+  "maturity_evidence": [...]
+}
 ```
 
-**L003 - Dangling Workflow Reference**
+### State Mapping
 
-Triggers when an entity explicitly references a workflow that doesn't exist.
+Map legacy states to maturity levels:
 
-**L004 - Lifecycle/Feature Status Mismatch**
+| Legacy State | Maturity Level |
+|--------------|----------------|
+| `idea` | `idea` |
+| `drafted`, `reviewed`, `approved` | `specified` or `designed` |
+| `implemented` | `implemented` |
+| `tested` | `tested` |
+| `documented` | `documented` |
+| `released`, `stable` | `released` |
+| `deprecated` | `deprecated` |
 
-For features, checks that `lifecycle_state` is consistent with the `status` field:
-- `idea`, `drafted`, `reviewed`, `approved` → `status: "planned"`
-- `implemented` → `status: "implemented"`
-- `tested`, `documented`, `released`, `deprecated`, `removed` → `status: "tested"`
-
-**L005 - Invalid Workflow Definition**
-
-Checks workflow internal consistency:
-- `initial_state` must reference a defined state
-- All transitions must reference valid `from_state` and `to_state`
-
-**L006 - Invalid Evidence Reference**
-
-Checks that evidence URLs are valid format:
-- `pr` evidence must have valid URL format
-- `docs` evidence must have valid URL format
-
-```bash
-# Check evidence URL formats
-libspec lint -r L006
-```
-
-**L007 - Undefined Custom Evidence Type**
-
-Triggers when custom evidence references a `type_name` not defined in the workflow's `evidence_types` array.
-
-```bash
-# Find undefined custom evidence types
-libspec lint -r L007
-```
-
-**L008 - Evidence Missing Required Field**
-
-Checks that evidence has all required fields for its type:
-- `pr` requires `url`
-- `tests` requires `path`
-- `design_doc` requires `reference`
-- `docs` requires `url`
-- `approval` requires `reference` and `author`
-- `benchmark` requires `reference`
-- `migration_guide` requires `reference`
-- `deprecation_notice` requires `reference` and `date`
-- `custom` requires `type_name`
-
-```bash
-# Check evidence field requirements
-libspec lint -r L008
-```
-
-**L009 - Invalid Test Path Pattern**
-
-Checks that test evidence paths match common test file patterns:
-- Contains `test` or `spec` in the path
-- Follows common naming conventions (`*_test.py`, `*.spec.js`, etc.)
-- Located in standard test directories (`tests/`, `__tests__/`)
-
-```bash
-# Check test path patterns
-libspec lint -r L009
-```
+Both field types are supported during migration. The CLI commands check `maturity` first, then fall back to `lifecycle_state`.
 
 ---
 
 ## Example Spec
 
-See [docs/examples/lifecycle.json](examples/lifecycle.json) for a complete example with:
-- Workflow definition with 10 states
-- Types at different lifecycle stages
-- Functions with lifecycle tracking
-- Features linked to lifecycle states
-- Evidence entries with references
+See [docs/examples/lifecycle.json](examples/lifecycle.json) for a complete example.
 
 ---
 
@@ -409,35 +497,38 @@ See [docs/examples/lifecycle.json](examples/lifecycle.json) for a complete examp
 ### Track API Maturity
 
 ```bash
-# What's still in design?
-libspec types --lifecycle-state drafted
-libspec types --lifecycle-state idea
+# What's still being designed?
+libspec types -t --maturity designed
+libspec next -m specified
 
 # What's ready for release?
-libspec types --lifecycle-state documented
+libspec types -t --maturity documented
 
 # What's deprecated?
-libspec types --lifecycle-state deprecated
+libspec types -t --maturity deprecated
 ```
 
 ### Find Blocked Progress
 
 ```bash
 # What needs work to advance?
-libspec lifecycle --blocked
+libspec blocked
 
-# What's blocking release?
-libspec lifecycle --state documented --blocked
+# What's blocking by missing gates?
+libspec blocked -g tests_passing
+
+# What's blocked by requirements?
+libspec blocked --by-requirement
 ```
 
-### Release Readiness
+### Development Dashboard
 
 ```bash
-# Summary for release notes
-libspec lifecycle --summary
+# Quick progress summary
+libspec navigate progress --format compact
 
-# Check all entities have proper evidence
-libspec lint -r L002 --strict
+# Full lifecycle report
+libspec lifecycle --summary
 ```
 
 ### CI Integration
@@ -446,12 +537,15 @@ libspec lint -r L002 --strict
 #!/bin/bash
 set -e
 
-# Validate lifecycle states are valid
-libspec lint -r L001 -r L003 -r L005 --strict
+# Validate references and workflow definitions
+libspec lint -r X001 -r L003 -r L005 --strict
+
+# Check for circular dependencies
+libspec lint -r X004 --strict
 
 # Warn about missing evidence (non-blocking)
-libspec lint -r L002
+libspec lint -r L002 -r M001
 
-# Report lifecycle status
-libspec lifecycle --summary -t
+# Report progress
+libspec navigate progress --format compact
 ```

@@ -491,6 +491,21 @@
       "title": "DocsEvidence",
       "type": "object"
     },
+    "EntityMaturity": {
+      "description": "Development maturity stage of an entity.\n\nUniversal progression tracking for types, functions, features, and methods.\nThis is the single source of truth for \"how developed is this entity?\"\n\nStages represent increasing maturity:\n- idea: Rough concept, may change significantly\n- specified: Behavior described, acceptance criteria clear\n- designed: Shape defined (signatures, contracts, types)\n- implemented: Code exists\n- tested: Tests exist and pass\n- documented: User-facing docs exist\n- released: Part of a public release\n- deprecated: Marked for removal",
+      "enum": [
+        "idea",
+        "specified",
+        "designed",
+        "implemented",
+        "tested",
+        "documented",
+        "released",
+        "deprecated"
+      ],
+      "title": "EntityMaturity",
+      "type": "string"
+    },
     "EvidenceTypeSpec": {
       "description": "Custom evidence type definition for a workflow.",
       "properties": {
@@ -601,7 +616,7 @@
       "type": "object"
     },
     "LifecycleFields": {
-      "description": "Fields added to entities when lifecycle extension is active.",
+      "description": "Fields added to entities when lifecycle extension is active.\n\nNote: The `maturity` field on core entities is the primary way to track\ndevelopment progress. This extension adds workflow orchestration and\nevidence tracking on top of maturity.\n\nFields:\n    workflow: Optional workflow override for this entity\n    maturity_evidence: Evidence supporting current maturity level\n    lifecycle_state: (Legacy) Arbitrary workflow state, use maturity instead\n    state_evidence: (Legacy) Alias for maturity_evidence",
       "properties": {
         "lifecycle_state": {
           "anyOf": [
@@ -613,9 +628,10 @@
             }
           ],
           "default": null,
+          "description": "Legacy: use core maturity field instead",
           "title": "Lifecycle State"
         },
-        "state_evidence": {
+        "maturity_evidence": {
           "items": {
             "discriminator": {
               "mapping": {
@@ -661,7 +677,56 @@
               }
             ]
           },
-          "minItems": 1,
+          "title": "Maturity Evidence",
+          "type": "array"
+        },
+        "state_evidence": {
+          "description": "Legacy: use maturity_evidence instead",
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "approval": "#/$defs/ApprovalEvidence",
+                "benchmark": "#/$defs/BenchmarkEvidence",
+                "custom": "#/$defs/CustomEvidence",
+                "deprecation_notice": "#/$defs/DeprecationNoticeEvidence",
+                "design_doc": "#/$defs/DesignDocEvidence",
+                "docs": "#/$defs/DocsEvidence",
+                "migration_guide": "#/$defs/MigrationGuideEvidence",
+                "pr": "#/$defs/PrEvidence",
+                "tests": "#/$defs/TestsEvidence"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PrEvidence"
+              },
+              {
+                "$ref": "#/$defs/TestsEvidence"
+              },
+              {
+                "$ref": "#/$defs/DesignDocEvidence"
+              },
+              {
+                "$ref": "#/$defs/DocsEvidence"
+              },
+              {
+                "$ref": "#/$defs/ApprovalEvidence"
+              },
+              {
+                "$ref": "#/$defs/BenchmarkEvidence"
+              },
+              {
+                "$ref": "#/$defs/MigrationGuideEvidence"
+              },
+              {
+                "$ref": "#/$defs/DeprecationNoticeEvidence"
+              },
+              {
+                "$ref": "#/$defs/CustomEvidence"
+              }
+            ]
+          },
           "title": "State Evidence",
           "type": "array"
         },
@@ -705,6 +770,46 @@
         }
       },
       "title": "LifecycleLibraryFields",
+      "type": "object"
+    },
+    "MaturityGate": {
+      "description": "A gate for transitioning between maturity levels.\n\nDefines what evidence or approvals are required to advance\nan entity from one maturity level to another.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Human-readable description of this transition",
+          "title": "Description"
+        },
+        "from_maturity": {
+          "$ref": "#/$defs/EntityMaturity",
+          "description": "Source maturity level"
+        },
+        "gates": {
+          "description": "Required evidence/approval gates",
+          "items": {
+            "$ref": "#/$defs/GateSpec"
+          },
+          "title": "Gates",
+          "type": "array"
+        },
+        "to_maturity": {
+          "$ref": "#/$defs/EntityMaturity",
+          "description": "Target maturity level"
+        }
+      },
+      "required": [
+        "from_maturity",
+        "to_maturity"
+      ],
+      "title": "MaturityGate",
       "type": "object"
     },
     "MigrationGuideEvidence": {
@@ -867,7 +972,7 @@
       "type": "object"
     },
     "WorkflowSpec": {
-      "description": "A named workflow defining development lifecycle states and transitions.",
+      "description": "A named workflow defining development lifecycle states and transitions.\n\nWorkflows can define gates in two ways:\n1. State-based (legacy): Using `states` and `transitions` for arbitrary workflow states\n2. Maturity-based: Using `maturity_gates` for EntityMaturity level transitions\n\nThe maturity-based approach is recommended as it aligns with the core\nmaturity field on entities.",
       "properties": {
         "allow_skip": {
           "default": false,
@@ -894,9 +999,25 @@
           "type": "array"
         },
         "initial_state": {
-          "minLength": 1,
-          "title": "Initial State",
-          "type": "string"
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Initial State"
+        },
+        "maturity_gates": {
+          "description": "Gates for maturity level transitions",
+          "items": {
+            "$ref": "#/$defs/MaturityGate"
+          },
+          "title": "Maturity Gates",
+          "type": "array"
         },
         "name": {
           "minLength": 1,
@@ -908,7 +1029,6 @@
           "items": {
             "$ref": "#/$defs/DevStateSpec"
           },
-          "minItems": 1,
           "title": "States",
           "type": "array"
         },
@@ -921,9 +1041,7 @@
         }
       },
       "required": [
-        "name",
-        "states",
-        "initial_state"
+        "name"
       ],
       "title": "WorkflowSpec",
       "type": "object"

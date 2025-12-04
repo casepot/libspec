@@ -24,7 +24,7 @@ from pydantic import (
 from typing_extensions import Self
 
 from ..base import ExtensionModel
-from ..types import KebabCaseId, LocalPath, NonEmptyStr, PathOrUrl
+from ..types import EntityMaturity, KebabCaseId, LocalPath, NonEmptyStr, PathOrUrl
 from ..utils import ensure_strict_bool, validate_local_path, validate_path_or_url
 
 # -----------------------------------------------------------------------------
@@ -220,6 +220,29 @@ class DevTransitionSpec(ExtensionModel):
     description: str | None = None
 
 
+class MaturityGate(ExtensionModel):
+    """A gate for transitioning between maturity levels.
+
+    Defines what evidence or approvals are required to advance
+    an entity from one maturity level to another.
+    """
+
+    from_maturity: EntityMaturity = Field(
+        description="Source maturity level"
+    )
+    to_maturity: EntityMaturity = Field(
+        description="Target maturity level"
+    )
+    gates: list[GateSpec] = Field(
+        default_factory=list,
+        description="Required evidence/approval gates"
+    )
+    description: str | None = Field(
+        default=None,
+        description="Human-readable description of this transition"
+    )
+
+
 class EvidenceTypeSpec(ExtensionModel):
     """Custom evidence type definition for a workflow."""
 
@@ -233,13 +256,27 @@ class EvidenceTypeSpec(ExtensionModel):
 
 
 class WorkflowSpec(ExtensionModel):
-    """A named workflow defining development lifecycle states and transitions."""
+    """A named workflow defining development lifecycle states and transitions.
+
+    Workflows can define gates in two ways:
+    1. State-based (legacy): Using `states` and `transitions` for arbitrary workflow states
+    2. Maturity-based: Using `maturity_gates` for EntityMaturity level transitions
+
+    The maturity-based approach is recommended as it aligns with the core
+    maturity field on entities.
+    """
 
     name: KebabCaseId  # kebab-case identifier
     description: str | None = None
-    states: list[DevStateSpec] = Field(min_length=1)
-    initial_state: NonEmptyStr
+    # Legacy state-based workflow fields
+    states: list[DevStateSpec] = Field(default_factory=list)
+    initial_state: NonEmptyStr | None = None
     transitions: list[DevTransitionSpec] = Field(default_factory=list)
+    # Maturity-based workflow gates (recommended)
+    maturity_gates: list[MaturityGate] = Field(
+        default_factory=list,
+        description="Gates for maturity level transitions"
+    )
     allow_skip: bool = False
     evidence_types: list[EvidenceTypeSpec] = Field(default_factory=list)
 
@@ -251,53 +288,65 @@ class WorkflowSpec(ExtensionModel):
     @model_validator(mode="after")
     def validate_workflow(self) -> Self:
         """L005: Validate workflow internal consistency."""
-        state_names = {s.name for s in self.states}
-        terminal_states = {s.name for s in self.states if s.terminal}
+        # Determine workflow mode based on which fields are populated
+        has_states = bool(self.states)
+        has_maturity_gates = bool(self.maturity_gates)
 
-        # Initial state must be in states
-        if self.initial_state not in state_names:
-            raise ValueError(
-                f"initial_state '{self.initial_state}' not in defined states"
-            )
+        # Validate maturity gates mode
+        if has_maturity_gates:
+            # Maturity gates should have valid progression (can't skip back without reason)
+            # This is informational - we don't enforce strict ordering
+            pass
 
-        # All transition states must be valid
-        for t in self.transitions:
-            if t.from_state not in state_names:
+        # Validate legacy state-based mode (only if states are defined)
+        if has_states:
+            state_names = {s.name for s in self.states}
+            terminal_states = {s.name for s in self.states if s.terminal}
+
+            # Initial state must be in states (if specified)
+            if self.initial_state and self.initial_state not in state_names:
                 raise ValueError(
-                    f"Transition from_state '{t.from_state}' not in defined states"
-                )
-            if t.to_state not in state_names:
-                raise ValueError(
-                    f"Transition to_state '{t.to_state}' not in defined states"
+                    f"initial_state '{self.initial_state}' not in defined states"
                 )
 
-        # Check for cycles that don't reach terminal states (potential infinite loops)
-        # Build adjacency list
-        graph: dict[str, set[str]] = {s.name: set() for s in self.states}
-        for t in self.transitions:
-            graph[t.from_state].add(t.to_state)
+            # All transition states must be valid
+            for t in self.transitions:
+                if t.from_state not in state_names:
+                    raise ValueError(
+                        f"Transition from_state '{t.from_state}' not in defined states"
+                    )
+                if t.to_state not in state_names:
+                    raise ValueError(
+                        f"Transition to_state '{t.to_state}' not in defined states"
+                    )
 
-        # Check reachability to terminal states using DFS
-        def can_reach_terminal(state: str, visited: set[str]) -> bool:
-            if state in terminal_states:
-                return True
-            if state in visited:
-                return False  # Cycle detected without reaching terminal
-            visited.add(state)
-            for next_state in graph[state]:
-                if can_reach_terminal(next_state, visited.copy()):
+            # Check for cycles that don't reach terminal states (potential infinite loops)
+            # Build adjacency list
+            graph: dict[str, set[str]] = {s.name: set() for s in self.states}
+            for t in self.transitions:
+                graph[t.from_state].add(t.to_state)
+
+            # Check reachability to terminal states using DFS
+            def can_reach_terminal(state: str, visited: set[str]) -> bool:
+                if state in terminal_states:
                     return True
-            return False
+                if state in visited:
+                    return False  # Cycle detected without reaching terminal
+                visited.add(state)
+                for next_state in graph[state]:
+                    if can_reach_terminal(next_state, visited.copy()):
+                        return True
+                return False
 
-        # Warn if initial state cannot reach any terminal state
-        if terminal_states and not can_reach_terminal(self.initial_state, set()):
-            import warnings
-            warnings.warn(
-                f"Workflow '{self.name}': initial state '{self.initial_state}' "
-                "cannot reach any terminal state",
-                UserWarning,
-                stacklevel=2,
-            )
+            # Warn if initial state cannot reach any terminal state
+            if self.initial_state and terminal_states and not can_reach_terminal(self.initial_state, set()):
+                import warnings
+                warnings.warn(
+                    f"Workflow '{self.name}': initial state '{self.initial_state}' "
+                    "cannot reach any terminal state",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
         return self
 
@@ -308,11 +357,31 @@ class WorkflowSpec(ExtensionModel):
 
 
 class LifecycleFields(ExtensionModel):
-    """Fields added to entities when lifecycle extension is active."""
+    """Fields added to entities when lifecycle extension is active.
 
-    lifecycle_state: str | None = None
+    Note: The `maturity` field on core entities is the primary way to track
+    development progress. This extension adds workflow orchestration and
+    evidence tracking on top of maturity.
+
+    Fields:
+        workflow: Optional workflow override for this entity
+        maturity_evidence: Evidence supporting current maturity level
+        lifecycle_state: (Legacy) Arbitrary workflow state, use maturity instead
+        state_evidence: (Legacy) Alias for maturity_evidence
+    """
+
     workflow: str | None = None  # Workflow override (uses default if not set)
-    state_evidence: Annotated[list[EvidenceSpec], Field(min_length=1)] = Field(default_factory=list)
+    # Maturity-based evidence (recommended)
+    maturity_evidence: Annotated[list[EvidenceSpec], Field()] = Field(default_factory=list)
+    # Legacy fields (kept for backward compatibility)
+    lifecycle_state: str | None = Field(
+        default=None,
+        description="Legacy: use core maturity field instead"
+    )
+    state_evidence: Annotated[list[EvidenceSpec], Field()] = Field(
+        default_factory=list,
+        description="Legacy: use maturity_evidence instead"
+    )
 
 
 class LifecycleLibraryFields(ExtensionModel):

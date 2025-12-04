@@ -108,7 +108,7 @@ def cli(
 
 
 # Import and register command groups (must be after cli definition to avoid circular imports)
-from libspec.cli.commands import analyze, inspect, lifecycle, query, validate  # noqa: E402
+from libspec.cli.commands import analyze, inspect, lifecycle, navigate, query, validate  # noqa: E402
 
 cli.add_command(inspect.info)  # type: ignore[has-type]
 cli.add_command(inspect.types)  # type: ignore[has-type]
@@ -129,3 +129,9 @@ cli.add_command(analyze.deps)  # type: ignore[has-type]
 cli.add_command(analyze.surface)  # type: ignore[has-type]
 
 cli.add_command(lifecycle.lifecycle)  # type: ignore[has-type]
+
+# Navigation commands (top-level for common operations)
+cli.add_command(navigate.next_cmd, name="next")  # type: ignore[has-type]
+cli.add_command(navigate.blocked)  # type: ignore[has-type]
+# Navigate group for less common commands
+cli.add_command(navigate.navigate)  # type: ignore[has-type]
