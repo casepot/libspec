@@ -1,6 +1,6 @@
-"""TypedDict definitions for lifecycle extension types.
+"""TypedDict definitions for workflow extension types.
 
-These provide type hints for the lifecycle extension schema structures,
+These provide type hints for the workflow extension schema structures,
 enabling IDE autocomplete and static type checking without runtime overhead.
 """
 
@@ -188,12 +188,12 @@ class WorkflowSpec(TypedDict, total=False):
 
 
 # -----------------------------------------------------------------------------
-# Entity Lifecycle Fields
+# Entity Workflow Fields
 # -----------------------------------------------------------------------------
 
 
-class LifecycleFields(TypedDict, total=False):
-    """Fields added to entities when lifecycle extension is active.
+class WorkflowFields(TypedDict, total=False):
+    """Fields added to entities when workflow extension is active.
 
     The maturity field on core entities is the primary state tracker.
     This extension adds workflow orchestration and evidence tracking.
@@ -203,7 +203,7 @@ class LifecycleFields(TypedDict, total=False):
     # Maturity-based evidence (recommended)
     maturity_evidence: list[EvidenceSpec]
     # Legacy fields (backward compatibility)
-    lifecycle_state: str  # Use core maturity field instead
+    workflow_state: str  # Use core maturity field instead
     state_evidence: list[EvidenceSpec]  # Use maturity_evidence instead
 
 
@@ -212,8 +212,8 @@ class LifecycleFields(TypedDict, total=False):
 # -----------------------------------------------------------------------------
 
 
-class LifecycleLibraryFields(TypedDict, total=False):
-    """Fields added to Library when lifecycle extension is active."""
+class WorkflowLibraryFields(TypedDict, total=False):
+    """Fields added to Library when workflow extension is active."""
 
     workflows: list[WorkflowSpec]
     default_workflow: str
@@ -224,10 +224,10 @@ class LifecycleLibraryFields(TypedDict, total=False):
 # -----------------------------------------------------------------------------
 
 
-class LifecycleEntity(TypedDict):
-    """An entity with lifecycle tracking (collected for reporting).
+class WorkflowEntity(TypedDict):
+    """An entity with workflow tracking (collected for reporting).
 
-    Supports both maturity-based (core) and lifecycle_state-based (legacy) tracking.
+    Supports both maturity-based (core) and workflow_state-based (legacy) tracking.
     """
 
     entity_type: Literal["type", "function", "feature", "method"]
@@ -237,7 +237,7 @@ class LifecycleEntity(TypedDict):
     maturity: str | None
     maturity_evidence: list[EvidenceSpec]
     # Legacy fields (backward compatibility)
-    lifecycle_state: str | None
+    workflow_state: str | None
     workflow: str | None
     state_evidence: list[EvidenceSpec]
 

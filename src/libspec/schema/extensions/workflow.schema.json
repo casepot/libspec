@@ -615,163 +615,6 @@
       "title": "GateSpec",
       "type": "object"
     },
-    "LifecycleFields": {
-      "description": "Fields added to entities when lifecycle extension is active.\n\nNote: The `maturity` field on core entities is the primary way to track\ndevelopment progress. This extension adds workflow orchestration and\nevidence tracking on top of maturity.\n\nFields:\n    workflow: Optional workflow override for this entity\n    maturity_evidence: Evidence supporting current maturity level\n    lifecycle_state: (Legacy) Arbitrary workflow state, use maturity instead\n    state_evidence: (Legacy) Alias for maturity_evidence",
-      "properties": {
-        "lifecycle_state": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Legacy: use core maturity field instead",
-          "title": "Lifecycle State"
-        },
-        "maturity_evidence": {
-          "items": {
-            "discriminator": {
-              "mapping": {
-                "approval": "#/$defs/ApprovalEvidence",
-                "benchmark": "#/$defs/BenchmarkEvidence",
-                "custom": "#/$defs/CustomEvidence",
-                "deprecation_notice": "#/$defs/DeprecationNoticeEvidence",
-                "design_doc": "#/$defs/DesignDocEvidence",
-                "docs": "#/$defs/DocsEvidence",
-                "migration_guide": "#/$defs/MigrationGuideEvidence",
-                "pr": "#/$defs/PrEvidence",
-                "tests": "#/$defs/TestsEvidence"
-              },
-              "propertyName": "type"
-            },
-            "oneOf": [
-              {
-                "$ref": "#/$defs/PrEvidence"
-              },
-              {
-                "$ref": "#/$defs/TestsEvidence"
-              },
-              {
-                "$ref": "#/$defs/DesignDocEvidence"
-              },
-              {
-                "$ref": "#/$defs/DocsEvidence"
-              },
-              {
-                "$ref": "#/$defs/ApprovalEvidence"
-              },
-              {
-                "$ref": "#/$defs/BenchmarkEvidence"
-              },
-              {
-                "$ref": "#/$defs/MigrationGuideEvidence"
-              },
-              {
-                "$ref": "#/$defs/DeprecationNoticeEvidence"
-              },
-              {
-                "$ref": "#/$defs/CustomEvidence"
-              }
-            ]
-          },
-          "title": "Maturity Evidence",
-          "type": "array"
-        },
-        "state_evidence": {
-          "description": "Legacy: use maturity_evidence instead",
-          "items": {
-            "discriminator": {
-              "mapping": {
-                "approval": "#/$defs/ApprovalEvidence",
-                "benchmark": "#/$defs/BenchmarkEvidence",
-                "custom": "#/$defs/CustomEvidence",
-                "deprecation_notice": "#/$defs/DeprecationNoticeEvidence",
-                "design_doc": "#/$defs/DesignDocEvidence",
-                "docs": "#/$defs/DocsEvidence",
-                "migration_guide": "#/$defs/MigrationGuideEvidence",
-                "pr": "#/$defs/PrEvidence",
-                "tests": "#/$defs/TestsEvidence"
-              },
-              "propertyName": "type"
-            },
-            "oneOf": [
-              {
-                "$ref": "#/$defs/PrEvidence"
-              },
-              {
-                "$ref": "#/$defs/TestsEvidence"
-              },
-              {
-                "$ref": "#/$defs/DesignDocEvidence"
-              },
-              {
-                "$ref": "#/$defs/DocsEvidence"
-              },
-              {
-                "$ref": "#/$defs/ApprovalEvidence"
-              },
-              {
-                "$ref": "#/$defs/BenchmarkEvidence"
-              },
-              {
-                "$ref": "#/$defs/MigrationGuideEvidence"
-              },
-              {
-                "$ref": "#/$defs/DeprecationNoticeEvidence"
-              },
-              {
-                "$ref": "#/$defs/CustomEvidence"
-              }
-            ]
-          },
-          "title": "State Evidence",
-          "type": "array"
-        },
-        "workflow": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Workflow"
-        }
-      },
-      "title": "LifecycleFields",
-      "type": "object"
-    },
-    "LifecycleLibraryFields": {
-      "description": "Fields added to Library when lifecycle extension is active.",
-      "properties": {
-        "default_workflow": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Default Workflow"
-        },
-        "workflows": {
-          "items": {
-            "$ref": "#/$defs/WorkflowSpec"
-          },
-          "title": "Workflows",
-          "type": "array"
-        }
-      },
-      "title": "LifecycleLibraryFields",
-      "type": "object"
-    },
     "MaturityGate": {
       "description": "A gate for transitioning between maturity levels.\n\nDefines what evidence or approvals are required to advance\nan entity from one maturity level to another.",
       "properties": {
@@ -971,6 +814,163 @@
       "title": "TestsEvidence",
       "type": "object"
     },
+    "WorkflowFields": {
+      "description": "Fields added to entities when workflow extension is active.\n\nNote: The `maturity` field on core entities is the primary way to track\ndevelopment progress. This extension adds workflow orchestration and\nevidence tracking on top of maturity.\n\nFields:\n    workflow: Optional workflow override for this entity\n    maturity_evidence: Evidence supporting current maturity level\n    workflow_state: (Legacy) Arbitrary workflow state, use maturity instead\n    state_evidence: (Legacy) Alias for maturity_evidence",
+      "properties": {
+        "maturity_evidence": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "approval": "#/$defs/ApprovalEvidence",
+                "benchmark": "#/$defs/BenchmarkEvidence",
+                "custom": "#/$defs/CustomEvidence",
+                "deprecation_notice": "#/$defs/DeprecationNoticeEvidence",
+                "design_doc": "#/$defs/DesignDocEvidence",
+                "docs": "#/$defs/DocsEvidence",
+                "migration_guide": "#/$defs/MigrationGuideEvidence",
+                "pr": "#/$defs/PrEvidence",
+                "tests": "#/$defs/TestsEvidence"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PrEvidence"
+              },
+              {
+                "$ref": "#/$defs/TestsEvidence"
+              },
+              {
+                "$ref": "#/$defs/DesignDocEvidence"
+              },
+              {
+                "$ref": "#/$defs/DocsEvidence"
+              },
+              {
+                "$ref": "#/$defs/ApprovalEvidence"
+              },
+              {
+                "$ref": "#/$defs/BenchmarkEvidence"
+              },
+              {
+                "$ref": "#/$defs/MigrationGuideEvidence"
+              },
+              {
+                "$ref": "#/$defs/DeprecationNoticeEvidence"
+              },
+              {
+                "$ref": "#/$defs/CustomEvidence"
+              }
+            ]
+          },
+          "title": "Maturity Evidence",
+          "type": "array"
+        },
+        "state_evidence": {
+          "description": "Legacy: use maturity_evidence instead",
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "approval": "#/$defs/ApprovalEvidence",
+                "benchmark": "#/$defs/BenchmarkEvidence",
+                "custom": "#/$defs/CustomEvidence",
+                "deprecation_notice": "#/$defs/DeprecationNoticeEvidence",
+                "design_doc": "#/$defs/DesignDocEvidence",
+                "docs": "#/$defs/DocsEvidence",
+                "migration_guide": "#/$defs/MigrationGuideEvidence",
+                "pr": "#/$defs/PrEvidence",
+                "tests": "#/$defs/TestsEvidence"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PrEvidence"
+              },
+              {
+                "$ref": "#/$defs/TestsEvidence"
+              },
+              {
+                "$ref": "#/$defs/DesignDocEvidence"
+              },
+              {
+                "$ref": "#/$defs/DocsEvidence"
+              },
+              {
+                "$ref": "#/$defs/ApprovalEvidence"
+              },
+              {
+                "$ref": "#/$defs/BenchmarkEvidence"
+              },
+              {
+                "$ref": "#/$defs/MigrationGuideEvidence"
+              },
+              {
+                "$ref": "#/$defs/DeprecationNoticeEvidence"
+              },
+              {
+                "$ref": "#/$defs/CustomEvidence"
+              }
+            ]
+          },
+          "title": "State Evidence",
+          "type": "array"
+        },
+        "workflow": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Workflow"
+        },
+        "workflow_state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Legacy: use core maturity field instead",
+          "title": "Workflow State"
+        }
+      },
+      "title": "WorkflowFields",
+      "type": "object"
+    },
+    "WorkflowLibraryFields": {
+      "description": "Fields added to Library when workflow extension is active.",
+      "properties": {
+        "default_workflow": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Default Workflow"
+        },
+        "workflows": {
+          "items": {
+            "$ref": "#/$defs/WorkflowSpec"
+          },
+          "title": "Workflows",
+          "type": "array"
+        }
+      },
+      "title": "WorkflowLibraryFields",
+      "type": "object"
+    },
     "WorkflowSpec": {
       "description": "A named workflow defining development lifecycle states and transitions.\n\nWorkflows can define gates in two ways:\n1. State-based (legacy): Using `states` and `transitions` for arbitrary workflow states\n2. Maturity-based: Using `maturity_gates` for EntityMaturity level transitions\n\nThe maturity-based approach is recommended as it aligns with the core\nmaturity field on entities.",
       "properties": {
@@ -1047,8 +1047,8 @@
       "type": "object"
     }
   },
-  "$id": "https://libspec.dev/schema/1.0/extensions/lifecycle.schema.json",
+  "$id": "https://libspec.dev/schema/1.0/extensions/workflow.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Extension for development lifecycle tracking: states, transitions, evidence, workflows.",
-  "title": "Lifecycle Extension"
+  "description": "Extension for development workflow tracking: states, transitions, evidence, gates.",
+  "title": "Workflow Extension"
 }

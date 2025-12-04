@@ -173,13 +173,13 @@ This enables:
 - **Lint rule X004** — Detect circular dependencies
 - **Lint rule X005** — Flag unsatisfied requirements
 
-### Lifecycle Extension (Optional)
+### Workflow Extension (Optional)
 
-For teams needing auditable workflows, the `lifecycle` extension adds **gates** and **evidence**:
+For teams needing auditable workflows, the `workflow` extension adds **gates** and **evidence**:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Lifecycle Extension (opt-in)                        │
+│  Workflow Extension (opt-in)                         │
 │  • Gates: required evidence per transition           │
 │  • Evidence: PRs, tests, docs, approvals            │
 │  → "Can this advance? What's missing?"              │
@@ -193,7 +193,7 @@ For teams needing auditable workflows, the `lifecycle` extension adds **gates** 
 
 ```json
 {
-  "extensions": ["lifecycle"],
+  "extensions": ["workflow"],
   "library": {
     "default_workflow": "standard",
     "workflows": [{
@@ -246,7 +246,7 @@ Cross-cutting aspects that apply to any library:
 | `safety` | Safety guarantees | `thread_safe`, `reentrant`, `memory_safety` |
 | `versioning` | API evolution | `deprecated_in`, `removed_in`, `migration_guide` |
 | `observability` | Debugging | `logs[]`, `metrics[]`, `traces[]`, `health_checks[]` |
-| `lifecycle` | Development workflow | `workflows[]`, `maturity_gates[]`, `maturity_evidence[]` |
+| `workflow` | Development workflow | `workflows[]`, `maturity_gates[]`, `maturity_evidence[]` |
 
 ### Compatibility
 
@@ -255,7 +255,7 @@ All extensions compose freely. Recommended combinations:
 - **Web APIs**: `async` + `errors` + `web` + `observability`
 - **Data Processing**: `data` + `serialization` + `perf`
 - **CLI Tools**: `cli` + `config` + `errors`
-- **Plugin Systems**: `plugins` + `lifecycle` + `versioning`
+- **Plugin Systems**: `plugins` + `workflow` + `versioning`
 
 ---
 
@@ -296,8 +296,8 @@ uv run python tools/generate_schema.py --check  # CI: verify schemas match model
 - [Core Schema Reference](docs/core.md) — Types, functions, features, maturity, requirements
 - [CLI Reference](docs/cli.md) — All commands, options, lint rules
 - [Extensions Reference](docs/extensions.md) — Domain and concern extensions
-- [Lifecycle Extension](docs/lifecycle.md) — Workflows, gates, evidence
-- [Examples](docs/examples/) — Sample specs: `minimal.json`, `http-client.json`, `data-pipeline.json`, `lifecycle.json`
+- [Workflow Extension](docs/workflow.md) — Workflows, gates, evidence
+- [Examples](docs/examples/) — Sample specs: `minimal.json`, `http-client.json`, `data-pipeline.json`, `workflow.json`
 
 ## License
 

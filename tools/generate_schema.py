@@ -28,7 +28,7 @@ from libspec.models.extensions import config as config_ext
 from libspec.models.extensions import data as data_ext
 from libspec.models.extensions import errors as errors_ext
 from libspec.models.extensions import events as events_ext
-from libspec.models.extensions import lifecycle as lifecycle_ext
+from libspec.models.extensions import workflow as workflow_ext
 from libspec.models.extensions import observability as observability_ext
 from libspec.models.extensions import orm as orm_ext
 from libspec.models.extensions import perf as perf_ext
@@ -90,12 +90,12 @@ EXTENSIONS: dict[str, tuple[str, str, list[type]]] = {
             events_ext.EventsTypeFields,
         ],
     ),
-    "lifecycle": (
-        "Lifecycle Extension",
-        "Extension for development lifecycle tracking: states, transitions, evidence, workflows.",
+    "workflow": (
+        "Workflow Extension",
+        "Extension for development workflow tracking: states, transitions, evidence, gates.",
         [
-            lifecycle_ext.LifecycleFields,
-            lifecycle_ext.LifecycleLibraryFields,
+            workflow_ext.WorkflowFields,
+            workflow_ext.WorkflowLibraryFields,
         ],
     ),
     "observability": (

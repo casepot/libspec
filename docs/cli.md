@@ -113,7 +113,7 @@ libspec types --kind protocol       # Only protocols
 libspec types --kind enum           # Only enums
 libspec types -m 'mylib\.core'      # Filter by module (regex)
 libspec types --undocumented        # Missing docstrings
-libspec types --lifecycle-state implemented  # Filter by lifecycle
+libspec types --workflow-state implemented  # Filter by workflow state
 ```
 
 #### `libspec functions`
@@ -123,7 +123,7 @@ List function definitions.
 ```bash
 libspec functions                   # All functions
 libspec functions --kind decorator  # Only decorators
-libspec functions --lifecycle-state tested  # Filter by lifecycle
+libspec functions --workflow-state tested  # Filter by workflow state
 ```
 
 #### `libspec features`
@@ -135,7 +135,7 @@ libspec features                    # All features
 libspec features --status planned   # Not yet implemented
 libspec features --status tested    # With test coverage
 libspec features -c CONNECTION      # Filter by category
-libspec features --lifecycle-state released  # Filter by lifecycle
+libspec features --workflow-state released  # Filter by workflow state
 ```
 
 #### `libspec modules`
@@ -308,7 +308,7 @@ libspec surface --by-module     # Breakdown per module
 
 #### `libspec lifecycle`
 
-Analyze entity lifecycle states and transitions. Requires the `lifecycle` extension.
+Analyze entity lifecycle states and transitions. Requires the `workflow` extension.
 
 ```bash
 libspec lifecycle                    # Full report
@@ -321,7 +321,7 @@ libspec lifecycle --workflow standard
 | Option | Description |
 |--------|-------------|
 | `-w, --workflow TEXT` | Filter by workflow name |
-| `-s, --state TEXT` | Filter by lifecycle state |
+| `-s, --state TEXT` | Filter by workflow state |
 | `--blocked` | Show only blocked entities (missing required gates) |
 | `--summary` | Show summary statistics only |
 
@@ -330,7 +330,7 @@ Output includes:
 - Blocked items missing required gates
 - Entity breakdown by type
 
-See [Lifecycle Extension](lifecycle.md) for full documentation.
+See [Workflow Extension](workflow.md) for full documentation.
 
 ---
 
@@ -338,7 +338,7 @@ See [Lifecycle Extension](lifecycle.md) for full documentation.
 
 Navigation commands answer development workflow questions: "What's next?", "What's blocked?", "Where are gaps?"
 
-These commands work with or without the lifecycle extension. With just the core `maturity` field, they track development progress. With the lifecycle extension enabled, they also check workflow gates.
+These commands work with or without the workflow extension. With just the core `maturity` field, they track development progress. With the workflow extension enabled, they also check workflow gates.
 
 #### `libspec next`
 
@@ -356,7 +356,7 @@ libspec next --module 'mylib\.core'  # Filter by module (regex)
 |--------|-------------|
 | `-t, --type TYPE` | Filter by entity type (type/function/feature/method/all) |
 | `-m, --maturity LEVEL` | Filter by current maturity level |
-| `-w, --workflow NAME` | Filter by workflow (requires lifecycle extension) |
+| `-w, --workflow NAME` | Filter by workflow (requires workflow extension) |
 | `--module REGEX` | Filter by module path (regex) |
 | `--limit N` | Limit number of results |
 
@@ -383,7 +383,7 @@ libspec blocked --by-requirement  # Group by what's blocking them
 |--------|-------------|
 | `-t, --type TYPE` | Filter by entity type |
 | `-m, --maturity LEVEL` | Filter by current maturity level |
-| `-g, --gate TYPE` | Filter by missing gate type (requires lifecycle) |
+| `-g, --gate TYPE` | Filter by missing gate type (requires workflow) |
 | `--by-requirement` | Group output by blocking requirement |
 | `--limit N` | Limit number of results |
 
@@ -424,7 +424,7 @@ libspec navigate gaps -s tested   # Gaps in tested entities
 | Option | Description |
 |--------|-------------|
 | `-t, --type TYPE` | Filter by entity type |
-| `-s, --state STATE` | Filter by maturity/lifecycle state |
+| `-s, --state STATE` | Filter by maturity/workflow state |
 | `-i, --issue TYPE` | Filter by gap type: `signature`, `docstring`, `tests`, `evidence` |
 
 **Gap types:**
@@ -469,7 +469,7 @@ Rules are organized by category:
 | Completeness | `C` | Features without steps, missing signatures |
 | Consistency | `X` | Dangling refs, duplicates, circular deps, requirements |
 | Maturity | `M` | Maturity/status alignment |
-| Lifecycle | `L` | Lifecycle states, transitions, evidence |
+| Workflow | `L` | Workflow states, transitions, evidence |
 
 ### Available Rules
 
@@ -496,10 +496,10 @@ Rules are organized by category:
 | X004 | error | Circular dependency in requires chain |
 | X005 | warning | Required entity below min_maturity |
 | X006 | warning | Feature marked tested but has no steps |
-| L001 | error | Invalid lifecycle state (not in workflow) |
-| L002 | warning | Missing required evidence for lifecycle state |
+| L001 | error | Invalid workflow state (not in workflow) |
+| L002 | warning | Missing required evidence for workflow state |
 | L003 | error | Dangling workflow reference |
-| L004 | info | Lifecycle/feature status mismatch |
+| L004 | info | Workflow/feature status mismatch |
 | L005 | error | Invalid workflow definition |
 | L006 | warning | Evidence reference format invalid for type |
 | L007 | error | Custom evidence references undefined type |

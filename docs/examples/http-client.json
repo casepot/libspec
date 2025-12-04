@@ -1,6 +1,6 @@
 {
   "$schema": "libspec/1.0",
-  "extensions": ["lifecycle", "async"],
+  "extensions": ["workflow", "async"],
   "library": {
     "name": "httpx_lite",
     "version": "0.3.0",

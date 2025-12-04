@@ -13,22 +13,22 @@ from libspec.cli.lint.registry import RuleRegistry
 
 
 @RuleRegistry.register
-class LifecycleTestingMismatch(LintRule):
-    """Entity with 'tested' lifecycle_state should have testing extension specs."""
+class WorkflowTestingMismatch(LintRule):
+    """Entity with 'tested' workflow_state should have testing extension specs."""
 
     id = "E001"
-    name = "lifecycle-testing-mismatch"
+    name = "workflow-testing-mismatch"
     description = "Tested entity missing test coverage specs from testing extension"
     default_severity = Severity.WARNING
     category = "extension"
 
-    # Lifecycle states that imply testing should be documented
+    # Workflow states that imply testing should be documented
     TESTED_STATES = {"tested", "documented", "released"}
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         extensions = spec.get("extensions", [])
-        if "lifecycle" not in extensions or "testing" not in extensions:
+        if "workflow" not in extensions or "testing" not in extensions:
             return
 
         library = spec.get("library", {})
@@ -36,16 +36,16 @@ class LifecycleTestingMismatch(LintRule):
 
         # Check types
         for i, t in enumerate(library.get("types", [])):
-            lifecycle_state = t.get("lifecycle_state")
-            if lifecycle_state in self.TESTED_STATES:
+            workflow_state = t.get("workflow_state")
+            if workflow_state in self.TESTED_STATES:
                 test_coverage = t.get("test_coverage")
                 if not test_coverage:
                     yield LintIssue(
                         rule=self.id,
                         severity=severity,
                         message=(
-                            f"Type '{t.get('name')}' has lifecycle_state "
-                            f"'{lifecycle_state}' but no test_coverage defined"
+                            f"Type '{t.get('name')}' has workflow_state "
+                            f"'{workflow_state}' but no test_coverage defined"
                         ),
                         path=f"$.library.types[{i}]",
                         ref=f"#/types/{t.get('name')}",
@@ -53,16 +53,16 @@ class LifecycleTestingMismatch(LintRule):
 
         # Check features
         for i, feat in enumerate(library.get("features", [])):
-            lifecycle_state = feat.get("lifecycle_state")
-            if lifecycle_state in self.TESTED_STATES:
+            workflow_state = feat.get("workflow_state")
+            if workflow_state in self.TESTED_STATES:
                 test_coverage = feat.get("test_coverage")
                 if not test_coverage:
                     yield LintIssue(
                         rule=self.id,
                         severity=severity,
                         message=(
-                            f"Feature '{feat.get('id')}' has lifecycle_state "
-                            f"'{lifecycle_state}' but no test_coverage defined"
+                            f"Feature '{feat.get('id')}' has workflow_state "
+                            f"'{workflow_state}' but no test_coverage defined"
                         ),
                         path=f"$.library.features[{i}]",
                         ref=f"#/features/{feat.get('id')}",
@@ -71,7 +71,7 @@ class LifecycleTestingMismatch(LintRule):
 
 @RuleRegistry.register
 class PlannedWithImplementationEvidence(LintRule):
-    """Entity in early lifecycle state should not have implementation evidence."""
+    """Entity in early workflow state should not have implementation evidence."""
 
     id = "E002"
     name = "planned-with-implementation-evidence"
@@ -79,7 +79,7 @@ class PlannedWithImplementationEvidence(LintRule):
     default_severity = Severity.INFO
     category = "extension"
 
-    # Early lifecycle states where implementation evidence is unexpected
+    # Early workflow states where implementation evidence is unexpected
     EARLY_STATES = {"idea", "drafted", "planned"}
 
     # Evidence types that suggest implementation work
@@ -88,7 +88,7 @@ class PlannedWithImplementationEvidence(LintRule):
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         extensions = spec.get("extensions", [])
-        if "lifecycle" not in extensions:
+        if "workflow" not in extensions:
             return
 
         library = spec.get("library", {})
@@ -100,8 +100,8 @@ class PlannedWithImplementationEvidence(LintRule):
             index: int,
             name: str,
         ) -> Iterator[LintIssue]:
-            lifecycle_state = entity.get("lifecycle_state")
-            if lifecycle_state not in self.EARLY_STATES:
+            workflow_state = entity.get("workflow_state")
+            if workflow_state not in self.EARLY_STATES:
                 return
 
             evidence = entity.get("state_evidence", [])
@@ -114,9 +114,9 @@ class PlannedWithImplementationEvidence(LintRule):
                     rule=self.id,
                     severity=severity,
                     message=(
-                        f"{entity_type.title()} '{name}' has lifecycle_state "
-                        f"'{lifecycle_state}' but has implementation evidence "
-                        f"({evidence_types}) - consider updating lifecycle_state"
+                        f"{entity_type.title()} '{name}' has workflow_state "
+                        f"'{workflow_state}' but has implementation evidence "
+                        f"({evidence_types}) - consider updating workflow_state"
                     ),
                     path=f"$.library.{entity_type}s[{index}]",
                     ref=f"#/{entity_type}s/{name}",

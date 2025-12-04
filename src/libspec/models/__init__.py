@@ -63,8 +63,8 @@ from .extensions import (
     EvidenceSpec,
     EvidenceTypeSpec,
     GateSpec,
-    LifecycleFields,
-    LifecycleLibraryFields,
+    WorkflowFields,
+    WorkflowLibraryFields,
     MaturityGate,
     MigrationGuideEvidence,
     ObservabilityLibraryFields,
@@ -194,7 +194,7 @@ __all__ = [
     "FormatName",
     "ConfigKey",
     "ExceptionTypeName",
-    # Lifecycle extension types
+    # Workflow extension types
     "EvidenceBase",
     "EvidenceSpec",
     "PrEvidence",
@@ -212,8 +212,8 @@ __all__ = [
     "MaturityGate",
     "EvidenceTypeSpec",
     "WorkflowSpec",
-    "LifecycleFields",
-    "LifecycleLibraryFields",
+    "WorkflowFields",
+    "WorkflowLibraryFields",
     # Async
     "AsyncMethodFields",
     "AsyncFunctionFields",

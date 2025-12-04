@@ -5,11 +5,11 @@ from libspec.cli.lint.rules import (
     completeness,
     consistency,
     extensions,
-    lifecycle,
     maturity,
     naming,
     structural,
     version,
+    workflow,
 )
 
 __all__ = [
@@ -18,7 +18,7 @@ __all__ = [
     "completeness",
     "consistency",
     "maturity",
-    "lifecycle",
+    "workflow",
     "version",
     "extensions",
 ]

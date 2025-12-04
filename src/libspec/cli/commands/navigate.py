@@ -13,7 +13,7 @@ from typing import Any, TypedDict
 import click
 
 from libspec.cli.app import Context, pass_context
-from libspec.cli.lifecycle_utils import (
+from libspec.cli.workflow_utils import (
     MATURITY_ORDER,
     check_gates_satisfied,
     check_requirement_satisfied,
@@ -367,7 +367,7 @@ def gaps(
     if entity_type in ("all", "type"):
         for t in library.get("types", []):
             name = t.get("name")
-            current = t.get("maturity") or t.get("lifecycle_state")
+            current = t.get("maturity") or t.get("workflow_state")
 
             if state and current != state:
                 continue
@@ -403,7 +403,7 @@ def gaps(
     if entity_type in ("all", "function"):
         for f in library.get("functions", []):
             name = f.get("name")
-            current = f.get("maturity") or f.get("lifecycle_state")
+            current = f.get("maturity") or f.get("workflow_state")
 
             if state and current != state:
                 continue
@@ -441,7 +441,7 @@ def gaps(
             tname = t.get("name")
             for m in t.get("methods", []):
                 mname = m.get("name")
-                current = m.get("maturity") or m.get("lifecycle_state")
+                current = m.get("maturity") or m.get("workflow_state")
 
                 if state and current != state:
                     continue

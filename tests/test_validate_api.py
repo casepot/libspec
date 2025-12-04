@@ -79,7 +79,7 @@ class TestGetExtensionSchema:
             schema = get_extension_schema(ext_name)
             assert "$schema" in schema
         except FileNotFoundError:
-            # Some extensions may not have schemas yet (e.g., ml, lifecycle)
+            # Some extensions may not have schemas yet (e.g., ml, workflow)
             pytest.skip(f"Schema not found for {ext_name}")
 
 

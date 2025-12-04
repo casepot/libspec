@@ -1,10 +1,10 @@
 {
   "$schema": "libspec/1.0",
-  "extensions": ["lifecycle"],
+  "extensions": ["workflow"],
   "library": {
     "name": "edge_cases",
     "version": "0.1.0",
-    "tagline": "Edge case testing for navigation and lifecycle",
+    "tagline": "Edge case testing for navigation and workflow",
     "default_workflow": "strict",
     "workflows": [
       {

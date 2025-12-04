@@ -1,15 +1,15 @@
 {
   "$schema": "libspec/1.0",
-  "extensions": ["lifecycle"],
+  "extensions": ["workflow"],
   "library": {
     "name": "mylib",
     "version": "0.1.0",
-    "tagline": "A library demonstrating lifecycle tracking",
+    "tagline": "A library demonstrating workflow tracking",
     "default_workflow": "standard",
     "workflows": [
       {
         "name": "standard",
-        "description": "Standard API lifecycle workflow",
+        "description": "Standard API development workflow",
         "maturity_gates": [
           {
             "from_maturity": "specified",

@@ -134,25 +134,25 @@ def info(ctx: Context, counts_only: bool) -> None:
     output_json(envelope, ctx.no_meta)
 
 
-def _get_lifecycle_state(entity: TypeDef | FunctionDef | Feature) -> str | None:
-    """Get lifecycle_state from an entity (extension field)."""
-    # Lifecycle state is from the lifecycle extension, accessed via raw data
+def _get_workflow_state(entity: TypeDef | FunctionDef | Feature) -> str | None:
+    """Get workflow_state from an entity (extension field)."""
+    # Workflow state is from the workflow extension, accessed via raw data
     # For now, return None as we'd need extension field support
-    return getattr(entity, "lifecycle_state", None)
+    return getattr(entity, "workflow_state", None)
 
 
 @click.command()
 @click.option("--kind", "-k", help="Filter by kind (class, protocol, enum, dataclass, type_alias)")
 @click.option("--module", "-m", help="Filter by module path (regex pattern)")
 @click.option("--undocumented", is_flag=True, help="Only show types without docstrings")
-@click.option("--lifecycle-state", help="Filter by lifecycle_state (requires lifecycle extension)")
+@click.option("--workflow-state", help="Filter by workflow_state (requires workflow extension)")
 @pass_context
 def types(
     ctx: Context,
     kind: str | None,
     module: str | None,
     undocumented: bool,
-    lifecycle_state: str | None,
+    workflow_state: str | None,
 ) -> None:
     """
     List type definitions (classes, protocols, enums, etc).
@@ -167,7 +167,7 @@ def types(
         libspec types --kind protocol       # Only protocols
         libspec types -m 'mylib\\.core'     # Types in mylib.core
         libspec types --undocumented        # Find missing docstrings
-        libspec types --lifecycle-state implemented
+        libspec types --workflow-state implemented
     """
     spec = ctx.get_spec()
     result: list[TypeSummary] = []
@@ -180,7 +180,7 @@ def types(
             continue
         if undocumented and t.docstring:
             continue
-        if lifecycle_state and _get_lifecycle_state(t) != lifecycle_state:
+        if workflow_state and _get_workflow_state(t) != workflow_state:
             continue
 
         result.append(
@@ -218,13 +218,13 @@ def types(
     "--kind", "-k", help="Filter: function, decorator, context_manager, async_context_manager"
 )
 @click.option("--module", "-m", help="Filter by module path (regex pattern)")
-@click.option("--lifecycle-state", help="Filter by lifecycle_state (requires lifecycle extension)")
+@click.option("--workflow-state", help="Filter by workflow_state (requires workflow extension)")
 @pass_context
 def functions(
     ctx: Context,
     kind: str | None,
     module: str | None,
-    lifecycle_state: str | None,
+    workflow_state: str | None,
 ) -> None:
     """
     List function definitions.
@@ -233,7 +233,7 @@ def functions(
     Examples:
         libspec functions                   # All functions
         libspec functions --kind decorator  # Only decorators
-        libspec functions --lifecycle-state tested
+        libspec functions --workflow-state tested
         libspec functions | jq '.result[].signature'
     """
     spec = ctx.get_spec()
@@ -244,7 +244,7 @@ def functions(
             continue
         if module and not re.search(module, f.module):
             continue
-        if lifecycle_state and _get_lifecycle_state(f) != lifecycle_state:
+        if workflow_state and _get_workflow_state(f) != workflow_state:
             continue
 
         result.append(
@@ -283,13 +283,13 @@ def functions(
     help="Filter by implementation status",
 )
 @click.option("--category", "-c", help="Filter by category (regex, case-insensitive)")
-@click.option("--lifecycle-state", help="Filter by lifecycle_state (requires lifecycle extension)")
+@click.option("--workflow-state", help="Filter by workflow_state (requires workflow extension)")
 @pass_context
 def features(
     ctx: Context,
     status: str | None,
     category: str | None,
-    lifecycle_state: str | None,
+    workflow_state: str | None,
 ) -> None:
     """
     List feature specifications (behavioral contracts).
@@ -303,7 +303,7 @@ def features(
         libspec features                    # All features
         libspec features --status planned   # Not yet implemented
         libspec features -c CONNECTION      # Category filter
-        libspec features --lifecycle-state drafted
+        libspec features --workflow-state drafted
     """
     spec = ctx.get_spec()
     result: list[FeatureSummary] = []
@@ -313,7 +313,7 @@ def features(
             continue
         if category and not re.search(category, f.category, re.IGNORECASE):
             continue
-        if lifecycle_state and _get_lifecycle_state(f) != lifecycle_state:
+        if workflow_state and _get_workflow_state(f) != workflow_state:
             continue
 
         result.append(

@@ -1,11 +1,11 @@
-"""Lifecycle lint rules (L001-L099).
+"""Workflow lint rules (L001-L099).
 
-Rules for validating lifecycle extension usage, including both:
-- Legacy state-based workflows (lifecycle_state, state_evidence)
+Rules for validating workflow extension usage, including both:
+- Legacy state-based workflows (workflow_state, state_evidence)
 - Maturity-based workflows (maturity field, maturity_evidence)
 """
 
-from typing import Any, Iterator
+from typing import Any, Iterator, cast
 
 from typing_extensions import override
 
@@ -46,31 +46,31 @@ def get_entity_evidence(entity: dict[str, Any]) -> list[dict[str, Any]]:
     evidence = entity.get("maturity_evidence", [])
     if not evidence:
         evidence = entity.get("state_evidence", [])
-    return evidence
+    return cast(list[dict[str, Any]], evidence)
 
 
 def get_entity_state(entity: dict[str, Any]) -> str | None:
-    """Get state from entity, checking both maturity and lifecycle_state."""
-    # Prefer maturity, fall back to lifecycle_state for legacy support
+    """Get state from entity, checking both maturity and workflow_state."""
+    # Prefer maturity, fall back to workflow_state for legacy support
     state = entity.get("maturity")
     if not state:
-        state = entity.get("lifecycle_state")
+        state = entity.get("workflow_state")
     return state
 
 
 @RuleRegistry.register
-class InvalidLifecycleState(LintRule):
-    """Entity lifecycle_state must be a valid state in its workflow."""
+class InvalidWorkflowState(LintRule):
+    """Entity workflow_state must be a valid state in its workflow."""
 
     id = "L001"
-    name = "invalid-lifecycle-state"
-    description = "Entity has lifecycle_state not defined in its workflow"
+    name = "invalid-workflow-state"
+    description = "Entity has workflow_state not defined in its workflow"
     default_severity = Severity.ERROR
-    category = "lifecycle"
+    category = "workflow"
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         library = spec.get("library", {})
@@ -78,7 +78,7 @@ class InvalidLifecycleState(LintRule):
 
         # Check types
         for i, t in enumerate(library.get("types", [])):
-            if state := t.get("lifecycle_state"):
+            if state := t.get("workflow_state"):
                 workflow = get_workflow_for_entity(t, spec)
                 if workflow:
                     valid_states = get_workflow_states(workflow)
@@ -86,15 +86,15 @@ class InvalidLifecycleState(LintRule):
                         yield LintIssue(
                             rule=self.id,
                             severity=severity,
-                            message=f"Type '{t.get('name')}' has invalid lifecycle_state "
+                            message=f"Type '{t.get('name')}' has invalid workflow_state "
                             f"'{state}' (not in workflow '{workflow.get('name')}')",
-                            path=f"$.library.types[{i}].lifecycle_state",
+                            path=f"$.library.types[{i}].workflow_state",
                             ref=f"#/types/{t.get('name')}",
                         )
 
         # Check functions
         for i, f in enumerate(library.get("functions", [])):
-            if state := f.get("lifecycle_state"):
+            if state := f.get("workflow_state"):
                 workflow = get_workflow_for_entity(f, spec)
                 if workflow:
                     valid_states = get_workflow_states(workflow)
@@ -103,14 +103,14 @@ class InvalidLifecycleState(LintRule):
                         yield LintIssue(
                             rule=self.id,
                             severity=severity,
-                            message=f"Function '{fn_name}' has invalid lifecycle_state '{state}'",
-                            path=f"$.library.functions[{i}].lifecycle_state",
+                            message=f"Function '{fn_name}' has invalid workflow_state '{state}'",
+                            path=f"$.library.functions[{i}].workflow_state",
                             ref=f"#/functions/{fn_name}",
                         )
 
         # Check features
         for i, feat in enumerate(library.get("features", [])):
-            if state := feat.get("lifecycle_state"):
+            if state := feat.get("workflow_state"):
                 workflow = get_workflow_for_entity(feat, spec)
                 if workflow:
                     valid_states = get_workflow_states(workflow)
@@ -119,15 +119,15 @@ class InvalidLifecycleState(LintRule):
                         yield LintIssue(
                             rule=self.id,
                             severity=severity,
-                            message=f"Feature '{feat_id}' has invalid lifecycle_state '{state}'",
-                            path=f"$.library.features[{i}].lifecycle_state",
+                            message=f"Feature '{feat_id}' has invalid workflow_state '{state}'",
+                            path=f"$.library.features[{i}].workflow_state",
                             ref=f"#/features/{feat_id}",
                         )
 
         # Check methods in types
         for ti, t in enumerate(library.get("types", [])):
             for mi, m in enumerate(t.get("methods", [])):
-                if state := m.get("lifecycle_state"):
+                if state := m.get("workflow_state"):
                     workflow = get_workflow_for_entity(m, spec)
                     if not workflow:
                         workflow = get_workflow_for_entity(t, spec)
@@ -141,9 +141,9 @@ class InvalidLifecycleState(LintRule):
                                 severity=severity,
                                 message=(
                                     f"Method '{tname}.{mname}' has invalid "
-                                    f"lifecycle_state '{state}'"
+                                    f"workflow_state '{state}'"
                                 ),
-                                path=f"$.library.types[{ti}].methods[{mi}].lifecycle_state",
+                                path=f"$.library.types[{ti}].methods[{mi}].workflow_state",
                                 ref=f"#/types/{tname}/methods/{mname}",
                             )
 
@@ -154,13 +154,13 @@ class MissingRequiredEvidence(LintRule):
 
     id = "L002"
     name = "missing-required-evidence"
-    description = "Entity missing required evidence for its lifecycle state"
+    description = "Entity missing required evidence for its workflow state"
     default_severity = Severity.WARNING
-    category = "lifecycle"
+    category = "workflow"
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         library = spec.get("library", {})
@@ -172,7 +172,7 @@ class MissingRequiredEvidence(LintRule):
             index: int,
             ref: str,
         ) -> Iterator[LintIssue]:
-            state = entity.get("lifecycle_state")
+            state = entity.get("workflow_state")
             if not state:
                 return
 
@@ -228,11 +228,11 @@ class DanglingWorkflowReference(LintRule):
     name = "dangling-workflow-reference"
     description = "Entity references undefined workflow"
     default_severity = Severity.ERROR
-    category = "lifecycle"
+    category = "workflow"
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         library = spec.get("library", {})
@@ -267,16 +267,16 @@ class DanglingWorkflowReference(LintRule):
 
 
 @RuleRegistry.register
-class LifecycleFeatureStatusMismatch(LintRule):
-    """Feature lifecycle_state should be consistent with features.status."""
+class WorkflowFeatureStatusMismatch(LintRule):
+    """Feature workflow_state should be consistent with features.status."""
 
     id = "L004"
-    name = "lifecycle-feature-status-mismatch"
-    description = "Feature lifecycle_state inconsistent with status field"
+    name = "workflow-feature-status-mismatch"
+    description = "Feature workflow_state inconsistent with status field"
     default_severity = Severity.INFO
-    category = "lifecycle"
+    category = "workflow"
 
-    # Default mapping from lifecycle states to feature status
+    # Default mapping from workflow states to feature status
     STATE_TO_STATUS: dict[str, str] = {
         "idea": "planned",
         "drafted": "planned",
@@ -292,26 +292,26 @@ class LifecycleFeatureStatusMismatch(LintRule):
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         library = spec.get("library", {})
         severity = self.get_severity(config)
 
         for i, feat in enumerate(library.get("features", [])):
-            lifecycle_state = feat.get("lifecycle_state")
+            workflow_state = feat.get("workflow_state")
             status = feat.get("status", "planned")
 
-            if lifecycle_state:
-                expected_status = self.STATE_TO_STATUS.get(lifecycle_state)
+            if workflow_state:
+                expected_status = self.STATE_TO_STATUS.get(workflow_state)
                 if expected_status and expected_status != status:
                     feat_id = feat.get("id")
                     yield LintIssue(
                         rule=self.id,
                         severity=severity,
                         message=(
-                            f"Feature '{feat_id}' has lifecycle_state "
-                            f"'{lifecycle_state}' but status '{status}' "
+                            f"Feature '{feat_id}' has workflow_state "
+                            f"'{workflow_state}' but status '{status}' "
                             f"(expected '{expected_status}')"
                         ),
                         path=f"$.library.features[{i}]",
@@ -327,11 +327,11 @@ class InvalidWorkflowDefinition(LintRule):
     name = "invalid-workflow-definition"
     description = "Workflow has invalid state or transition references"
     default_severity = Severity.ERROR
-    category = "lifecycle"
+    category = "workflow"
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         library = spec.get("library", {})
@@ -469,11 +469,11 @@ class InvalidEvidenceReference(LintRule):
     name = "invalid-evidence-reference"
     description = "Evidence reference format invalid for its type"
     default_severity = Severity.WARNING
-    category = "lifecycle"
+    category = "workflow"
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         severity = self.get_severity(config)
@@ -553,11 +553,11 @@ class UndefinedCustomEvidenceType(LintRule):
     name = "undefined-custom-evidence-type"
     description = "Custom evidence references undefined type"
     default_severity = Severity.ERROR
-    category = "lifecycle"
+    category = "workflow"
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         severity = self.get_severity(config)
@@ -589,11 +589,11 @@ class EvidenceMissingRequiredField(LintRule):
     name = "evidence-missing-required-field"
     description = "Evidence missing required field for its type"
     default_severity = Severity.WARNING
-    category = "lifecycle"
+    category = "workflow"
 
     @override
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         severity = self.get_severity(config)
@@ -638,7 +638,7 @@ class InvalidTestPathPattern(LintRule):
     name = "invalid-test-path-pattern"
     description = "Test evidence path doesn't look like a test file"
     default_severity = Severity.INFO
-    category = "lifecycle"
+    category = "workflow"
 
     # Common test path patterns
     TEST_PATTERNS = [
@@ -656,7 +656,7 @@ class InvalidTestPathPattern(LintRule):
     def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
         import re
 
-        if "lifecycle" not in spec.get("extensions", []):
+        if "workflow" not in spec.get("extensions", []):
             return
 
         severity = self.get_severity(config)

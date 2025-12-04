@@ -1,6 +1,6 @@
 {
   "$schema": "libspec/1.0",
-  "extensions": ["lifecycle"],
+  "extensions": ["workflow"],
   "library": {
     "name": "dataflow",
     "version": "0.1.0",

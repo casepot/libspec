@@ -1,9 +1,9 @@
-"""Lifecycle extension models for development workflow tracking.
+"""Workflow extension models for development workflow tracking.
 
 This extension provides:
 - Workflow definitions with states and transitions
 - Evidence types for tracking progress (PRs, tests, docs, etc.)
-- Lifecycle state fields for entities (types, functions, features)
+- Workflow state fields for entities (types, functions, features)
 """
 
 from __future__ import annotations
@@ -352,12 +352,12 @@ class WorkflowSpec(ExtensionModel):
 
 
 # -----------------------------------------------------------------------------
-# Entity Lifecycle Fields (added to core types when extension is active)
+# Entity Workflow Fields (added to core types when extension is active)
 # -----------------------------------------------------------------------------
 
 
-class LifecycleFields(ExtensionModel):
-    """Fields added to entities when lifecycle extension is active.
+class WorkflowFields(ExtensionModel):
+    """Fields added to entities when workflow extension is active.
 
     Note: The `maturity` field on core entities is the primary way to track
     development progress. This extension adds workflow orchestration and
@@ -366,7 +366,7 @@ class LifecycleFields(ExtensionModel):
     Fields:
         workflow: Optional workflow override for this entity
         maturity_evidence: Evidence supporting current maturity level
-        lifecycle_state: (Legacy) Arbitrary workflow state, use maturity instead
+        workflow_state: (Legacy) Arbitrary workflow state, use maturity instead
         state_evidence: (Legacy) Alias for maturity_evidence
     """
 
@@ -374,7 +374,7 @@ class LifecycleFields(ExtensionModel):
     # Maturity-based evidence (recommended)
     maturity_evidence: Annotated[list[EvidenceSpec], Field()] = Field(default_factory=list)
     # Legacy fields (kept for backward compatibility)
-    lifecycle_state: str | None = Field(
+    workflow_state: str | None = Field(
         default=None,
         description="Legacy: use core maturity field instead"
     )
@@ -384,13 +384,13 @@ class LifecycleFields(ExtensionModel):
     )
 
 
-class LifecycleLibraryFields(ExtensionModel):
-    """Fields added to Library when lifecycle extension is active."""
+class WorkflowLibraryFields(ExtensionModel):
+    """Fields added to Library when workflow extension is active."""
 
     workflows: list[WorkflowSpec] = Field(default_factory=list)
     default_workflow: str | None = None
 
 
 # Ensure forward refs for EvidenceSpec are resolved when imported indirectly
-LifecycleFields.model_rebuild()
-LifecycleLibraryFields.model_rebuild()
+WorkflowFields.model_rebuild()
+WorkflowLibraryFields.model_rebuild()

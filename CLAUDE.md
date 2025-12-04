@@ -71,7 +71,7 @@ Rule-based linting with categories:
 - `C` (completeness): Missing signatures, empty enums
 - `X` (consistency): Dangling refs, duplicates
 - `V` (version): Python version compatibility
-- `L` (lifecycle): Lifecycle workflow validation
+- `L` (workflow): Workflow validation
 - `M` (maturity): Maturity/status alignment
 - `E` (extension): Extension-specific validation
 

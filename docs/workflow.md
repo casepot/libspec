@@ -1,6 +1,6 @@
-# Lifecycle Extension
+# Workflow Extension
 
-The `lifecycle` extension adds workflow orchestration on top of libspec's core maturity tracking. It enables gate criteria, evidence tracking, and formal workflow definitions.
+The `workflow` extension adds workflow orchestration on top of libspec's core maturity tracking. It enables gate criteria, evidence tracking, and formal workflow definitions.
 
 ## Architecture
 
@@ -8,7 +8,7 @@ Libspec uses a layered approach to development tracking:
 
 ```
 +-----------------------------------------------------+
-|  Lifecycle Extension (Optional Layer)               |
+|  Workflow Extension (Optional Layer)                |
 |  -------------------------------------------        |
 |  - Workflows define HOW to progress through maturity|
 |  - Gates: evidence/approval required per transition |
@@ -24,7 +24,7 @@ Libspec uses a layered approach to development tracking:
 +-----------------------------------------------------+
 ```
 
-**Key insight**: `maturity` is the core field tracking development stage. The `lifecycle` extension adds workflow orchestration (gates, evidence) around maturity transitions.
+**Key insight**: `maturity` is the core field tracking development stage. The `workflow` extension adds workflow orchestration (gates, evidence) around maturity transitions.
 
 ---
 
@@ -45,7 +45,7 @@ Every entity (type, function, feature, method) can have a `maturity` field track
 | `released` | Part of a public release |
 | `deprecated` | Marked for removal |
 
-### Usage Without Lifecycle Extension
+### Usage Without Workflow Extension
 
 ```json
 {
@@ -95,14 +95,14 @@ Entities can declare dependencies on other entities with optional maturity requi
 
 ---
 
-## Lifecycle Extension
+## Workflow Extension
 
-Enable the lifecycle extension to add workflow orchestration:
+Enable the workflow extension to add workflow orchestration:
 
 ```json
 {
   "$schema": "libspec/1.0",
-  "extensions": ["lifecycle"],
+  "extensions": ["workflow"],
   "library": {
     "name": "mylib",
     "version": "0.1.0",
@@ -167,7 +167,7 @@ Define gates for transitions between maturity levels:
 | `gates` | array | Gate criteria that must be satisfied |
 | `description` | string | What this transition represents |
 
-### Entity Fields with Lifecycle
+### Entity Fields with Workflow
 
 ```json
 {
@@ -263,13 +263,13 @@ For backward compatibility, state-based workflows are still supported:
 }
 ```
 
-Use `lifecycle_state` and `state_evidence` fields with legacy workflows:
+Use `workflow_state` and `state_evidence` fields with legacy workflows:
 
 ```json
 {
   "name": "LegacyType",
   "kind": "class",
-  "lifecycle_state": "drafted",
+  "workflow_state": "drafted",
   "state_evidence": [...]
 }
 ```
@@ -360,7 +360,7 @@ libspec navigate gaps -i tests    # Missing tests
 | Option | Description |
 |--------|-------------|
 | `-t, --type TYPE` | Filter by entity type |
-| `-s, --state STATE` | Filter by lifecycle state |
+| `-s, --state STATE` | Filter by workflow state |
 | `-i, --issue TYPE` | Filter by gap type (signature/docstring/tests/evidence) |
 
 #### `libspec navigate progress`
@@ -391,7 +391,7 @@ idea: 2 | specified: 3 | designed: 5 | implemented: 8 | tested: 6 | released: 4
 
 ### `libspec lifecycle`
 
-Full lifecycle analysis (requires lifecycle extension).
+Full lifecycle analysis (requires workflow extension).
 
 ```bash
 libspec lifecycle                 # Full report
@@ -405,7 +405,7 @@ libspec lifecycle --state tested  # Filter by state
 | Option | Description |
 |--------|-------------|
 | `-w, --workflow NAME` | Filter by workflow |
-| `-s, --state STATE` | Filter by maturity/lifecycle state |
+| `-s, --state STATE` | Filter by maturity/workflow state |
 | `--blocked` | Show only blocked entities |
 | `--summary` | Show summary statistics only |
 
@@ -419,14 +419,14 @@ libspec lifecycle --state tested  # Filter by state
 |------|----------|-------------|
 | **M001** | warning | Feature maturity inconsistent with status field |
 
-### Lifecycle Rules
+### Workflow Rules
 
 | Rule | Severity | Description |
 |------|----------|-------------|
 | **L001** | error | Entity state not defined in workflow |
 | **L002** | warning | Entity missing required evidence for state |
 | **L003** | error | Entity references undefined workflow |
-| **L004** | info | Feature lifecycle_state inconsistent with status |
+| **L004** | info | Feature workflow_state inconsistent with status |
 | **L005** | error | Workflow has invalid state references |
 | **L006** | warning | Evidence reference format invalid |
 | **L007** | error | Custom evidence references undefined type |
@@ -442,9 +442,9 @@ libspec lifecycle --state tested  # Filter by state
 
 ---
 
-## Migration: lifecycle_state to maturity
+## Migration: workflow_state to maturity
 
-If you have an existing spec using `lifecycle_state`, migrate to `maturity`:
+If you have an existing spec using `workflow_state`, migrate to `maturity`:
 
 ### Before (Legacy)
 
@@ -452,7 +452,7 @@ If you have an existing spec using `lifecycle_state`, migrate to `maturity`:
 {
   "name": "MyType",
   "kind": "class",
-  "lifecycle_state": "implemented",
+  "workflow_state": "implemented",
   "state_evidence": [...]
 }
 ```
@@ -482,13 +482,13 @@ Map legacy states to maturity levels:
 | `released`, `stable` | `released` |
 | `deprecated` | `deprecated` |
 
-Both field types are supported during migration. The CLI commands check `maturity` first, then fall back to `lifecycle_state`.
+Both field types are supported during migration. The CLI commands check `maturity` first, then fall back to `workflow_state`.
 
 ---
 
 ## Example Spec
 
-See [docs/examples/lifecycle.json](examples/lifecycle.json) for a complete example.
+See [docs/examples/workflow.json](examples/workflow.json) for a complete example.
 
 ---
 

@@ -33,7 +33,7 @@ Extensions that address cross-cutting concerns:
 | `config` | Configuration specifications |
 | `versioning` | API versioning and deprecation |
 | `observability` | Logging, metrics, and tracing |
-| `lifecycle` | Development workflow tracking (planned → tested → shipped) |
+| `workflow` | Development workflow tracking (planned → tested → shipped) |
 
 ## Compatibility Matrix
 
@@ -41,8 +41,8 @@ All extensions are designed to be composable. This matrix highlights particularl
 
 | Extension A | Extension B | Interaction |
 |-------------|-------------|-------------|
-| `lifecycle` | `testing` | `lifecycle_state: tested` should align with `test_coverage` specs |
-| `lifecycle` | `versioning` | Deprecation evidence pairs with `deprecated_in` version |
+| `workflow` | `testing` | `workflow_state: tested` should align with `test_coverage` specs |
+| `workflow` | `versioning` | Deprecation evidence pairs with `deprecated_in` version |
 | `async` | `state` | Orthogonal: async describes runtime behavior, state describes FSM APIs |
 | `events` | `observability` | Event-emitting types benefit from metrics/tracing specs |
 | `data` | `serialization` | Complementary: data validation + serialization formats |
@@ -50,17 +50,17 @@ All extensions are designed to be composable. This matrix highlights particularl
 
 ## Semantic Relationships
 
-### lifecycle + testing
+### workflow + testing
 
-When both extensions are enabled, entities with tested lifecycle states should have corresponding test specifications:
+When both extensions are enabled, entities with tested workflow states should have corresponding test specifications:
 
 ```json
 {
-  "extensions": ["lifecycle", "testing"],
+  "extensions": ["workflow", "testing"],
   "library": {
     "types": [{
       "name": "ConnectionPool",
-      "lifecycle_state": "tested",
+      "workflow_state": "tested",
       "test_coverage": {
         "unit": { "percentage": 95 },
         "integration": { "percentage": 80 }
@@ -70,19 +70,19 @@ When both extensions are enabled, entities with tested lifecycle states should h
 }
 ```
 
-**Lint rule `E001`** warns when an entity has `lifecycle_state` in `{tested, documented, released}` but no `test_coverage` defined.
+**Lint rule `E001`** warns when an entity has `workflow_state` in `{tested, documented, released}` but no `test_coverage` defined.
 
-### lifecycle + versioning
+### workflow + versioning
 
-Deprecation workflows benefit from combining lifecycle evidence with versioning metadata:
+Deprecation workflows benefit from combining workflow evidence with versioning metadata:
 
 ```json
 {
-  "extensions": ["lifecycle", "versioning"],
+  "extensions": ["workflow", "versioning"],
   "library": {
     "types": [{
       "name": "OldClient",
-      "lifecycle_state": "deprecated",
+      "workflow_state": "deprecated",
       "state_evidence": [{
         "type": "deprecation_notice",
         "reference": "CHANGELOG.md",
@@ -191,8 +191,8 @@ The following lint rules detect semantic conflicts between extensions:
 
 | Rule | Extensions | Description |
 |------|------------|-------------|
-| `E001` | lifecycle + testing | Tested entity missing test_coverage specs |
-| `E002` | lifecycle | Early-stage entity has implementation evidence |
+| `E001` | workflow + testing | Tested entity missing test_coverage specs |
+| `E002` | workflow | Early-stage entity has implementation evidence |
 
 Run extension-specific linting:
 
@@ -204,7 +204,7 @@ libspec lint --rule E001 spec.json
 
 When extensions define similar concepts, the more specific extension takes precedence for its domain:
 
-1. **State models**: `state.py` defines `MachineStateSpec` for XState/FSM patterns; `async_.py` defines `AsyncStateSpec` for runtime object lifecycles; `lifecycle.py` defines `DevStateSpec` for development workflows. These are distinct concepts.
+1. **State models**: `state.py` defines `MachineStateSpec` for XState/FSM patterns; `async_.py` defines `AsyncStateSpec` for runtime object lifecycles; `workflow.py` defines `DevStateSpec` for development workflows. These are distinct concepts.
 
 2. **Schema merging**: When `validate_spec()` merges extension schemas, core schema definitions take precedence over extension definitions with the same name.
 

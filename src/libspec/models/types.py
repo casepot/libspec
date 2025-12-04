@@ -516,7 +516,7 @@ class ExtensionName(str, Enum):
     CONFIG = "config"
     VERSIONING = "versioning"
     OBSERVABILITY = "observability"
-    LIFECYCLE = "lifecycle"
+    WORKFLOW = "workflow"
 
 
 class GenericParamKind(str, Enum):

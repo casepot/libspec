@@ -2,21 +2,22 @@
 
 This module supports both:
 - Maturity-based tracking (core maturity field)
-- Legacy lifecycle_state tracking
+- Legacy workflow_state tracking
 """
 
 from collections import defaultdict
-from typing import Any
+from typing import Any, cast
 
 import click
 
 from libspec.cli.app import Context, pass_context
-from libspec.cli.models.lifecycle import (
+from libspec.cli.models.workflow import (
     BlockedItem,
     DevTransitionSpec,
+    EvidenceSpec,
     GateStatus,
-    LifecycleEntity,
     MaturityGate,
+    WorkflowEntity,
     WorkflowSpec,
 )
 from libspec.cli.output import make_envelope, output_json
@@ -28,7 +29,7 @@ MATURITY_ORDER = [
 ]
 
 
-def get_entity_workflow(entity: LifecycleEntity, spec: dict[str, Any]) -> str | None:
+def get_entity_workflow(entity: WorkflowEntity, spec: dict[str, Any]) -> str | None:
     """Get the workflow for an entity (explicit or default)."""
     if workflow := entity.get("workflow"):
         return workflow
@@ -79,7 +80,7 @@ def get_valid_next_states(current_state: str, workflow: WorkflowSpec) -> list[st
     return next_states
 
 
-def get_entity_evidence(entity: LifecycleEntity) -> list[dict[str, Any]]:
+def get_entity_evidence(entity: WorkflowEntity) -> list[EvidenceSpec]:
     """Get evidence from entity, preferring maturity_evidence over state_evidence."""
     evidence = entity.get("maturity_evidence", [])
     if not evidence:
@@ -88,7 +89,7 @@ def get_entity_evidence(entity: LifecycleEntity) -> list[dict[str, Any]]:
 
 
 def check_gates_satisfied(
-    entity: LifecycleEntity,
+    entity: WorkflowEntity,
     transition: DevTransitionSpec | MaturityGate,
 ) -> list[GateStatus]:
     """Check which gates are satisfied/unsatisfied for a transition.
@@ -105,7 +106,7 @@ def check_gates_satisfied(
         if ev_type == "custom":
             # For custom evidence, use the type_name
             # Cast needed because TypedDict union doesn't narrow on discriminator
-            type_name: str | None = ev.get("type_name")  # type: ignore[assignment]
+            type_name = cast(str | None, ev.get("type_name"))
             if type_name:
                 evidence_types.add(type_name)
         elif ev_type:
@@ -137,54 +138,54 @@ def check_gates_satisfied(
     return results
 
 
-def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[LifecycleEntity]:
-    """Collect all entities that have maturity or lifecycle_state set.
+def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[WorkflowEntity]:
+    """Collect all entities that have maturity or workflow_state set.
 
     Supports both:
     - Maturity-based tracking (core maturity field)
-    - Legacy lifecycle_state tracking
+    - Legacy workflow_state tracking
     """
-    entities: list[LifecycleEntity] = []
+    entities: list[WorkflowEntity] = []
     library = spec.get("library", {})
 
     # Types
     for t in library.get("types", []):
-        if "maturity" in t or "lifecycle_state" in t:
+        if "maturity" in t or "workflow_state" in t:
             entities.append({
                 "entity_type": "type",
                 "name": t.get("name"),
                 "ref": f"#/types/{t.get('name')}",
                 "maturity": t.get("maturity"),
                 "maturity_evidence": t.get("maturity_evidence", []),
-                "lifecycle_state": t.get("lifecycle_state"),
+                "workflow_state": t.get("workflow_state"),
                 "workflow": t.get("workflow"),
                 "state_evidence": t.get("state_evidence", []),
             })
 
     # Functions
     for f in library.get("functions", []):
-        if "maturity" in f or "lifecycle_state" in f:
+        if "maturity" in f or "workflow_state" in f:
             entities.append({
                 "entity_type": "function",
                 "name": f.get("name"),
                 "ref": f"#/functions/{f.get('name')}",
                 "maturity": f.get("maturity"),
                 "maturity_evidence": f.get("maturity_evidence", []),
-                "lifecycle_state": f.get("lifecycle_state"),
+                "workflow_state": f.get("workflow_state"),
                 "workflow": f.get("workflow"),
                 "state_evidence": f.get("state_evidence", []),
             })
 
     # Features
     for feat in library.get("features", []):
-        if "maturity" in feat or "lifecycle_state" in feat:
+        if "maturity" in feat or "workflow_state" in feat:
             entities.append({
                 "entity_type": "feature",
                 "name": feat.get("id"),
                 "ref": f"#/features/{feat.get('id')}",
                 "maturity": feat.get("maturity"),
                 "maturity_evidence": feat.get("maturity_evidence", []),
-                "lifecycle_state": feat.get("lifecycle_state"),
+                "workflow_state": feat.get("workflow_state"),
                 "workflow": feat.get("workflow"),
                 "state_evidence": feat.get("state_evidence", []),
             })
@@ -192,14 +193,14 @@ def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[LifecycleEntit
     # Methods in types
     for t in library.get("types", []):
         for m in t.get("methods", []):
-            if "maturity" in m or "lifecycle_state" in m:
+            if "maturity" in m or "workflow_state" in m:
                 entities.append({
                     "entity_type": "method",
                     "name": f"{t.get('name')}.{m.get('name')}",
                     "ref": f"#/types/{t.get('name')}/methods/{m.get('name')}",
                     "maturity": m.get("maturity"),
                     "maturity_evidence": m.get("maturity_evidence", []),
-                    "lifecycle_state": m.get("lifecycle_state"),
+                    "workflow_state": m.get("workflow_state"),
                     "workflow": m.get("workflow"),
                     "state_evidence": m.get("state_evidence", []),
                 })
@@ -207,11 +208,11 @@ def collect_entities_with_lifecycle(spec: dict[str, Any]) -> list[LifecycleEntit
     return entities
 
 
-def get_entity_state(entity: LifecycleEntity) -> str | None:
-    """Get state from entity, preferring maturity over lifecycle_state."""
+def get_entity_state(entity: WorkflowEntity) -> str | None:
+    """Get state from entity, preferring maturity over workflow_state."""
     state = entity.get("maturity")
     if not state:
-        state = entity.get("lifecycle_state")
+        state = entity.get("workflow_state")
     return state
 
 
@@ -236,13 +237,13 @@ def lifecycle(
     Analyze entity lifecycle states and transitions.
 
     \b
-    Works with the core maturity field on all entities. When the lifecycle
+    Works with the core maturity field on all entities. When the workflow
     extension is enabled, also reports workflow gates and blocked items.
 
     \b
     Reports:
       - Counts by state (maturity) across all tracked entities
-      - By workflow breakdown (if lifecycle extension enabled)
+      - By workflow breakdown (if workflow extension enabled)
       - Blocked items missing required gates (if workflows defined)
 
     \b
@@ -266,7 +267,7 @@ def lifecycle(
             if (e.get("workflow") or default_workflow) == workflow
         ]
     if state:
-        # Filter by state (supports both maturity and lifecycle_state)
+        # Filter by state (supports both maturity and workflow_state)
         entities = [e for e in entities if get_entity_state(e) == state]
 
     # Compute statistics
@@ -276,7 +277,7 @@ def lifecycle(
     blocked_items: list[BlockedItem] = []
 
     for entity in entities:
-        # Use get_entity_state to support both maturity and lifecycle_state
+        # Use get_entity_state to support both maturity and workflow_state
         entity_state = get_entity_state(entity) or "unknown"
         entity_workflow = entity.get("workflow") or default_workflow
         entity_type = entity.get("entity_type")
@@ -313,7 +314,7 @@ def lifecycle(
                         })
 
         # Also check legacy state-based transitions
-        elif wf and entity.get("lifecycle_state"):
+        elif wf and entity.get("workflow_state"):
             next_states = get_valid_next_states(entity_state, wf)
             for next_state in next_states:
                 # Find the transition

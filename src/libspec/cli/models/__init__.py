@@ -1,6 +1,6 @@
 """Pydantic models for CLI output and internal representation."""
 
-from libspec.cli.models.lifecycle import (
+from libspec.cli.models.workflow import (
     ApprovalEvidence,
     BenchmarkEvidence,
     BlockedItem,
@@ -15,13 +15,13 @@ from libspec.cli.models.lifecycle import (
     EvidenceTypeSpec,
     GateSpec,
     GateStatus,
-    LifecycleEntity,
-    # Entity types
-    LifecycleFields,
-    LifecycleLibraryFields,
     MigrationGuideEvidence,
     PrEvidence,
     TestsEvidence,
+    # Entity types
+    WorkflowEntity,
+    WorkflowFields,
+    WorkflowLibraryFields,
     # Workflow types
     WorkflowSpec,
 )
@@ -61,7 +61,7 @@ __all__ = [
     "LintIssue",
     "LintResult",
     "LintMeta",
-    # Lifecycle types
+    # Workflow types
     "EvidenceSpec",
     "PrEvidence",
     "TestsEvidence",
@@ -77,9 +77,9 @@ __all__ = [
     "DevTransitionSpec",
     "GateSpec",
     "EvidenceTypeSpec",
-    "LifecycleFields",
-    "LifecycleLibraryFields",
-    "LifecycleEntity",
+    "WorkflowFields",
+    "WorkflowLibraryFields",
+    "WorkflowEntity",
     "BlockedItem",
     "GateStatus",
 ]

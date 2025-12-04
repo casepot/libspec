@@ -309,7 +309,7 @@
         "config",
         "versioning",
         "observability",
-        "lifecycle"
+        "workflow"
       ],
       "title": "ExtensionName",
       "type": "string"

@@ -37,7 +37,7 @@ Extensions that address cross-cutting concerns:
 | Extension | Purpose |
 |-----------|---------|
 | [`errors`](#errors) | Error handling (hierarchy, codes, recovery) |
-| [`lifecycle`](#lifecycle) | Development workflow tracking (states, evidence, gates) |
+| [`workflow`](#workflow) | Development workflow tracking (states, evidence, gates) |
 | [`observability`](#observability) | Logging, metrics, tracing, health checks |
 | [`perf`](#perf) | Performance characteristics (complexity, benchmarks) |
 | [`safety`](#safety) | Thread safety, reentrancy, memory safety |
@@ -745,21 +745,21 @@ Extensions that address cross-cutting concerns:
 
 ---
 
-### lifecycle
+### workflow
 
 **Purpose**: Add workflow orchestration on top of the core `maturity` field—defining gates, evidence requirements, and approval processes for maturity transitions.
 
-**Enable**: `"extensions": ["lifecycle"]`
+**Enable**: `"extensions": ["workflow"]`
 
-See [Lifecycle Extension](lifecycle.md) for comprehensive documentation including workflow definitions, evidence types, and lint rules.
+See [Workflow Extension](workflow.md) for comprehensive documentation including workflow definitions, evidence types, and lint rules.
 
 #### Architecture: Layered Design
 
-The lifecycle extension works on top of the core `maturity` field (see [Core Schema](core.md#entitymaturity)):
+The workflow extension works on top of the core `maturity` field (see [Core Schema](core.md#entitymaturity)):
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  Lifecycle Extension (Optional)                      │
+│  Workflow Extension (Optional)                       │
 │  • Workflows define HOW to progress through maturity │
 │  • Gates: evidence/approval required per transition  │
 │  • Evidence tracking for auditing/compliance         │
@@ -770,8 +770,8 @@ The lifecycle extension works on top of the core `maturity` field (see [Core Sch
 └─────────────────────────────────────────────────────┘
 ```
 
-- **Without lifecycle**: Set `maturity` directly, no validation of transitions
-- **With lifecycle**: Workflows define gates that must be satisfied to advance
+- **Without workflow**: Set `maturity` directly, no validation of transitions
+- **With workflow**: Workflows define gates that must be satisfied to advance
 
 #### Library Fields
 
@@ -819,7 +819,7 @@ Workflows define gates for maturity transitions:
 
 ```json
 {
-  "extensions": ["lifecycle"],
+  "extensions": ["workflow"],
   "library": {
     "default_workflow": "standard",
     "workflows": [{
@@ -1113,8 +1113,8 @@ All extensions are designed to be composable. This section highlights synergisti
 
 | Extension A | Extension B | Interaction |
 |-------------|-------------|-------------|
-| `lifecycle` | `testing` | `lifecycle_state: tested` should align with test coverage |
-| `lifecycle` | `versioning` | Deprecation evidence pairs with `deprecated_since` |
+| `workflow` | `testing` | `workflow_state: tested` should align with test coverage |
+| `workflow` | `versioning` | Deprecation evidence pairs with `deprecated_since` |
 | `async` | `state` | Orthogonal: async describes runtime, state describes FSM APIs |
 | `events` | `observability` | Event-emitting types benefit from metrics/tracing |
 | `data` | `serialization` | Complementary: data validation + serialization formats |
@@ -1149,13 +1149,13 @@ A type can use both:
 }
 ```
 
-### lifecycle + versioning
+### workflow + versioning
 
-Deprecation workflows benefit from combining lifecycle evidence with versioning metadata:
+Deprecation workflows benefit from combining workflow evidence with versioning metadata:
 
 ```json
 {
-  "extensions": ["lifecycle", "versioning"],
+  "extensions": ["workflow", "versioning"],
   "library": {
     "types": [{
       "name": "OldClient",
@@ -1220,11 +1220,11 @@ Deprecation workflows benefit from combining lifecycle evidence with versioning 
 ### Plugin-Based Library
 
 ```json
-{"extensions": ["plugins", "lifecycle", "versioning"]}
+{"extensions": ["plugins", "workflow", "versioning"]}
 ```
 
 - `plugins`: Extension points and hooks
-- `lifecycle`: Track plugin API maturity
+- `workflow`: Track plugin API maturity
 - `versioning`: Plugin API versioning
 
 ---

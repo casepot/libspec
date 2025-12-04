@@ -22,8 +22,8 @@ def test_minimal_info_and_lint():
     run_cmd(["--spec", spec, "lint"])
 
 
-def test_lifecycle_info_and_lint_non_strict():
-    spec = str(FIXTURES / "lifecycle.json")
+def test_workflow_info_and_lint_non_strict():
+    spec = str(FIXTURES / "workflow.json")
     run_cmd(["--spec", spec, "--text", "info"])
     # default lint (non-strict) should pass even with informational issues
     run_cmd(["--spec", spec, "lint"])

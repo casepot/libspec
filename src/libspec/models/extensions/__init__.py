@@ -9,7 +9,7 @@ from .config import ConfigLibraryFields
 from .data import DataLibraryFields, DataMethodFields, DataTypeFields
 from .errors import ErrorsLibraryFields
 from .events import EventsLibraryFields, EventsMethodFields, EventsTypeFields
-from .lifecycle import (
+from .workflow import (
     ApprovalEvidence,
     BenchmarkEvidence,
     CustomEvidence,
@@ -22,12 +22,12 @@ from .lifecycle import (
     EvidenceSpec,
     EvidenceTypeSpec,
     GateSpec,
-    LifecycleFields,
-    LifecycleLibraryFields,
     MaturityGate,
     MigrationGuideEvidence,
     PrEvidence,
     TestsEvidence,
+    WorkflowFields,
+    WorkflowLibraryFields,
     WorkflowSpec,
 )
 from .observability import ObservabilityLibraryFields
@@ -51,7 +51,7 @@ from .versioning import (
 from .web import WebLibraryFields
 
 __all__ = [
-    # Lifecycle evidence and workflow types
+    # Workflow evidence and workflow types
     "EvidenceBase",
     "EvidenceSpec",
     "PrEvidence",
@@ -69,8 +69,8 @@ __all__ = [
     "MaturityGate",
     "EvidenceTypeSpec",
     "WorkflowSpec",
-    "LifecycleFields",
-    "LifecycleLibraryFields",
+    "WorkflowFields",
+    "WorkflowLibraryFields",
     # Async
     "AsyncMethodFields",
     "AsyncFunctionFields",

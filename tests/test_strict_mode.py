@@ -18,7 +18,7 @@ def test_extension_field_rejected_without_declaration(tmp_path: Path) -> None:
                     "id": "feat",
                     "category": "CORE",
                     "steps": ["step"],
-                    "lifecycle_state": "draft",  # lifecycle field without extension
+                    "workflow_state": "draft",  # workflow field without extension
                 }
             ],
         }
@@ -36,7 +36,7 @@ def test_test_path_must_exist_in_strict_mode(tmp_path: Path) -> None:
 
     spec_path = tmp_path / "spec.json"
     data = {
-        "extensions": ["lifecycle"],
+        "extensions": ["workflow"],
         "library": {
             "name": "mylib",
             "version": "0.1.0",
@@ -45,7 +45,7 @@ def test_test_path_must_exist_in_strict_mode(tmp_path: Path) -> None:
                     "name": "Greeter",
                     "kind": "class",
                     "module": "mylib",
-                    "lifecycle_state": "stable",
+                    "workflow_state": "stable",
                     "state_evidence": [
                         {"type": "tests", "path": "tests/test_example.py"}
                     ],

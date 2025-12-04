@@ -68,7 +68,7 @@ class LibspecModel(BaseModel):
 class ExtensibleModel(LibspecModel):
     """Base model for types that can have extension fields.
 
-    Uses extra="ignore" to allow extension fields (e.g., lifecycle_state)
+    Uses extra="ignore" to allow extension fields (e.g., workflow_state)
     even when the extension is not declared, for forward compatibility.
     This applies to entity types like TypeDef, FunctionDef, Feature, etc.
     """

@@ -81,7 +81,7 @@ CONCERN_EXTENSIONS = frozenset([
     "config",
     "versioning",
     "observability",
-    "lifecycle",
+    "workflow",
 ])
 
 ALL_EXTENSIONS = DOMAIN_EXTENSIONS | CONCERN_EXTENSIONS
