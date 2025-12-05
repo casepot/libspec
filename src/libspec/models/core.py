@@ -277,6 +277,10 @@ class GenericParam(LibspecModel):
         default=None,
         description="Python version when this construct was introduced",
     )
+    description: str | None = Field(
+        default=None,
+        description="Semantic meaning of this type parameter",
+    )
 
     @model_validator(mode="after")
     def validate_kind_specific_fields(self) -> Self:
@@ -449,6 +453,10 @@ class Method(ExtensibleModel):
     description: str | None = Field(
         default=None, description="What this method does"
     )
+    decorators: list[str] = Field(
+        default_factory=list,
+        description="Decorator names applied to this method (e.g., ['asynccontextmanager', 'cache'])",
+    )
     parameters: list[Parameter] = Field(
         default_factory=list, description="Detailed parameter specifications"
     )
@@ -549,6 +557,10 @@ class Constructor(LibspecModel):
     )
 
     signature: NonEmptyStr = Field(description="Constructor signature")
+    description: str | None = Field(
+        default=None,
+        description="What this constructor does and how to use it",
+    )
     parameters: list[Parameter] = Field(
         default_factory=list, description="Constructor parameters"
     )
@@ -786,6 +798,10 @@ class FunctionDef(ExtensibleModel):
     )
     description: str | None = Field(
         default=None, description="What this function does"
+    )
+    decorators: list[str] = Field(
+        default_factory=list,
+        description="Decorator names applied to this function (e.g., ['asynccontextmanager', 'cache'])",
     )
     preconditions: list[str] = Field(
         default_factory=list,
@@ -1060,6 +1076,18 @@ class Principle(LibspecModel):
     )
     anti_patterns: list[str] = Field(
         default_factory=list, description="What this principle forbids"
+    )
+    category: str | None = Field(
+        default=None,
+        description="Category for grouping related principles (e.g., 'actor_model', 'error_handling')",
+    )
+    refs: list[CrossReference] = Field(
+        default_factory=list,
+        description="Cross-references to types/functions governed by this principle",
+    )
+    source: str | None = Field(
+        default=None,
+        description="Provenance of this principle (e.g., 'design.md:45-47', 'ADR-012')",
     )
 
 

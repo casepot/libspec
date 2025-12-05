@@ -24,9 +24,10 @@ class TestEntityMaturity:
     """Test EntityMaturity enum values."""
 
     def test_all_maturity_stages_exist(self) -> None:
-        """All 8 maturity stages should be defined."""
+        """All 9 maturity stages should be defined."""
         stages = [
             EntityMaturity.IDEA,
+            EntityMaturity.PROPOSED,
             EntityMaturity.SPECIFIED,
             EntityMaturity.DESIGNED,
             EntityMaturity.IMPLEMENTED,
@@ -35,12 +36,13 @@ class TestEntityMaturity:
             EntityMaturity.RELEASED,
             EntityMaturity.DEPRECATED,
         ]
-        assert len(stages) == 8
-        assert len(EntityMaturity) == 8
+        assert len(stages) == 9
+        assert len(EntityMaturity) == 9
 
     def test_maturity_string_values(self) -> None:
         """Maturity enum values should be lowercase strings."""
         assert EntityMaturity.IDEA.value == "idea"
+        assert EntityMaturity.PROPOSED.value == "proposed"
         assert EntityMaturity.SPECIFIED.value == "specified"
         assert EntityMaturity.DESIGNED.value == "designed"
         assert EntityMaturity.IMPLEMENTED.value == "implemented"

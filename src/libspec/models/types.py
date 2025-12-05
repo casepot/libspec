@@ -80,19 +80,44 @@ NonEmptyStr = Annotated[str, StringConstraints(min_length=1)]
 """Generic non-empty string for required text fields."""
 
 # Cross-reference format with strict validation
+# Supports:
+#   1. Internal refs: #/types/TypeName, lib#/types/TypeName
+#   2. Internal refs with params: #/types/Handle[T], #/types/Dict[str, V]
+#   3. Nested refs: #/types/TypeName/methods/method_name, #/types/TypeName/properties/prop
+#   4. Extension categories: #/events/EventName, #/invariants/inv-id, #/integrations/IntegName
+#   5. External refs (colon): pydantic:BaseModel, typing:Protocol
+#   6. External refs (dot): pydantic.BaseModel, asyncio.CancelledError
+#   7. Bare type names: Handle[T], Enum, str (for stdlib/internal shorthand)
 # Entity names can be:
 #   - PascalCase for types (TypeName)
 #   - snake_case for functions (function_name)
 #   - kebab-case for features/principles (feature-id)
+#   - SCREAMING_SNAKE for events (EVENT_NAME)
 #   - dotted for modules (mylib.submodule)
 CrossReference = Annotated[
     str,
     StringConstraints(
-        pattern=r"^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+        pattern=(
+            r"^("
+            # Internal refs with optional nested path and type params:
+            # #/types/X, lib#/types/X[T], #/types/X/methods/y, #/events/EVENT_NAME
+            # Category is any lowercase identifier (allows extensions)
+            r"([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\[[^\]]+\])?"
+            r"|"
+            # External refs with colon: pkg:Type, pkg.mod:Type[Param]
+            r"[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\[[^\]]+\])?"
+            r"|"
+            # External refs with dot: pydantic.BaseModel, asyncio.TimeoutError
+            r"[a-z_][a-z0-9_]*\.[A-Z][a-zA-Z0-9_]*(\[[^\]]+\])?"
+            r"|"
+            # Bare type names with optional params: Handle[T], Enum, str
+            r"[A-Za-z_][A-Za-z0-9_]*(\[[^\]]+\])?"
+            r")$"
+        ),
         min_length=1,
     ),
 ]
-"""Reference to another entity: #/types/X, #/functions/Y, or external lib#/types/Z."""
+"""Reference to another entity: #/types/X, #/types/X/methods/y, lib#/types/X[T], pkg:Type, or bare TypeName."""
 
 # Type annotation strings (Python type expressions)
 TypeAnnotationStr = Annotated[str, StringConstraints(min_length=1)]
@@ -466,6 +491,7 @@ class EntityMaturity(str, Enum):
 
     Stages represent increasing maturity:
     - idea: Rough concept, may change significantly
+    - proposed: Formally proposed for inclusion (RFC, proposal doc, design review)
     - specified: Behavior described, acceptance criteria clear
     - designed: Shape defined (signatures, contracts, types)
     - implemented: Code exists
@@ -476,6 +502,7 @@ class EntityMaturity(str, Enum):
     """
 
     IDEA = "idea"
+    PROPOSED = "proposed"
     SPECIFIED = "specified"
     DESIGNED = "designed"
     IMPLEMENTED = "implemented"

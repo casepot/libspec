@@ -492,9 +492,10 @@
       "type": "object"
     },
     "EntityMaturity": {
-      "description": "Development maturity stage of an entity.\n\nUniversal progression tracking for types, functions, features, and methods.\nThis is the single source of truth for \"how developed is this entity?\"\n\nStages represent increasing maturity:\n- idea: Rough concept, may change significantly\n- specified: Behavior described, acceptance criteria clear\n- designed: Shape defined (signatures, contracts, types)\n- implemented: Code exists\n- tested: Tests exist and pass\n- documented: User-facing docs exist\n- released: Part of a public release\n- deprecated: Marked for removal",
+      "description": "Development maturity stage of an entity.\n\nUniversal progression tracking for types, functions, features, and methods.\nThis is the single source of truth for \"how developed is this entity?\"\n\nStages represent increasing maturity:\n- idea: Rough concept, may change significantly\n- proposed: Formally proposed for inclusion (RFC, proposal doc, design review)\n- specified: Behavior described, acceptance criteria clear\n- designed: Shape defined (signatures, contracts, types)\n- implemented: Code exists\n- tested: Tests exist and pass\n- documented: User-facing docs exist\n- released: Part of a public release\n- deprecated: Marked for removal",
       "enum": [
         "idea",
+        "proposed",
         "specified",
         "designed",
         "implemented",

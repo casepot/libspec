@@ -21,6 +21,19 @@
         }
       ],
       "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this constructor does and how to use it",
+          "title": "Description"
+        },
         "parameters": {
           "description": "Constructor parameters",
           "items": {
@@ -108,7 +121,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+              "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
               "type": "string"
             },
             {
@@ -138,9 +151,10 @@
       "type": "object"
     },
     "EntityMaturity": {
-      "description": "Development maturity stage of an entity.\n\nUniversal progression tracking for types, functions, features, and methods.\nThis is the single source of truth for \"how developed is this entity?\"\n\nStages represent increasing maturity:\n- idea: Rough concept, may change significantly\n- specified: Behavior described, acceptance criteria clear\n- designed: Shape defined (signatures, contracts, types)\n- implemented: Code exists\n- tested: Tests exist and pass\n- documented: User-facing docs exist\n- released: Part of a public release\n- deprecated: Marked for removal",
+      "description": "Development maturity stage of an entity.\n\nUniversal progression tracking for types, functions, features, and methods.\nThis is the single source of truth for \"how developed is this entity?\"\n\nStages represent increasing maturity:\n- idea: Rough concept, may change significantly\n- proposed: Formally proposed for inclusion (RFC, proposal doc, design review)\n- specified: Behavior described, acceptance criteria clear\n- designed: Shape defined (signatures, contracts, types)\n- implemented: Code exists\n- tested: Tests exist and pass\n- documented: User-facing docs exist\n- released: Part of a public release\n- deprecated: Marked for removal",
       "enum": [
         "idea",
+        "proposed",
         "specified",
         "designed",
         "implemented",
@@ -387,7 +401,7 @@
           "description": "Related types, functions, or features",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
             "type": "string"
           },
           "title": "References",
@@ -499,6 +513,14 @@
           ],
           "default": null,
           "description": "Yield value specification for async generators"
+        },
+        "decorators": {
+          "description": "Decorator names applied to this function (e.g., ['asynccontextmanager', 'cache'])",
+          "items": {
+            "type": "string"
+          },
+          "title": "Decorators",
+          "type": "array"
         },
         "deprecation": {
           "anyOf": [
@@ -695,7 +717,7 @@
           "description": "Related types or functions (cross-references)",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
             "type": "string"
           },
           "title": "Related",
@@ -823,6 +845,19 @@
           "default": null,
           "description": "Default type if not specified (Python 3.13+, PEP 696)",
           "title": "Default"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Semantic meaning of this type parameter",
+          "title": "Description"
         },
         "kind": {
           "$ref": "#/$defs/GenericParamKind",
@@ -1052,6 +1087,14 @@
           "default": null,
           "description": "Yield value specification for async generators"
         },
+        "decorators": {
+          "description": "Decorator names applied to this method (e.g., ['asynccontextmanager', 'cache'])",
+          "items": {
+            "type": "string"
+          },
+          "title": "Decorators",
+          "type": "array"
+        },
         "deprecation": {
           "anyOf": [
             {
@@ -1081,7 +1124,7 @@
           "anyOf": [
             {
               "minLength": 1,
-              "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+              "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
               "type": "string"
             },
             {
@@ -1530,6 +1573,19 @@
           "title": "Anti Patterns",
           "type": "array"
         },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Category for grouping related principles (e.g., 'actor_model', 'error_handling')",
+          "title": "Category"
+        },
         "id": {
           "description": "Unique identifier for this principle",
           "minLength": 1,
@@ -1557,6 +1613,29 @@
           "default": null,
           "description": "Why this principle exists",
           "title": "Rationale"
+        },
+        "refs": {
+          "description": "Cross-references to types/functions governed by this principle",
+          "items": {
+            "minLength": 1,
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
+            "type": "string"
+          },
+          "title": "Refs",
+          "type": "array"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Provenance of this principle (e.g., 'design.md:45-47', 'ADR-012')",
+          "title": "Source"
         },
         "statement": {
           "description": "Brief principle statement",
@@ -1796,7 +1875,7 @@
         "ref": {
           "description": "Reference to required entity (#/types/X, #/functions/Y, etc.)",
           "minLength": 1,
-          "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+          "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
           "title": "Ref",
           "type": "string"
         }
@@ -1918,7 +1997,7 @@
           "description": "Base classes or protocols",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
             "type": "string"
           },
           "title": "Bases",
@@ -2066,7 +2145,7 @@
           "description": "Related types or functions (cross-references)",
           "items": {
             "minLength": 1,
-            "pattern": "^([a-z_][a-z0-9_.]*)?#/(types|functions|features|principles|modules)/[a-zA-Z_][a-zA-Z0-9_-]*$",
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
             "type": "string"
           },
           "title": "Related",
