@@ -24,6 +24,10 @@ libspec query '.library.types[] | select(.kind=="protocol")'
 
 # Validate and lint
 libspec validate && libspec lint --strict
+
+# Generate Python stubs
+libspec codegen --dry-run                # Preview
+libspec codegen -o src/                  # Write files
 ```
 
 ## Global Options
@@ -458,6 +462,96 @@ idea: 2 | specified: 3 | designed: 5 | implemented: 8 | tested: 6 | released: 4
 
 ---
 
+### Code Generation Commands
+
+#### `libspec codegen`
+
+Generate Python stubs from a libspec.json specification. Outputs type definitions, function stubs with full signatures, and `__init__.py` files with exports.
+
+```bash
+libspec codegen --list-modules           # Show available modules
+libspec codegen -o src/                  # Generate all to src/
+libspec codegen -m mylib.server          # One module to stdout
+libspec codegen --pydantic -o generated/ # Use Pydantic models
+libspec codegen --dry-run                # Preview all files to stdout
+```
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--output PATH` | `-o` | Output directory for generated files |
+| `--module TEXT` | `-m` | Generate only this module (prints to stdout) |
+| `--dry-run` | | Preview generated code without writing files |
+| `--no-format` | | Skip ruff formatting |
+| `--pydantic` | | Generate Pydantic BaseModel classes instead of dataclasses |
+| `--list-modules` | | List available modules and exit |
+| `--skip-implemented` | | Skip entities with maturity='implemented' or 'tested' |
+
+**Generated output includes:**
+
+- **Type stubs**: Classes, dataclasses, enums, protocols, namedtuples, type aliases
+- **Function stubs**: Full signatures with type hints, `raise NotImplementedError` bodies
+- **Docstrings**: Rendered from libspec description, args, returns, raises, preconditions, postconditions
+- **Decorators**: Preserved from spec with proper imports inferred
+- **`__init__.py` files**: Generated from module exports with `__all__`
+
+**Dry-run output format:**
+
+```
+# --- mylib/server/tools.py (246 lines) ---
+"""Generated stubs for mylib.server.tools."""
+
+from __future__ import annotations
+...
+
+# --- mylib/models/__init__.py (42 lines) ---
+...
+
+# Would generate 17 files (1076 lines)
+```
+
+**Pydantic mode (`--pydantic`):**
+
+Generates Pydantic BaseModel classes instead of dataclasses:
+- Properties become `Field()` declarations with descriptions
+- Default values and constraints (`ge`, `le`) are preserved
+- Enums inherit from both `str` and `Enum` for JSON serialization
+
+```python
+# Standard output
+@dataclass
+class Config:
+    timeout: float = 30.0
+
+# With --pydantic
+class Config(BaseModel):
+    timeout: float = Field(default=30.0, description="Request timeout in seconds")
+```
+
+**Decorator handling:**
+
+Decorators defined in the spec are rendered with proper imports:
+
+```json
+{
+  "name": "my_tool",
+  "decorators": [
+    {"name": "mcp.tool", "call": true, "import_from": "mcp"}
+  ]
+}
+```
+
+Generates:
+```python
+import mcp
+
+@mcp.tool()
+def my_tool(...):
+```
+
+Stdlib decorators (`@lru_cache`, `@contextmanager`, `@dataclass`, etc.) are auto-detected and imported from their correct modules.
+
+---
+
 ## Lint Rules
 
 Rules are organized by category:
@@ -607,7 +701,6 @@ The `query` command requires jq to be installed separately:
 
 **High value:**
 - `libspec diff` – Compare two spec versions and surface API changes (no stub exists yet)
-- `libspec generate` – Emit Python stubs from a spec (no command registered)
 - `libspec watch` – Continuous validation while editing (not started)
 - Auto-fix for simple lint issues (e.g., kebab-case conversion); requires wiring a `--fix` mode and rule-level fixers
 
