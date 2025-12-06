@@ -1175,8 +1175,12 @@ def generate_module_code(
     for typ in content.types:
         body.append(generate_type_ast(typ, use_pydantic))
 
+    # Collect function notes for post-processing
+    function_notes: dict[str, str] = {}
     for func in content.functions:
         body.append(generate_function_ast(func, spec=spec))
+        if func.get("notes"):
+            function_notes[func["name"]] = func["notes"]
 
     module = ast.Module(body=body, type_ignores=[])
     ast.fix_missing_locations(module)
@@ -1184,6 +1188,7 @@ def generate_module_code(
     code = ast.unparse(module)
 
     code = _fix_module_docstring(code)
+    code = _insert_function_notes(code, function_notes)
 
     lines = code.split("\n")
     cleaned = []
@@ -1223,6 +1228,47 @@ def _fix_module_docstring(code: str) -> str:
                     break
 
     return "\n".join(lines)
+
+
+def _insert_function_notes(code: str, function_notes: dict[str, str]) -> str:
+    """Insert implementation notes as comments before raise NotImplementedError."""
+    if not function_notes:
+        return code
+
+    lines = code.split("\n")
+    result = []
+    i = 0
+
+    while i < len(lines):
+        line = lines[i]
+
+        # Look for: raise NotImplementedError("func_name not implemented")
+        # ast.unparse may use single or double quotes
+        stripped = line.strip()
+        if stripped.startswith("raise NotImplementedError("):
+            # Extract function name from the error message
+            for func_name, notes in function_notes.items():
+                # Check both quote styles
+                if (
+                    f'"{func_name} not implemented"' in stripped
+                    or f"'{func_name} not implemented'" in stripped
+                ):
+                    # Get indentation from current line
+                    indent = line[: len(line) - len(line.lstrip())]
+
+                    # Format notes as comments
+                    result.append(f"{indent}# Implementation notes:")
+                    for note_line in notes.split("\n"):
+                        if note_line.strip():
+                            result.append(f"{indent}# {note_line}")
+                        else:
+                            result.append(f"{indent}#")
+                    break
+
+        result.append(line)
+        i += 1
+
+    return "\n".join(result)
 
 
 def format_with_ruff(code: str) -> str:

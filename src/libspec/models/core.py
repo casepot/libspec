@@ -888,6 +888,10 @@ class FunctionDef(ExtensibleModel):
     example: str | None = Field(
         default=None, description="Code example showing typical usage"
     )
+    notes: str | None = Field(
+        default=None,
+        description="Implementation notes, internal guidance, or developer comments not for public docs",
+    )
     python_added: PythonVersion | None = Field(
         default=None,
         description="Python version when this function or its features were introduced",

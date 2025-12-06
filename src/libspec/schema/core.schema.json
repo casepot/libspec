@@ -21,6 +21,12 @@
         }
       ],
       "properties": {
+        "signature": {
+          "description": "Constructor signature",
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        },
         "description": {
           "anyOf": [
             {
@@ -42,6 +48,22 @@
           "title": "Parameters",
           "type": "array"
         },
+        "validates": {
+          "description": "Validation performed during construction",
+          "items": {
+            "type": "string"
+          },
+          "title": "Validates",
+          "type": "array"
+        },
+        "raises": {
+          "description": "Exceptions that may be raised during construction",
+          "items": {
+            "$ref": "#/$defs/RaisesClause"
+          },
+          "title": "Raises",
+          "type": "array"
+        },
         "python_added": {
           "anyOf": [
             {
@@ -56,28 +78,6 @@
           "default": null,
           "description": "Python version when this constructor pattern was introduced",
           "title": "Python Added"
-        },
-        "raises": {
-          "description": "Exceptions that may be raised during construction",
-          "items": {
-            "$ref": "#/$defs/RaisesClause"
-          },
-          "title": "Raises",
-          "type": "array"
-        },
-        "signature": {
-          "description": "Constructor signature",
-          "minLength": 1,
-          "title": "Signature",
-          "type": "string"
-        },
-        "validates": {
-          "description": "Validation performed during construction",
-          "items": {
-            "type": "string"
-          },
-          "title": "Validates",
-          "type": "array"
         }
       },
       "required": [
@@ -116,6 +116,18 @@
         }
       ],
       "properties": {
+        "name": {
+          "description": "Decorator name (may be dotted like 'mcp.tool' or 'pytest.mark.skip')",
+          "examples": [
+            "cache",
+            "lru_cache",
+            "mcp.tool",
+            "contextmanager"
+          ],
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
         "args": {
           "description": "Positional arguments as Python expressions",
           "examples": [
@@ -132,6 +144,23 @@
           },
           "title": "Args",
           "type": "array"
+        },
+        "kwargs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Keyword arguments as name -> Python expression mapping",
+          "examples": [
+            {
+              "maxsize": "128"
+            },
+            {
+              "frozen": "True",
+              "slots": "True"
+            }
+          ],
+          "title": "Kwargs",
+          "type": "object"
         },
         "call": {
           "default": true,
@@ -156,35 +185,6 @@
             "fastmcp"
           ],
           "title": "Import From"
-        },
-        "kwargs": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "Keyword arguments as name -> Python expression mapping",
-          "examples": [
-            {
-              "maxsize": "128"
-            },
-            {
-              "frozen": "True",
-              "slots": "True"
-            }
-          ],
-          "title": "Kwargs",
-          "type": "object"
-        },
-        "name": {
-          "description": "Decorator name (may be dotted like 'mcp.tool' or 'pytest.mark.skip')",
-          "examples": [
-            "cache",
-            "lru_cache",
-            "mcp.tool",
-            "contextmanager"
-          ],
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
         }
       },
       "required": [
@@ -209,6 +209,20 @@
           "default": null,
           "description": "Deprecation message (shown by type checkers and at runtime)",
           "title": "Message"
+        },
+        "since": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version when this was deprecated",
+          "title": "Since"
         },
         "removal": {
           "anyOf": [
@@ -238,20 +252,6 @@
           "default": null,
           "description": "Suggested replacement (cross-reference)",
           "title": "Replacement"
-        },
-        "since": {
-          "anyOf": [
-            {
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Version when this was deprecated",
-          "title": "Since"
         }
       },
       "title": "DeprecationInfo",
@@ -288,19 +288,6 @@
         }
       ],
       "properties": {
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "What this enum value represents",
-          "title": "Description"
-        },
         "name": {
           "description": "Enum member name",
           "minLength": 1,
@@ -322,6 +309,19 @@
           "default": null,
           "description": "Enum member value (e.g., 'auto()' or explicit value)",
           "title": "Value"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this enum value represents",
+          "title": "Description"
         }
       },
       "required": [
@@ -358,12 +358,6 @@
           "default": "defined",
           "description": "How this symbol is exported: defined, reexported, or aliased"
         },
-        "public": {
-          "default": true,
-          "description": "Whether this symbol is in __all__ (public API)",
-          "title": "Public",
-          "type": "boolean"
-        },
         "source_module": {
           "anyOf": [
             {
@@ -392,6 +386,12 @@
           "default": null,
           "description": "For aliased: the original name of the symbol (if different)",
           "title": "Source Name"
+        },
+        "public": {
+          "default": true,
+          "description": "Whether this symbol is in __all__ (public API)",
+          "title": "Public",
+          "type": "boolean"
         }
       },
       "required": [
@@ -451,40 +451,6 @@
         }
       ],
       "properties": {
-        "breaking_since": {
-          "anyOf": [
-            {
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Version where this became a breaking change",
-          "title": "Breaking Since"
-        },
-        "category": {
-          "description": "Feature category (SCREAMING_SNAKE_CASE)",
-          "minLength": 1,
-          "pattern": "^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$",
-          "title": "Category",
-          "type": "string"
-        },
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Detailed description (Markdown supported)",
-          "title": "Description"
-        },
         "id": {
           "description": "Unique identifier for this feature",
           "minLength": 1,
@@ -492,49 +458,12 @@
           "title": "Id",
           "type": "string"
         },
-        "maturity": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/EntityMaturity"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Development maturity stage of this feature"
-        },
-        "references": {
-          "description": "Related types, functions, or features",
-          "items": {
-            "minLength": 1,
-            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
-            "type": "string"
-          },
-          "title": "References",
-          "type": "array"
-        },
-        "requires": {
-          "description": "Entities that must be at specified maturity before this can advance",
-          "items": {
-            "$ref": "#/$defs/Requirement"
-          },
-          "title": "Requires",
-          "type": "array"
-        },
-        "status": {
-          "$ref": "#/$defs/FeatureStatus",
-          "default": "planned",
-          "description": "Implementation status"
-        },
-        "steps": {
-          "description": "Verification/test steps (at least one recommended; lint C001)",
-          "items": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "title": "Steps",
-          "type": "array"
+        "category": {
+          "description": "Feature category (SCREAMING_SNAKE_CASE)",
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$",
+          "title": "Category",
+          "type": "string"
         },
         "summary": {
           "anyOf": [
@@ -549,6 +478,57 @@
           "description": "Brief one-line summary",
           "title": "Summary"
         },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Detailed description (Markdown supported)",
+          "title": "Description"
+        },
+        "steps": {
+          "description": "Verification/test steps (at least one recommended; lint C001)",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Steps",
+          "type": "array"
+        },
+        "references": {
+          "description": "Related types, functions, or features",
+          "items": {
+            "minLength": 1,
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
+            "type": "string"
+          },
+          "title": "References",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/FeatureStatus",
+          "default": "planned",
+          "description": "Implementation status"
+        },
+        "breaking_since": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Version where this became a breaking change",
+          "title": "Breaking Since"
+        },
         "v1_planned": {
           "anyOf": [
             {
@@ -561,6 +541,26 @@
           "default": null,
           "description": "Whether planned for v1.0 release",
           "title": "V1 Planned"
+        },
+        "maturity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityMaturity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Development maturity stage of this feature"
+        },
+        "requires": {
+          "description": "Entities that must be at specified maturity before this can advance",
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Requires",
+          "type": "array"
         }
       },
       "required": [
@@ -609,6 +609,86 @@
         }
       ],
       "properties": {
+        "name": {
+          "description": "Function name",
+          "examples": [
+            "read_csv",
+            "calculate_hash",
+            "send_request"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/FunctionKind",
+          "default": "function",
+          "description": "Kind of callable",
+          "examples": [
+            "function",
+            "decorator",
+            "context_manager"
+          ]
+        },
+        "module": {
+          "description": "Module where this function is defined",
+          "examples": [
+            "mylib.io",
+            "mylib.utils"
+          ],
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
+          "title": "Module",
+          "type": "string"
+        },
+        "signature": {
+          "description": "Full signature including parameters and return type",
+          "examples": [
+            "(path: str, encoding: str = 'utf-8') -> DataFrame"
+          ],
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        },
+        "generic_params": {
+          "description": "Generic type parameters",
+          "items": {
+            "$ref": "#/$defs/GenericParam"
+          },
+          "title": "Generic Params",
+          "type": "array"
+        },
+        "parameters": {
+          "description": "Detailed parameter specifications",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "title": "Parameters",
+          "type": "array"
+        },
+        "returns": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReturnSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Return value specification"
+        },
+        "yields": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/YieldSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Yield value specification for sync generators"
+        },
         "async_yields": {
           "anyOf": [
             {
@@ -620,6 +700,27 @@
           ],
           "default": null,
           "description": "Yield value specification for async generators"
+        },
+        "overloads": {
+          "description": "@overload signature variants for type-checking",
+          "items": {
+            "$ref": "#/$defs/OverloadSpec"
+          },
+          "title": "Overloads",
+          "type": "array"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "What this function does",
+          "title": "Description"
         },
         "decorators": {
           "description": "Decorators applied to this function. Use strings for simple names, DecoratorSpec for decorators with arguments.",
@@ -652,63 +753,36 @@
           "title": "Decorators",
           "type": "array"
         },
-        "deprecation": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DeprecationInfo"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Deprecation information if this function is deprecated (PEP 702)"
-        },
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "What this function does",
-          "title": "Description"
-        },
-        "deterministic": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Whether same inputs always produce same outputs",
-          "title": "Deterministic"
-        },
-        "example": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Code example showing typical usage",
-          "title": "Example"
-        },
-        "generic_params": {
-          "description": "Generic type parameters",
+        "preconditions": {
+          "description": "State requirements before calling this function",
           "items": {
-            "$ref": "#/$defs/GenericParam"
+            "type": "string"
           },
-          "title": "Generic Params",
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "description": "Guaranteed state after this function completes",
+          "items": {
+            "type": "string"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "invariants": {
+          "description": "Conditions preserved by this function",
+          "items": {
+            "type": "string"
+          },
+          "title": "Invariants",
+          "type": "array"
+        },
+        "raises": {
+          "description": "Exceptions this function may raise",
+          "items": {
+            "$ref": "#/$defs/RaisesClause"
+          },
+          "title": "Raises",
           "type": "array"
         },
         "idempotent": {
@@ -724,89 +798,6 @@
           "description": "Whether calling multiple times has same effect as once",
           "title": "Idempotent"
         },
-        "invariants": {
-          "description": "Conditions preserved by this function",
-          "items": {
-            "type": "string"
-          },
-          "title": "Invariants",
-          "type": "array"
-        },
-        "kind": {
-          "$ref": "#/$defs/FunctionKind",
-          "default": "function",
-          "description": "Kind of callable",
-          "examples": [
-            "function",
-            "decorator",
-            "context_manager"
-          ]
-        },
-        "maturity": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/EntityMaturity"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Development maturity stage of this function"
-        },
-        "module": {
-          "description": "Module where this function is defined",
-          "examples": [
-            "mylib.io",
-            "mylib.utils"
-          ],
-          "minLength": 1,
-          "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
-          "title": "Module",
-          "type": "string"
-        },
-        "name": {
-          "description": "Function name",
-          "examples": [
-            "read_csv",
-            "calculate_hash",
-            "send_request"
-          ],
-          "title": "Name",
-          "type": "string"
-        },
-        "overloads": {
-          "description": "@overload signature variants for type-checking",
-          "items": {
-            "$ref": "#/$defs/OverloadSpec"
-          },
-          "title": "Overloads",
-          "type": "array"
-        },
-        "parameters": {
-          "description": "Detailed parameter specifications",
-          "items": {
-            "$ref": "#/$defs/Parameter"
-          },
-          "title": "Parameters",
-          "type": "array"
-        },
-        "postconditions": {
-          "description": "Guaranteed state after this function completes",
-          "items": {
-            "type": "string"
-          },
-          "title": "Postconditions",
-          "type": "array"
-        },
-        "preconditions": {
-          "description": "State requirements before calling this function",
-          "items": {
-            "type": "string"
-          },
-          "title": "Preconditions",
-          "type": "array"
-        },
         "pure": {
           "anyOf": [
             {
@@ -819,6 +810,55 @@
           "default": null,
           "description": "Whether function has no side effects",
           "title": "Pure"
+        },
+        "deterministic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether same inputs always produce same outputs",
+          "title": "Deterministic"
+        },
+        "related": {
+          "description": "Related types or functions (cross-references)",
+          "items": {
+            "minLength": 1,
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
+            "type": "string"
+          },
+          "title": "Related",
+          "type": "array"
+        },
+        "example": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Code example showing typical usage",
+          "title": "Example"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Implementation notes, internal guidance, or developer comments not for public docs",
+          "title": "Notes"
         },
         "python_added": {
           "anyOf": [
@@ -835,23 +875,29 @@
           "description": "Python version when this function or its features were introduced",
           "title": "Python Added"
         },
-        "raises": {
-          "description": "Exceptions this function may raise",
-          "items": {
-            "$ref": "#/$defs/RaisesClause"
-          },
-          "title": "Raises",
-          "type": "array"
+        "deprecation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DeprecationInfo"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Deprecation information if this function is deprecated (PEP 702)"
         },
-        "related": {
-          "description": "Related types or functions (cross-references)",
-          "items": {
-            "minLength": 1,
-            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
-            "type": "string"
-          },
-          "title": "Related",
-          "type": "array"
+        "maturity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntityMaturity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Development maturity stage of this function"
         },
         "requires": {
           "description": "Entities that must be at specified maturity before this can advance",
@@ -860,39 +906,6 @@
           },
           "title": "Requires",
           "type": "array"
-        },
-        "returns": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ReturnSpec"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Return value specification"
-        },
-        "signature": {
-          "description": "Full signature including parameters and return type",
-          "examples": [
-            "(path: str, encoding: str = 'utf-8') -> DataFrame"
-          ],
-          "minLength": 1,
-          "title": "Signature",
-          "type": "string"
-        },
-        "yields": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/YieldSpec"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Yield value specification for sync generators"
         }
       },
       "required": [
@@ -939,6 +952,17 @@
         }
       ],
       "properties": {
+        "name": {
+          "description": "Parameter name (e.g., 'T', 'P', 'Ts')",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/GenericParamKind",
+          "default": "type_var",
+          "description": "Kind of generic parameter: type_var (default), param_spec, or type_var_tuple"
+        },
         "bound": {
           "anyOf": [
             {
@@ -953,14 +977,10 @@
           "description": "Upper bound type constraint (TypeVar only)",
           "title": "Bound"
         },
-        "constraints": {
-          "description": "Type constraints for TypeVar (e.g., ['int', 'str'])",
-          "items": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "title": "Constraints",
-          "type": "array"
+        "variance": {
+          "$ref": "#/$defs/GenericVariance",
+          "default": "invariant",
+          "description": "Variance of the parameter (TypeVar only)"
         },
         "default": {
           "anyOf": [
@@ -976,29 +996,14 @@
           "description": "Default type if not specified (Python 3.13+, PEP 696)",
           "title": "Default"
         },
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Semantic meaning of this type parameter",
-          "title": "Description"
-        },
-        "kind": {
-          "$ref": "#/$defs/GenericParamKind",
-          "default": "type_var",
-          "description": "Kind of generic parameter: type_var (default), param_spec, or type_var_tuple"
-        },
-        "name": {
-          "description": "Parameter name (e.g., 'T', 'P', 'Ts')",
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
+        "constraints": {
+          "description": "Type constraints for TypeVar (e.g., ['int', 'str'])",
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Constraints",
+          "type": "array"
         },
         "python_added": {
           "anyOf": [
@@ -1015,10 +1020,18 @@
           "description": "Python version when this construct was introduced",
           "title": "Python Added"
         },
-        "variance": {
-          "$ref": "#/$defs/GenericVariance",
-          "default": "invariant",
-          "description": "Variance of the parameter (TypeVar only)"
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Semantic meaning of this type parameter",
+          "title": "Description"
         }
       },
       "required": [
@@ -1050,59 +1063,6 @@
     "Library": {
       "description": "Root container for a library specification.",
       "properties": {
-        "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Longer description (Markdown supported)",
-          "title": "Description"
-        },
-        "documentation": {
-          "anyOf": [
-            {
-              "format": "uri",
-              "maxLength": 2083,
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "URL to documentation",
-          "title": "Documentation"
-        },
-        "features": {
-          "description": "Behavioral specifications with test steps",
-          "items": {
-            "$ref": "#/$defs/Feature"
-          },
-          "title": "Features",
-          "type": "array"
-        },
-        "functions": {
-          "description": "Top-level function definitions",
-          "items": {
-            "$ref": "#/$defs/FunctionDef"
-          },
-          "title": "Functions",
-          "type": "array"
-        },
-        "modules": {
-          "description": "Package structure and module definitions",
-          "items": {
-            "$ref": "#/$defs/Module"
-          },
-          "title": "Modules",
-          "type": "array"
-        },
         "name": {
           "description": "Package name (lowercase, underscores allowed)",
           "maxLength": 100,
@@ -1111,13 +1071,11 @@
           "title": "Name",
           "type": "string"
         },
-        "principles": {
-          "description": "Design principles guiding the library",
-          "items": {
-            "$ref": "#/$defs/Principle"
-          },
-          "title": "Principles",
-          "type": "array"
+        "version": {
+          "description": "Semantic version string",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+          "title": "Version",
+          "type": "string"
         },
         "python_requires": {
           "anyOf": [
@@ -1132,6 +1090,32 @@
           "default": null,
           "description": "Python version requirement (e.g., '>=3.10')",
           "title": "Python Requires"
+        },
+        "tagline": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "One-line description of the library",
+          "title": "Tagline"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Longer description (Markdown supported)",
+          "title": "Description"
         },
         "repository": {
           "anyOf": [
@@ -1149,9 +1133,12 @@
           "description": "URL to source repository",
           "title": "Repository"
         },
-        "tagline": {
+        "documentation": {
           "anyOf": [
             {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
               "type": "string"
             },
             {
@@ -1159,8 +1146,24 @@
             }
           ],
           "default": null,
-          "description": "One-line description of the library",
-          "title": "Tagline"
+          "description": "URL to documentation",
+          "title": "Documentation"
+        },
+        "principles": {
+          "description": "Design principles guiding the library",
+          "items": {
+            "$ref": "#/$defs/Principle"
+          },
+          "title": "Principles",
+          "type": "array"
+        },
+        "modules": {
+          "description": "Package structure and module definitions",
+          "items": {
+            "$ref": "#/$defs/Module"
+          },
+          "title": "Modules",
+          "type": "array"
         },
         "types": {
           "description": "Type definitions (classes, protocols, enums, etc.)",
@@ -1170,11 +1173,21 @@
           "title": "Types",
           "type": "array"
         },
-        "version": {
-          "description": "Semantic version string",
-          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
-          "title": "Version",
-          "type": "string"
+        "functions": {
+          "description": "Top-level function definitions",
+          "items": {
+            "$ref": "#/$defs/FunctionDef"
+          },
+          "title": "Functions",
+          "type": "array"
+        },
+        "features": {
+          "description": "Behavioral specifications with test steps",
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Features",
+          "type": "array"
         }
       },
       "required": [
@@ -1205,17 +1218,40 @@
         }
       ],
       "properties": {
-        "async_yields": {
+        "name": {
+          "description": "Method name",
+          "examples": [
+            "read",
+            "write",
+            "connect",
+            "__init__"
+          ],
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "signature": {
+          "description": "Full signature including parameters and return type",
+          "examples": [
+            "(self, data: bytes) -> int",
+            "(self) -> None"
+          ],
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        },
+        "description": {
           "anyOf": [
             {
-              "$ref": "#/$defs/YieldSpec"
+              "type": "string"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "Yield value specification for async generators"
+          "description": "What this method does",
+          "title": "Description"
         },
         "decorators": {
           "description": "Decorators applied to this method. Use strings for simple names, DecoratorSpec for decorators with arguments.",
@@ -1245,30 +1281,81 @@
           "title": "Decorators",
           "type": "array"
         },
-        "deprecation": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DeprecationInfo"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Deprecation information if this method is deprecated (PEP 702)"
+        "parameters": {
+          "description": "Detailed parameter specifications",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "title": "Parameters",
+          "type": "array"
         },
-        "description": {
+        "returns": {
           "anyOf": [
             {
-              "type": "string"
+              "$ref": "#/$defs/ReturnSpec"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "What this method does",
-          "title": "Description"
+          "description": "Return value specification"
+        },
+        "yields": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/YieldSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Yield value specification for sync generators"
+        },
+        "async_yields": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/YieldSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Yield value specification for async generators"
+        },
+        "overloads": {
+          "description": "@overload signature variants for type-checking",
+          "items": {
+            "$ref": "#/$defs/OverloadSpec"
+          },
+          "title": "Overloads",
+          "type": "array"
+        },
+        "preconditions": {
+          "description": "State requirements before calling this method",
+          "items": {
+            "type": "string"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "description": "Guaranteed state after this method completes",
+          "items": {
+            "type": "string"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "raises": {
+          "description": "Exceptions this method may raise",
+          "items": {
+            "$ref": "#/$defs/RaisesClause"
+          },
+          "title": "Raises",
+          "type": "array"
         },
         "inherited_from": {
           "anyOf": [
@@ -1285,74 +1372,17 @@
           "description": "Base class this method is inherited from (if any)",
           "title": "Inherited From"
         },
-        "is_override": {
+        "visibility": {
           "anyOf": [
             {
-              "type": "boolean"
+              "$ref": "#/$defs/Visibility"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "Whether this method uses @override decorator (PEP 698, Python 3.12+)",
-          "title": "Is Override"
-        },
-        "maturity": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/EntityMaturity"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Development maturity stage of this method"
-        },
-        "name": {
-          "description": "Method name",
-          "examples": [
-            "read",
-            "write",
-            "connect",
-            "__init__"
-          ],
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
-        },
-        "overloads": {
-          "description": "@overload signature variants for type-checking",
-          "items": {
-            "$ref": "#/$defs/OverloadSpec"
-          },
-          "title": "Overloads",
-          "type": "array"
-        },
-        "parameters": {
-          "description": "Detailed parameter specifications",
-          "items": {
-            "$ref": "#/$defs/Parameter"
-          },
-          "title": "Parameters",
-          "type": "array"
-        },
-        "postconditions": {
-          "description": "Guaranteed state after this method completes",
-          "items": {
-            "type": "string"
-          },
-          "title": "Postconditions",
-          "type": "array"
-        },
-        "preconditions": {
-          "description": "State requirements before calling this method",
-          "items": {
-            "type": "string"
-          },
-          "title": "Preconditions",
-          "type": "array"
+          "description": "Symbol visibility (public/private/mangled/dunder). Defaults to public."
         },
         "python_added": {
           "anyOf": [
@@ -1369,59 +1399,42 @@
           "description": "Python version when this method or its features were introduced",
           "title": "Python Added"
         },
-        "raises": {
-          "description": "Exceptions this method may raise",
-          "items": {
-            "$ref": "#/$defs/RaisesClause"
-          },
-          "title": "Raises",
-          "type": "array"
-        },
-        "returns": {
+        "is_override": {
           "anyOf": [
             {
-              "$ref": "#/$defs/ReturnSpec"
+              "type": "boolean"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "Return value specification"
+          "description": "Whether this method uses @override decorator (PEP 698, Python 3.12+)",
+          "title": "Is Override"
         },
-        "signature": {
-          "description": "Full signature including parameters and return type",
-          "examples": [
-            "(self, data: bytes) -> int",
-            "(self) -> None"
-          ],
-          "minLength": 1,
-          "title": "Signature",
-          "type": "string"
-        },
-        "visibility": {
+        "deprecation": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Visibility"
+              "$ref": "#/$defs/DeprecationInfo"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "Symbol visibility (public/private/mangled/dunder). Defaults to public."
+          "description": "Deprecation information if this method is deprecated (PEP 702)"
         },
-        "yields": {
+        "maturity": {
           "anyOf": [
             {
-              "$ref": "#/$defs/YieldSpec"
+              "$ref": "#/$defs/EntityMaturity"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "Yield value specification for sync generators"
+          "description": "Development maturity stage of this method"
         }
       },
       "required": [
@@ -1448,13 +1461,12 @@
         }
       ],
       "properties": {
-        "depends_on": {
-          "description": "Internal module dependencies",
-          "items": {
-            "type": "string"
-          },
-          "title": "Depends On",
-          "type": "array"
+        "path": {
+          "description": "Dotted module path (e.g., 'mylib.submodule')",
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
+          "title": "Path",
+          "type": "string"
         },
         "description": {
           "anyOf": [
@@ -1484,6 +1496,14 @@
           "title": "Exports",
           "type": "array"
         },
+        "depends_on": {
+          "description": "Internal module dependencies",
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
         "external_deps": {
           "description": "External package dependencies",
           "items": {
@@ -1497,13 +1517,6 @@
           "description": "Whether this is a private/internal module",
           "title": "Internal",
           "type": "boolean"
-        },
-        "path": {
-          "description": "Dotted module path (e.g., 'mylib.submodule')",
-          "minLength": 1,
-          "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
-          "title": "Path",
-          "type": "string"
         }
       },
       "required": [
@@ -1526,6 +1539,32 @@
         }
       ],
       "properties": {
+        "signature": {
+          "description": "The overloaded signature variant",
+          "minLength": 1,
+          "title": "Signature",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "Parameter specifications for this overload",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          },
+          "title": "Parameters",
+          "type": "array"
+        },
+        "returns": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReturnSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Return type for this overload"
+        },
         "description": {
           "anyOf": [
             {
@@ -1538,14 +1577,6 @@
           "default": null,
           "description": "When this overload variant applies",
           "title": "Description"
-        },
-        "parameters": {
-          "description": "Parameter specifications for this overload",
-          "items": {
-            "$ref": "#/$defs/Parameter"
-          },
-          "title": "Parameters",
-          "type": "array"
         },
         "python_added": {
           "anyOf": [
@@ -1561,24 +1592,6 @@
           "default": null,
           "description": "Python version when this overload variant was introduced",
           "title": "Python Added"
-        },
-        "returns": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ReturnSpec"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Return type for this overload"
-        },
-        "signature": {
-          "description": "The overloaded signature variant",
-          "minLength": 1,
-          "title": "Signature",
-          "type": "string"
         }
       },
       "required": [
@@ -1604,6 +1617,37 @@
         }
       ],
       "properties": {
+        "name": {
+          "description": "Parameter name",
+          "examples": [
+            "data",
+            "timeout",
+            "callback"
+          ],
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Parameter type annotation",
+          "examples": [
+            "str",
+            "int",
+            "list[str]",
+            "Callable[[int], bool]"
+          ],
+          "title": "Type"
+        },
         "default": {
           "anyOf": [
             {
@@ -1635,17 +1679,6 @@
           "default": "positional_or_keyword",
           "description": "Parameter kind"
         },
-        "name": {
-          "description": "Parameter name",
-          "examples": [
-            "data",
-            "timeout",
-            "callback"
-          ],
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
-        },
         "python_added": {
           "anyOf": [
             {
@@ -1660,26 +1693,6 @@
           "default": null,
           "description": "Python version when this parameter's type was introduced",
           "title": "Python Added"
-        },
-        "type": {
-          "anyOf": [
-            {
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Parameter type annotation",
-          "examples": [
-            "str",
-            "int",
-            "list[str]",
-            "Callable[[int], bool]"
-          ],
-          "title": "Type"
         }
       },
       "required": [
@@ -1715,6 +1728,40 @@
         }
       ],
       "properties": {
+        "id": {
+          "description": "Unique identifier for this principle",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "statement": {
+          "description": "Brief principle statement",
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why this principle exists",
+          "title": "Rationale"
+        },
+        "implications": {
+          "description": "Concrete implications of this principle",
+          "items": {
+            "type": "string"
+          },
+          "title": "Implications",
+          "type": "array"
+        },
         "anti_patterns": {
           "description": "What this principle forbids",
           "items": {
@@ -1735,34 +1782,6 @@
           "default": null,
           "description": "Category for grouping related principles (e.g., 'actor_model', 'error_handling')",
           "title": "Category"
-        },
-        "id": {
-          "description": "Unique identifier for this principle",
-          "minLength": 1,
-          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
-          "title": "Id",
-          "type": "string"
-        },
-        "implications": {
-          "description": "Concrete implications of this principle",
-          "items": {
-            "type": "string"
-          },
-          "title": "Implications",
-          "type": "array"
-        },
-        "rationale": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Why this principle exists",
-          "title": "Rationale"
         },
         "refs": {
           "description": "Cross-references to types/functions governed by this principle",
@@ -1786,12 +1805,6 @@
           "default": null,
           "description": "Provenance of this principle (e.g., 'design.md:45-47', 'ADR-012')",
           "title": "Source"
-        },
-        "statement": {
-          "description": "Brief principle statement",
-          "minLength": 1,
-          "title": "Statement",
-          "type": "string"
         }
       },
       "required": [
@@ -1816,6 +1829,45 @@
         }
       ],
       "properties": {
+        "name": {
+          "description": "Property name",
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Property type annotation",
+          "title": "Type"
+        },
+        "readonly": {
+          "default": false,
+          "description": "Whether this is a read-only property",
+          "title": "Readonly",
+          "type": "boolean"
+        },
+        "readonly_marker": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For TypedDict: whether this uses PEP 705 ReadOnly[T] marker (Python 3.13+)",
+          "title": "Readonly Marker"
+        },
         "default": {
           "anyOf": [
             {
@@ -1842,11 +1894,30 @@
           "description": "What this property represents",
           "title": "Description"
         },
-        "name": {
-          "description": "Property name",
-          "minLength": 1,
-          "title": "Name",
-          "type": "string"
+        "visibility": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Visibility"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Symbol visibility (public/private/mangled). Defaults to public."
+        },
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For TypedDict: whether this key is required. None inherits total.",
+          "title": "Required"
         },
         "python_added": {
           "anyOf": [
@@ -1862,64 +1933,6 @@
           "default": null,
           "description": "Python version required for this property's type annotation",
           "title": "Python Added"
-        },
-        "readonly": {
-          "default": false,
-          "description": "Whether this is a read-only property",
-          "title": "Readonly",
-          "type": "boolean"
-        },
-        "readonly_marker": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "For TypedDict: whether this uses PEP 705 ReadOnly[T] marker (Python 3.13+)",
-          "title": "Readonly Marker"
-        },
-        "required": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "For TypedDict: whether this key is required. None inherits total.",
-          "title": "Required"
-        },
-        "type": {
-          "anyOf": [
-            {
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Property type annotation",
-          "title": "Type"
-        },
-        "visibility": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Visibility"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Symbol visibility (public/private/mangled). Defaults to public."
         }
       },
       "required": [
@@ -1942,21 +1955,6 @@
         }
       ],
       "properties": {
-        "python_added": {
-          "anyOf": [
-            {
-              "minLength": 3,
-              "pattern": "^3\\.\\d+(\\+)?$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Python version when this exception type was introduced",
-          "title": "Python Added"
-        },
         "type": {
           "description": "Exception type name",
           "minLength": 1,
@@ -1975,6 +1973,21 @@
           "default": null,
           "description": "Condition under which this exception is raised",
           "title": "When"
+        },
+        "python_added": {
+          "anyOf": [
+            {
+              "minLength": 3,
+              "pattern": "^3\\.\\d+(\\+)?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Python version when this exception type was introduced",
+          "title": "Python Added"
         }
       },
       "required": [
@@ -1997,6 +2010,13 @@
         }
       ],
       "properties": {
+        "ref": {
+          "description": "Reference to required entity (#/types/X, #/functions/Y, etc.)",
+          "minLength": 1,
+          "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
+          "title": "Ref",
+          "type": "string"
+        },
         "min_maturity": {
           "anyOf": [
             {
@@ -2021,13 +2041,6 @@
           "default": null,
           "description": "Why this requirement exists",
           "title": "Reason"
-        },
-        "ref": {
-          "description": "Reference to required entity (#/types/X, #/functions/Y, etc.)",
-          "minLength": 1,
-          "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
-          "title": "Ref",
-          "type": "string"
         }
       },
       "required": [
@@ -2050,6 +2063,12 @@
         }
       ],
       "properties": {
+        "type": {
+          "description": "Return type annotation",
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        },
         "description": {
           "anyOf": [
             {
@@ -2062,6 +2081,20 @@
           "default": null,
           "description": "What the return value represents",
           "title": "Description"
+        },
+        "narrows_type": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Type that input is narrowed to when True (for TypeGuard/TypeIs)",
+          "title": "Narrows Type"
         },
         "narrowing_kind": {
           "anyOf": [
@@ -2080,20 +2113,6 @@
           "description": "Kind of type narrowing: 'type_guard' (PEP 647) or 'type_is' (PEP 742)",
           "title": "Narrowing Kind"
         },
-        "narrows_type": {
-          "anyOf": [
-            {
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Type that input is narrowed to when True (for TypeGuard/TypeIs)",
-          "title": "Narrows Type"
-        },
         "python_added": {
           "anyOf": [
             {
@@ -2108,12 +2127,6 @@
           "default": null,
           "description": "Python version when this return type construct was introduced",
           "title": "Python Added"
-        },
-        "type": {
-          "description": "Return type annotation",
-          "minLength": 1,
-          "title": "Type",
-          "type": "string"
         }
       },
       "required": [
@@ -2143,6 +2156,47 @@
         }
       ],
       "properties": {
+        "name": {
+          "description": "Type name",
+          "examples": [
+            "Point",
+            "Connection",
+            "UserData"
+          ],
+          "minLength": 1,
+          "pattern": "^[A-Z][a-zA-Z0-9]*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/TypeKind",
+          "description": "Kind of type",
+          "examples": [
+            "class",
+            "protocol",
+            "enum",
+            "dataclass"
+          ]
+        },
+        "module": {
+          "description": "Module where this type is defined",
+          "examples": [
+            "mylib.core",
+            "mylib.models.user"
+          ],
+          "minLength": 1,
+          "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
+          "title": "Module",
+          "type": "string"
+        },
+        "generic_params": {
+          "description": "Generic type parameters",
+          "items": {
+            "$ref": "#/$defs/GenericParam"
+          },
+          "title": "Generic Params",
+          "type": "array"
+        },
         "bases": {
           "description": "Base classes or protocols",
           "items": {
@@ -2152,26 +2206,6 @@
           },
           "title": "Bases",
           "type": "array"
-        },
-        "class_methods": {
-          "description": "Class methods",
-          "items": {
-            "$ref": "#/$defs/Method"
-          },
-          "title": "Class Methods",
-          "type": "array"
-        },
-        "construction": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Constructor"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Constructor specification"
         },
         "docstring": {
           "anyOf": [
@@ -2186,6 +2220,90 @@
           "description": "What this type represents",
           "title": "Docstring"
         },
+        "type_target": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "For type_alias: the aliased type",
+          "title": "Type Target"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Property"
+          },
+          "description": "Instance properties/attributes",
+          "title": "Properties"
+        },
+        "methods": {
+          "description": "Instance methods",
+          "items": {
+            "$ref": "#/$defs/Method"
+          },
+          "title": "Methods",
+          "type": "array"
+        },
+        "class_methods": {
+          "description": "Class methods",
+          "items": {
+            "$ref": "#/$defs/Method"
+          },
+          "title": "Class Methods",
+          "type": "array"
+        },
+        "static_methods": {
+          "description": "Static methods",
+          "items": {
+            "$ref": "#/$defs/Method"
+          },
+          "title": "Static Methods",
+          "type": "array"
+        },
+        "values": {
+          "description": "Enum values (only for kind='enum')",
+          "items": {
+            "$ref": "#/$defs/EnumValue"
+          },
+          "title": "Values",
+          "type": "array"
+        },
+        "invariants": {
+          "description": "Statements that are always true for valid instances",
+          "items": {
+            "type": "string"
+          },
+          "title": "Invariants",
+          "type": "array"
+        },
+        "construction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Constructor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Constructor specification"
+        },
+        "related": {
+          "description": "Related types or functions (cross-references)",
+          "items": {
+            "minLength": 1,
+            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
+            "type": "string"
+          },
+          "title": "Related",
+          "type": "array"
+        },
         "example": {
           "anyOf": [
             {
@@ -2198,83 +2316,6 @@
           "default": null,
           "description": "Code example showing typical usage",
           "title": "Example"
-        },
-        "generic_params": {
-          "description": "Generic type parameters",
-          "items": {
-            "$ref": "#/$defs/GenericParam"
-          },
-          "title": "Generic Params",
-          "type": "array"
-        },
-        "invariants": {
-          "description": "Statements that are always true for valid instances",
-          "items": {
-            "type": "string"
-          },
-          "title": "Invariants",
-          "type": "array"
-        },
-        "kind": {
-          "$ref": "#/$defs/TypeKind",
-          "description": "Kind of type",
-          "examples": [
-            "class",
-            "protocol",
-            "enum",
-            "dataclass"
-          ]
-        },
-        "maturity": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/EntityMaturity"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Development maturity stage of this type"
-        },
-        "methods": {
-          "description": "Instance methods",
-          "items": {
-            "$ref": "#/$defs/Method"
-          },
-          "title": "Methods",
-          "type": "array"
-        },
-        "module": {
-          "description": "Module where this type is defined",
-          "examples": [
-            "mylib.core",
-            "mylib.models.user"
-          ],
-          "minLength": 1,
-          "pattern": "^[a-z_][a-z0-9_]*(?:\\.[a-z_][a-z0-9_]*)*$",
-          "title": "Module",
-          "type": "string"
-        },
-        "name": {
-          "description": "Type name",
-          "examples": [
-            "Point",
-            "Connection",
-            "UserData"
-          ],
-          "minLength": 1,
-          "pattern": "^[A-Z][a-zA-Z0-9]*$",
-          "title": "Name",
-          "type": "string"
-        },
-        "properties": {
-          "description": "Instance properties/attributes",
-          "items": {
-            "$ref": "#/$defs/Property"
-          },
-          "title": "Properties",
-          "type": "array"
         },
         "python_added": {
           "anyOf": [
@@ -2291,45 +2332,18 @@
           "description": "Python version when this type or its features were introduced",
           "title": "Python Added"
         },
-        "related": {
-          "description": "Related types or functions (cross-references)",
-          "items": {
-            "minLength": 1,
-            "pattern": "^(([a-z_][a-z0-9_.]*)?#/[a-z]+/[a-zA-Z_][a-zA-Z0-9_-]*(/[a-z_]+/[a-zA-Z_][a-zA-Z0-9_-]*)*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_.]*:[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[a-z_][a-z0-9_]*\\.[A-Z][a-zA-Z0-9_]*(\\[[^\\]]+\\])?|[A-Za-z_][A-Za-z0-9_]*(\\[[^\\]]+\\])?)$",
-            "type": "string"
-          },
-          "title": "Related",
-          "type": "array"
-        },
-        "requires": {
-          "description": "Entities that must be at specified maturity before this can advance",
-          "items": {
-            "$ref": "#/$defs/Requirement"
-          },
-          "title": "Requires",
-          "type": "array"
-        },
-        "static_methods": {
-          "description": "Static methods",
-          "items": {
-            "$ref": "#/$defs/Method"
-          },
-          "title": "Static Methods",
-          "type": "array"
-        },
-        "type_target": {
+        "typed_dict_total": {
           "anyOf": [
             {
-              "minLength": 1,
-              "type": "string"
+              "type": "boolean"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "For type_alias: the aliased type",
-          "title": "Type Target"
+          "description": "For TypedDict: whether all keys are required by default (total=True/False)",
+          "title": "Typed Dict Total"
         },
         "typed_dict_closed": {
           "anyOf": [
@@ -2344,25 +2358,24 @@
           "description": "For TypedDict: whether extra keys are forbidden (PEP 728, Python 3.13+)",
           "title": "Typed Dict Closed"
         },
-        "typed_dict_total": {
+        "maturity": {
           "anyOf": [
             {
-              "type": "boolean"
+              "$ref": "#/$defs/EntityMaturity"
             },
             {
               "type": "null"
             }
           ],
           "default": null,
-          "description": "For TypedDict: whether all keys are required by default (total=True/False)",
-          "title": "Typed Dict Total"
+          "description": "Development maturity stage of this type"
         },
-        "values": {
-          "description": "Enum values (only for kind='enum')",
+        "requires": {
+          "description": "Entities that must be at specified maturity before this can advance",
           "items": {
-            "$ref": "#/$defs/EnumValue"
+            "$ref": "#/$defs/Requirement"
           },
-          "title": "Values",
+          "title": "Requires",
           "type": "array"
         }
       },
@@ -2417,6 +2430,12 @@
         }
       ],
       "properties": {
+        "type": {
+          "description": "Yielded type annotation",
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        },
         "description": {
           "anyOf": [
             {
@@ -2444,12 +2463,6 @@
           "default": null,
           "description": "Python version when this yield type construct was introduced",
           "title": "Python Added"
-        },
-        "type": {
-          "description": "Yielded type annotation",
-          "minLength": 1,
-          "title": "Type",
-          "type": "string"
         }
       },
       "required": [
