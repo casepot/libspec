@@ -1373,7 +1373,7 @@ def codegen(
         libspec codegen -o src/                  # Generate all to src/
         libspec codegen -m mylib.server          # One module to stdout
         libspec codegen --pydantic -o generated/ # Use Pydantic models
-        libspec codegen --dry-run                # Preview without writing
+        libspec codegen --dry-run                # Preview all files to stdout
     """
     loaded = ctx.get_spec()
     spec = loaded.data  # Get raw dict data for codegen
@@ -1414,9 +1414,9 @@ def codegen(
         click.echo(code)
         return
 
-    # Generate all mode
-    if output:
-        output_dir = Path(output)
+    # Generate all mode (triggered by -o or --dry-run)
+    if output or dry_run:
+        output_dir = Path(output) if output else Path(".")
         results: list[GenerationResult] = []
 
         for module_path, content in modules.items():
@@ -1436,13 +1436,12 @@ def codegen(
             result = GenerationResult(
                 module=module_path,
                 code=code,
-                path=file_path if not dry_run else None,
+                path=file_path,
             )
 
             if not dry_run:
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 file_path.write_text(code)
-                result.path = file_path
 
             results.append(result)
 
@@ -1492,22 +1491,25 @@ def codegen(
             result = GenerationResult(
                 module=f"{mod_path}.__init__",
                 code=init_code,
-                path=init_file_path if not dry_run else None,
+                path=init_file_path,
             )
 
             if not dry_run:
                 init_file_path.parent.mkdir(parents=True, exist_ok=True)
                 init_file_path.write_text(init_code)
-                result.path = init_file_path
 
             results.append(result)
 
         # Output results
         if dry_run:
+            total_lines = 0
             for result in results:
-                click.echo(f"# === {result.module} ===")
+                line_count = result.code.count('\n') + 1
+                total_lines += line_count
+                click.echo(f"# --- {result.path} ({line_count} lines) ---")
                 click.echo(result.code)
                 click.echo()
+            click.echo(f"# Would generate {len(results)} files ({total_lines} lines)")
         else:
             for result in results:
                 click.echo(f"Generated: {result.path}")
