@@ -113,7 +113,7 @@ def cli(
 
 
 # Import and register commands (must be after cli definition to avoid circular imports)
-from libspec.cli.commands import analyze, inspect, lifecycle, navigate, query, validate  # noqa: E402
+from libspec.cli.commands import analyze, codegen, inspect, lifecycle, navigate, query, validate  # noqa: E402
 
 cli.add_command(inspect.info)  # type: ignore[has-type]
 cli.add_command(inspect.types)  # type: ignore[has-type]
@@ -140,3 +140,6 @@ cli.add_command(navigate.next_cmd, name="next")  # type: ignore[has-type]
 cli.add_command(navigate.blocked)  # type: ignore[has-type]
 # Navigate group for less common commands
 cli.add_command(navigate.navigate)  # type: ignore[has-type]
+
+# Code generation
+cli.add_command(codegen.codegen)  # type: ignore[has-type]

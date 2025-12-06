@@ -86,6 +86,113 @@
       "title": "Constructor",
       "type": "object"
     },
+    "DecoratorSpec": {
+      "additionalProperties": false,
+      "description": "A decorator applied to a function, method, or class.\n\nSupports both simple decorator names and decorators with arguments.\nFor simple cases, use a plain string in the decorators list.\nFor decorators with arguments, use this model.\n\nExamples:\n    # Simple (just name): [\"cache\", \"staticmethod\"]\n    # With args: {\"name\": \"lru_cache\", \"kwargs\": {\"maxsize\": \"128\"}}\n    # Dotted name: {\"name\": \"mcp.tool\"}\n    # With positional arg: {\"name\": \"deprecated\", \"args\": [\"'Use new_func'\"]}",
+      "examples": [
+        {
+          "name": "cache"
+        },
+        {
+          "kwargs": {
+            "maxsize": "128"
+          },
+          "name": "lru_cache"
+        },
+        {
+          "name": "mcp.tool"
+        },
+        {
+          "args": [
+            "'Use new_function instead'"
+          ],
+          "name": "deprecated"
+        },
+        {
+          "kwargs": {
+            "reason": "'Not implemented'"
+          },
+          "name": "pytest.mark.skip"
+        }
+      ],
+      "properties": {
+        "args": {
+          "description": "Positional arguments as Python expressions",
+          "examples": [
+            [
+              "'reason string'"
+            ],
+            [
+              "SomeClass",
+              "True"
+            ]
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "call": {
+          "default": true,
+          "description": "Whether to call the decorator. False means @name instead of @name()",
+          "title": "Call",
+          "type": "boolean"
+        },
+        "import_from": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Module to import from (auto-inferred for dotted names and known stdlib)",
+          "examples": [
+            "functools",
+            "contextlib",
+            "fastmcp"
+          ],
+          "title": "Import From"
+        },
+        "kwargs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Keyword arguments as name -> Python expression mapping",
+          "examples": [
+            {
+              "maxsize": "128"
+            },
+            {
+              "frozen": "True",
+              "slots": "True"
+            }
+          ],
+          "title": "Kwargs",
+          "type": "object"
+        },
+        "name": {
+          "description": "Decorator name (may be dotted like 'mcp.tool' or 'pytest.mark.skip')",
+          "examples": [
+            "cache",
+            "lru_cache",
+            "mcp.tool",
+            "contextmanager"
+          ],
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Decorator Specification",
+      "type": "object"
+    },
     "DeprecationInfo": {
       "additionalProperties": false,
       "description": "Deprecation information for a function, method, or parameter (PEP 702).",
@@ -515,9 +622,32 @@
           "description": "Yield value specification for async generators"
         },
         "decorators": {
-          "description": "Decorator names applied to this function (e.g., ['asynccontextmanager', 'cache'])",
+          "description": "Decorators applied to this function. Use strings for simple names, DecoratorSpec for decorators with arguments.",
+          "examples": [
+            [
+              "cache"
+            ],
+            [
+              {
+                "name": "mcp.tool"
+              },
+              {
+                "kwargs": {
+                  "maxsize": "128"
+                },
+                "name": "lru_cache"
+              }
+            ]
+          ],
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/DecoratorSpec"
+              }
+            ]
           },
           "title": "Decorators",
           "type": "array"
@@ -1088,9 +1218,29 @@
           "description": "Yield value specification for async generators"
         },
         "decorators": {
-          "description": "Decorator names applied to this method (e.g., ['asynccontextmanager', 'cache'])",
+          "description": "Decorators applied to this method. Use strings for simple names, DecoratorSpec for decorators with arguments.",
+          "examples": [
+            [
+              "cache"
+            ],
+            [
+              {
+                "kwargs": {
+                  "maxsize": "128"
+                },
+                "name": "lru_cache"
+              }
+            ]
+          ],
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/DecoratorSpec"
+              }
+            ]
           },
           "title": "Decorators",
           "type": "array"

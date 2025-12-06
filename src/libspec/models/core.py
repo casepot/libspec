@@ -203,6 +203,58 @@ class DeprecationInfo(LibspecModel):
         return self
 
 
+class DecoratorSpec(LibspecModel):
+    """A decorator applied to a function, method, or class.
+
+    Supports both simple decorator names and decorators with arguments.
+    For simple cases, use a plain string in the decorators list.
+    For decorators with arguments, use this model.
+
+    Examples:
+        # Simple (just name): ["cache", "staticmethod"]
+        # With args: {"name": "lru_cache", "kwargs": {"maxsize": "128"}}
+        # Dotted name: {"name": "mcp.tool"}
+        # With positional arg: {"name": "deprecated", "args": ["'Use new_func'"]}
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "title": "Decorator Specification",
+            "examples": [
+                {"name": "cache"},
+                {"name": "lru_cache", "kwargs": {"maxsize": "128"}},
+                {"name": "mcp.tool"},
+                {"name": "deprecated", "args": ["'Use new_function instead'"]},
+                {"name": "pytest.mark.skip", "kwargs": {"reason": "'Not implemented'"}},
+            ],
+        }
+    )
+
+    name: NonEmptyStr = Field(
+        description="Decorator name (may be dotted like 'mcp.tool' or 'pytest.mark.skip')",
+        examples=["cache", "lru_cache", "mcp.tool", "contextmanager"],
+    )
+    args: list[str] = Field(
+        default_factory=list,
+        description="Positional arguments as Python expressions",
+        examples=[["'reason string'"], ["SomeClass", "True"]],
+    )
+    kwargs: dict[str, str] = Field(
+        default_factory=dict,
+        description="Keyword arguments as name -> Python expression mapping",
+        examples=[{"maxsize": "128"}, {"frozen": "True", "slots": "True"}],
+    )
+    call: bool = Field(
+        default=True,
+        description="Whether to call the decorator. False means @name instead of @name()",
+    )
+    import_from: str | None = Field(
+        default=None,
+        description="Module to import from (auto-inferred for dotted names and known stdlib)",
+        examples=["functools", "contextlib", "fastmcp"],
+    )
+
+
 class Requirement(LibspecModel):
     """A dependency requirement with optional maturity constraint.
 
@@ -453,9 +505,10 @@ class Method(ExtensibleModel):
     description: str | None = Field(
         default=None, description="What this method does"
     )
-    decorators: list[str] = Field(
+    decorators: list[str | DecoratorSpec] = Field(
         default_factory=list,
-        description="Decorator names applied to this method (e.g., ['asynccontextmanager', 'cache'])",
+        description="Decorators applied to this method. Use strings for simple names, DecoratorSpec for decorators with arguments.",
+        examples=[["cache"], [{"name": "lru_cache", "kwargs": {"maxsize": "128"}}]],
     )
     parameters: list[Parameter] = Field(
         default_factory=list, description="Detailed parameter specifications"
@@ -799,9 +852,10 @@ class FunctionDef(ExtensibleModel):
     description: str | None = Field(
         default=None, description="What this function does"
     )
-    decorators: list[str] = Field(
+    decorators: list[str | DecoratorSpec] = Field(
         default_factory=list,
-        description="Decorator names applied to this function (e.g., ['asynccontextmanager', 'cache'])",
+        description="Decorators applied to this function. Use strings for simple names, DecoratorSpec for decorators with arguments.",
+        examples=[["cache"], [{"name": "mcp.tool"}, {"name": "lru_cache", "kwargs": {"maxsize": "128"}}]],
     )
     preconditions: list[str] = Field(
         default_factory=list,
