@@ -14,8 +14,16 @@ import subprocess
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import NamedTuple
 
 import click
+
+
+class ImportResult(NamedTuple):
+    """Result of collecting imports for a module."""
+
+    runtime: list[str]  # Imports needed at runtime (base classes, decorators, defaults)
+    type_only: list[str]  # Imports only needed for type checking
 
 from libspec.cli.app import Context, pass_context
 
@@ -65,7 +73,9 @@ STDLIB_TYPE_IMPORTS: dict[str, str] = {
     r"\bMutableMapping\b": "from collections.abc import MutableMapping",
     r"\bIterable\b": "from collections.abc import Iterable",
     r"\bCoroutine\b": "from collections.abc import Coroutine",
+    r"\bHashable\b": "from collections.abc import Hashable",
     # typing - special forms
+    r"\bAny\b": "from typing import Any",
     r"\bLiteral\b": "from typing import Literal",
     r"\bTypeVar\b": "from typing import TypeVar",
     r"\bParamSpec\b": "from typing import ParamSpec",
@@ -79,6 +89,9 @@ STDLIB_TYPE_IMPORTS: dict[str, str] = {
     r"\bNoReturn\b": "from typing import NoReturn",
     r"\bUnpack\b": "from typing import Unpack",
     r"\bConcatenate\b": "from typing import Concatenate",
+    r"\bAnnotated\b": "from typing import Annotated",
+    r"\bUnion\b": "from typing import Union",
+    r"\bOptional\b": "from typing import Optional",
     # contextlib
     r"\bContextManager\b": "from contextlib import AbstractContextManager as ContextManager",
     r"\bAsyncContextManager\b": "from contextlib import AbstractAsyncContextManager as AsyncContextManager",
@@ -551,7 +564,11 @@ def generate_function_ast(
     }
 
     for p in sig.params:
-        arg = ast.arg(arg=p.name, annotation=make_type_annotation(p.type_hint))
+        type_hint = p.type_hint
+        # Fix type annotation when default is None but type doesn't include None
+        if p.default == "None" and type_hint and "None" not in type_hint:
+            type_hint = f"{type_hint} | None"
+        arg = ast.arg(arg=p.name, annotation=make_type_annotation(type_hint))
         kind = param_kind_map.get(p.name, "positional_or_keyword")
 
         default_node = None
@@ -586,6 +603,14 @@ def generate_function_ast(
     returns_node = None
     if sig.returns:
         returns_node = make_type_annotation(sig.returns)
+    elif func.get("returns"):
+        # Fall back to spec's returns.type if signature lacks return type
+        ret_spec = func["returns"]
+        if isinstance(ret_spec, dict) and ret_spec.get("type"):
+            returns_node = make_type_annotation(normalize_type(ret_spec["type"]))
+    # Note: If no return type is specified, we leave it as None
+    # rather than defaulting to -> None, as stub methods may have
+    # meaningful return types that should be specified in the spec
 
     docstring = render_function_docstring(func, spec)
 
@@ -788,6 +813,8 @@ def generate_dataclass_ast(typ: dict) -> ast.ClassDef:
             "name": method["name"],
             "signature": method.get("signature", "()"),
             "description": method.get("description", ""),
+            "returns": method.get("returns"),  # Pass through for return type fallback
+            "parameters": method.get("parameters", []),  # Pass through for defaults
         }
         body.append(generate_function_ast(method_dict, is_method=True))
 
@@ -899,6 +926,8 @@ def generate_pydantic_model_ast(typ: dict) -> ast.ClassDef:
             "name": method["name"],
             "signature": method.get("signature", "()"),
             "description": method.get("description", ""),
+            "returns": method.get("returns"),  # Pass through for return type fallback
+            "parameters": method.get("parameters", []),  # Pass through for defaults
         }
         body.append(generate_function_ast(method_dict, is_method=True))
 
@@ -938,6 +967,8 @@ def generate_class_ast(typ: dict) -> ast.ClassDef:
             "name": method["name"],
             "signature": method.get("signature", "()"),
             "description": method.get("description", ""),
+            "returns": method.get("returns"),  # Pass through for return type fallback
+            "parameters": method.get("parameters", []),  # Pass through for defaults
         }
         body.append(generate_function_ast(method_dict, is_method=True))
 
@@ -972,6 +1003,8 @@ def generate_protocol_ast(typ: dict) -> ast.ClassDef:
             "name": method["name"],
             "signature": method.get("signature", "()"),
             "description": method.get("description", ""),
+            "returns": method.get("returns"),  # Pass through for return type fallback
+            "parameters": method.get("parameters", []),  # Pass through for defaults
         }
         body.append(generate_function_ast(method_dict, is_method=True))
 
@@ -992,14 +1025,17 @@ def generate_protocol_ast(typ: dict) -> ast.ClassDef:
     )
 
 
-def generate_type_alias_ast(typ: dict) -> ast.Assign:
-    """Build AST for a type alias."""
+def generate_type_alias_ast(typ: dict) -> ast.AnnAssign:
+    """Build AST for a type alias with proper TypeAlias annotation."""
     name = typ["name"]
-    target_type = typ.get("target", "Any")
+    # Use type_target field (per core.py model) with fallback to target
+    target_type = typ.get("type_target") or typ.get("target", "Any")
 
-    return ast.Assign(
-        targets=[ast.Name(id=name, ctx=ast.Store())],
+    return ast.AnnAssign(
+        target=ast.Name(id=name, ctx=ast.Store()),
+        annotation=ast.Name(id="TypeAlias", ctx=ast.Load()),
         value=make_type_annotation(target_type),
+        simple=1,
     )
 
 
@@ -1090,15 +1126,57 @@ def collect_imports(
     type_module_map: dict[str, str] | None = None,
     current_module: str = "",
     use_pydantic: bool = False,
-) -> list[str]:
-    """Determine required imports for a module."""
-    imports = set()
+) -> ImportResult:
+    """Determine required imports for a module.
 
-    imports.add("from __future__ import annotations")
+    Returns ImportResult with runtime and type_only import lists.
+    Runtime imports are needed at module load time (base classes, decorators, defaults).
+    Type-only imports are only needed for type checking and go in TYPE_CHECKING blocks.
+    """
+    runtime_imports: set[str] = set()
+    type_only_imports: set[str] = set()
+
+    runtime_imports.add("from __future__ import annotations")
+
+    # Track types defined locally to avoid importing them
+    local_type_names = {t.get("name") for t in content.types if t.get("name")}
+
+    # Track types used in default values (these need runtime imports)
+    runtime_types: set[str] = set()
+
+    # Check for type aliases that need TypeAlias import (runtime - used in assignment)
+    has_type_alias = any(t.get("kind") == "type_alias" for t in content.types)
+    if has_type_alias:
+        runtime_imports.add("from typing import TypeAlias")
+
+    # Scan type alias targets for types that need imports (runtime - evaluated at module load)
+    for typ in content.types:
+        if typ.get("kind") == "type_alias":
+            target_type = typ.get("type_target") or typ.get("target", "")
+            # Check for stdlib types in the target
+            for pattern, import_stmt in STDLIB_TYPE_IMPORTS.items():
+                if re.search(pattern, target_type):
+                    runtime_imports.add(import_stmt)
+            # Check for pydantic Field in type alias (e.g., Annotated[..., Field(...)])
+            if re.search(r"\bField\b", target_type):
+                # Import Field for runtime use in Annotated
+                runtime_imports.add("from pydantic import Field")
+            # Collect referenced types for cross-module imports
+            if type_module_map:
+                for type_name in re.findall(r"\b([A-Z][A-Za-z0-9]+)\b", target_type):
+                    if type_name in type_module_map and type_module_map[type_name] != current_module:
+                        source_module = type_module_map[type_name]
+                        # Type aliases need runtime imports since they're evaluated
+                        runtime_imports.add(f"from {source_module} import {type_name}")
 
     has_dataclass = any(t.get("kind") == "dataclass" for t in content.types)
+    # kind="class" types also use pydantic BaseModel with Field() for properties
+    has_pydantic_class = any(
+        t.get("kind") in ("class", "model", None) for t in content.types
+    )
 
-    if use_pydantic and has_dataclass:
+    # Framework imports are always runtime (used in class definitions)
+    if use_pydantic and (has_dataclass or has_pydantic_class):
         needs_field = False
         for typ in content.types:
             if typ.get("kind") == "enum":
@@ -1119,9 +1197,9 @@ def collect_imports(
                 break
 
         if needs_field:
-            imports.add("from pydantic import BaseModel, Field")
+            runtime_imports.add("from pydantic import BaseModel, Field")
         else:
-            imports.add("from pydantic import BaseModel")
+            runtime_imports.add("from pydantic import BaseModel")
 
     elif has_dataclass:
         needs_field = False
@@ -1144,13 +1222,13 @@ def collect_imports(
                 break
 
         if needs_field:
-            imports.add("from dataclasses import dataclass, field")
+            runtime_imports.add("from dataclasses import dataclass, field")
         else:
-            imports.add("from dataclasses import dataclass")
+            runtime_imports.add("from dataclasses import dataclass")
 
     has_enum = any(t.get("kind") == "enum" for t in content.types)
     if has_enum:
-        imports.add("import enum")
+        runtime_imports.add("import enum")
 
     has_context_manager = any(
         f.get("kind") == "context_manager" for f in content.functions
@@ -1159,15 +1237,16 @@ def collect_imports(
         f.get("kind") == "async_context_manager" for f in content.functions
     )
     if has_context_manager:
-        imports.add("from contextlib import contextmanager")
+        runtime_imports.add("from contextlib import contextmanager")
     if has_async_context_manager:
-        imports.add("from contextlib import asynccontextmanager")
+        runtime_imports.add("from contextlib import asynccontextmanager")
 
     has_protocol = any(t.get("kind") == "protocol" for t in content.types)
     if has_protocol:
-        imports.add("from typing import Protocol")
+        runtime_imports.add("from typing import Protocol")
 
     # Collect imports for generic_params (TypeVar, ParamSpec, TypeVarTuple)
+    # These are runtime because they're assigned at module level
     generic_param_kinds: set[str] = set()
     for typ in content.types:
         for param in typ.get("generic_params", []):
@@ -1189,11 +1268,11 @@ def collect_imports(
                 generic_param_kinds.add(kind)
 
     if "type_var" in generic_param_kinds:
-        imports.add("from typing import TypeVar")
+        runtime_imports.add("from typing import TypeVar")
     if "param_spec" in generic_param_kinds:
-        imports.add("from typing import ParamSpec")
+        runtime_imports.add("from typing import ParamSpec")
     if "type_var_tuple" in generic_param_kinds:
-        imports.add("from typing import TypeVarTuple")
+        runtime_imports.add("from typing import TypeVarTuple")
 
     all_sigs = [f.get("signature", "") for f in content.functions]
     for typ in content.types:
@@ -1207,22 +1286,33 @@ def collect_imports(
     ]
     combined = " ".join(all_sigs + all_types)
 
+    # Stdlib type imports are type-only (only used in annotations with PEP 563)
     if "Any" in combined:
-        imports.add("from typing import Any")
+        type_only_imports.add("from typing import Any")
 
-    # Check for known stdlib types
+    # Check for known stdlib types - these are type-only
     for pattern, import_stmt in STDLIB_TYPE_IMPORTS.items():
         if re.search(pattern, combined):
-            imports.add(import_stmt)
+            type_only_imports.add(import_stmt)
 
     if type_module_map:
-        referenced_types = set()
+        referenced_types = set()  # Types used in annotations
+        runtime_types: set[str] = set()  # Types used in defaults (need runtime import)
 
         for func in content.functions:
             sig = func.get("signature", "")
             for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", sig):
                 if word in type_module_map:
                     referenced_types.add(word)
+            # Scan parameter defaults for type references (runtime evaluation)
+            # Handles cases like: priority: Priority = Priority.NORMAL
+            for param in func.get("parameters", []):
+                default = param.get("default", "")
+                if default and default not in ("REQUIRED", "None", "True", "False"):
+                    for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", default):
+                        if word in type_module_map:
+                            referenced_types.add(word)
+                            runtime_types.add(word)  # Used in default = runtime
 
         for typ in content.types:
             for prop in typ.get("properties", []):
@@ -1237,18 +1327,39 @@ def collect_imports(
                     for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", sig):
                         if word in type_module_map:
                             referenced_types.add(word)
+                    # Scan method parameter defaults for type references
+                    for param in method.get("parameters", []):
+                        default = param.get("default", "")
+                        if default and default not in ("REQUIRED", "None", "True", "False"):
+                            for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", default):
+                                if word in type_module_map:
+                                    referenced_types.add(word)
+                                    runtime_types.add(word)  # Used in default = runtime
 
-        module_imports: dict[str, list[str]] = defaultdict(list)
+        # Separate imports into runtime and type-only based on usage
+        runtime_module_imports: dict[str, list[str]] = defaultdict(list)
+        type_only_module_imports: dict[str, list[str]] = defaultdict(list)
+
         for type_name in referenced_types:
+            # Skip types defined locally (avoids import then redefine errors)
+            if type_name in local_type_names:
+                continue
             type_module = type_module_map[type_name]
             if type_module != current_module:
-                module_imports[type_module].append(type_name)
+                if type_name in runtime_types:
+                    runtime_module_imports[type_module].append(type_name)
+                else:
+                    type_only_module_imports[type_module].append(type_name)
 
-        for mod, type_names in sorted(module_imports.items()):
-            names = ", ".join(sorted(type_names))
-            imports.add(f"from {mod} import {names}")
+        for mod, names in sorted(runtime_module_imports.items()):
+            names_str = ", ".join(sorted(names))
+            runtime_imports.add(f"from {mod} import {names_str}")
 
-    # Collect base class imports (multi-stage resolution)
+        for mod, names in sorted(type_only_module_imports.items()):
+            names_str = ", ".join(sorted(names))
+            type_only_imports.add(f"from {mod} import {names_str}")
+
+    # Collect base class imports (multi-stage resolution) - always runtime
     for typ in content.types:
         for base in typ.get("bases", []):
             # Stage 0: Handle dotted base class names (e.g., pydantic.BaseModel)
@@ -1256,32 +1367,32 @@ def collect_imports(
                 parts = base.split(".")
                 if len(parts) == 2:
                     # Simple case: module.Class -> import module
-                    imports.add(f"import {parts[0]}")
+                    runtime_imports.add(f"import {parts[0]}")
                 else:
                     # Deeper path: a.b.Class -> import a.b
                     module_path = ".".join(parts[:-1])
-                    imports.add(f"import {module_path}")
+                    runtime_imports.add(f"import {module_path}")
                 continue
 
             # Stage 1: Check KNOWN_BASE_IMPORTS
             if base in KNOWN_BASE_IMPORTS:
                 import_stmt = KNOWN_BASE_IMPORTS[base]
                 if import_stmt:  # None means builtin, no import needed
-                    imports.add(import_stmt)
+                    runtime_imports.add(import_stmt)
                 continue
 
             # Stage 2: Check type_module_map (base defined elsewhere in spec)
             if type_module_map and base in type_module_map:
                 base_module = type_module_map[base]
                 if base_module != current_module:
-                    imports.add(f"from {base_module} import {base}")
+                    runtime_imports.add(f"from {base_module} import {base}")
                 continue
 
             # Stage 3: Check if base matches a stdlib pattern (e.g., Pattern, Iterator)
             found_stdlib = False
             for pattern, import_stmt in STDLIB_TYPE_IMPORTS.items():
                 if re.match(pattern.replace(r"\b", "^") + "$", base):
-                    imports.add(import_stmt)
+                    runtime_imports.add(import_stmt)
                     found_stdlib = True
                     break
             if found_stdlib:
@@ -1300,19 +1411,41 @@ def collect_imports(
                         if mod_name == prefix_lower or mod_name.startswith(prefix_lower):
                             # Skip self-imports (Issue 4 fix)
                             if mod_path != current_module:
-                                imports.add(f"from {mod_path} import {base}")
+                                runtime_imports.add(f"from {mod_path} import {base}")
                             break
 
             # Stage 5: Unresolved base - will need manual import (no warning here, just skip)
 
-    # Collect decorator imports
+    # Check if types with dotted pydantic bases need Field import
+    # (e.g., class Foo(pydantic.BaseModel): x: str = Field(...))
+    for typ in content.types:
+        has_dotted_pydantic_base = any(
+            "." in base and base.split(".")[0] == "pydantic"
+            for base in typ.get("bases", [])
+        )
+        if has_dotted_pydantic_base:
+            # Check if this type needs Field
+            for prop in typ.get("properties", []):
+                if prop.get("description") or prop.get("constraints"):
+                    runtime_imports.add("from pydantic import Field")
+                    break
+                default = prop.get("default", "")
+                if (
+                    default in ("[]", "{}", "set()")
+                    or (default and default.startswith("["))
+                    or (default and default.startswith("{"))
+                ):
+                    runtime_imports.add("from pydantic import Field")
+                    break
+
+    # Collect decorator imports - always runtime
     for func in content.functions:
         for dec in func.get("decorators", []):
             if isinstance(dec, str):
                 # Simple string decorator
                 if dec in STDLIB_DECORATOR_IMPORTS:
                     module = STDLIB_DECORATOR_IMPORTS[dec]
-                    imports.add(f"from {module} import {dec}")
+                    runtime_imports.add(f"from {module} import {dec}")
             else:
                 # DecoratorSpec dict
                 name = dec.get("name", "")
@@ -1321,17 +1454,24 @@ def collect_imports(
 
                 if import_from:
                     # Explicit import_from: from {import_from} import {root}
-                    imports.add(f"from {import_from} import {root}")
+                    runtime_imports.add(f"from {import_from} import {root}")
                 elif "." in name:
                     # Dotted name without import_from: import {root}
-                    imports.add(f"import {root}")
+                    runtime_imports.add(f"import {root}")
                 elif name in STDLIB_DECORATOR_IMPORTS:
                     # Known stdlib decorator
                     module = STDLIB_DECORATOR_IMPORTS[name]
-                    imports.add(f"from {module} import {name}")
+                    runtime_imports.add(f"from {module} import {name}")
                 # else: assume it's builtin or already imported
 
-    return sorted(imports)
+    # Add TYPE_CHECKING import if we have type-only imports
+    if type_only_imports:
+        runtime_imports.add("from typing import TYPE_CHECKING")
+
+    return ImportResult(
+        runtime=sorted(runtime_imports),
+        type_only=sorted(type_only_imports),
+    )
 
 
 def collect_generic_params(content: ModuleContent) -> list[dict]:
@@ -1361,11 +1501,18 @@ def collect_generic_params(content: ModuleContent) -> list[dict]:
     return params
 
 
-def generate_type_var_ast(param: dict) -> ast.Assign:
-    """Generate AST for a type variable definition (TypeVar, ParamSpec, TypeVarTuple)."""
+def generate_type_var_ast(param: dict) -> tuple[ast.Assign, dict[str, str]]:
+    """Generate AST for a type variable definition (TypeVar, ParamSpec, TypeVarTuple).
+
+    Returns:
+        A tuple of (AST node, rename mapping) where rename mapping is empty if
+        no rename occurred, or {original_name: new_name} if the TypeVar was renamed.
+    """
     name = param["name"]
+    original_name = name
     kind = param.get("kind", "type_var")
     bound = param.get("bound")
+    rename_map: dict[str, str] = {}
 
     # Handle deprecated bound="ParamSpec" pattern (Issue 1 fix)
     if kind == "type_var" and bound == "ParamSpec":
@@ -1396,6 +1543,30 @@ def generate_type_var_ast(param: dict) -> ast.Assign:
         constraints = param.get("constraints", [])
         variance = param.get("variance", "invariant")
         default = param.get("default")
+
+        # Auto-fix TypeVar naming to follow PEP 8 convention
+        if variance == "covariant" and not name.endswith("_co"):
+            name = f"{name}_co"
+            click.secho(
+                f"Warning: Covariant TypeVar '{original_name}' renamed to '{name}' "
+                "per PEP 8 naming convention",
+                fg="yellow",
+                err=True,
+            )
+            # Update the args to use the new name
+            args = [ast.Constant(value=name)]
+            rename_map[original_name] = name
+        elif variance == "contravariant" and not name.endswith("_contra"):
+            name = f"{name}_contra"
+            click.secho(
+                f"Warning: Contravariant TypeVar '{original_name}' renamed to '{name}' "
+                "per PEP 8 naming convention",
+                fg="yellow",
+                err=True,
+            )
+            # Update the args to use the new name
+            args = [ast.Constant(value=name)]
+            rename_map[original_name] = name
 
         # Add constraints as positional arguments (TypeVar("T", int, str))
         for constraint in constraints:
@@ -1432,14 +1603,151 @@ def generate_type_var_ast(param: dict) -> ast.Assign:
             )
 
     # Create the assignment: T = TypeVar("T", ...)
-    return ast.Assign(
-        targets=[ast.Name(id=name, ctx=ast.Store())],
-        value=ast.Call(
-            func=ast.Name(id=constructor, ctx=ast.Load()),
-            args=args,
-            keywords=keywords,
+    return (
+        ast.Assign(
+            targets=[ast.Name(id=name, ctx=ast.Store())],
+            value=ast.Call(
+                func=ast.Name(id=constructor, ctx=ast.Load()),
+                args=args,
+                keywords=keywords,
+            ),
         ),
+        rename_map,
     )
+
+
+def _apply_typevar_renames(code: str, renames: dict[str, str]) -> str:
+    """Apply TypeVar renames to type references in generated code.
+
+    Uses word-boundary matching to replace type references without affecting
+    the TypeVar declaration itself or other occurrences.
+    """
+    import re
+
+    lines = code.split("\n")
+    result_lines = []
+
+    for line in lines:
+        # Skip TypeVar declaration lines - they already have the correct name
+        if "TypeVar(" in line or "ParamSpec(" in line or "TypeVarTuple(" in line:
+            result_lines.append(line)
+            continue
+
+        for original, renamed in renames.items():
+            # Match the type name as a word boundary
+            # Handles: T, T], T[, T,, T), T|, -> T, etc.
+            pattern = rf"\b{re.escape(original)}\b"
+            line = re.sub(pattern, renamed, line)
+        result_lines.append(line)
+
+    return "\n".join(result_lines)
+
+
+def _topological_sort_types(types: list[dict]) -> list[dict]:
+    """Topologically sort types so dependencies come first.
+
+    Dependencies:
+    - Base classes must precede derived classes
+    - Types referenced in type alias targets must precede the alias
+
+    Falls back to kind-based ordering for types without dependencies:
+    enums (0) < classes/dataclasses (1) < protocols (2) < type_aliases (3)
+    """
+    # Build name -> type mapping
+    type_by_name: dict[str, dict] = {t["name"]: t for t in types if "name" in t}
+    local_names = set(type_by_name.keys())
+
+    # Build dependency graph (type name -> set of names it depends on)
+    dependencies: dict[str, set[str]] = {name: set() for name in local_names}
+
+    for typ in types:
+        name = typ.get("name")
+        if not name:
+            continue
+
+        # Dependency: base classes (only local ones)
+        for base in typ.get("bases", []):
+            # Handle dotted names like "pydantic.BaseModel" -> ignore external
+            if "." in base:
+                continue
+            # Strip generic parameters: Handle[T] -> Handle
+            base_name = re.sub(r"\[.*\]$", "", base)
+            if base_name in local_names and base_name != name:
+                dependencies[name].add(base_name)
+
+        # Dependency: type alias targets reference other types
+        if typ.get("kind") == "type_alias":
+            target = typ.get("type_target") or typ.get("target", "")
+            # Extract type names from target (capitalized words)
+            for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", target):
+                if word in local_names and word != name:
+                    dependencies[name].add(word)
+
+    # Kind-based priority for stable sorting of independent types
+    def kind_priority(typ: dict) -> int:
+        kind = typ.get("kind", "class")
+        if kind == "enum":
+            return 0
+        elif kind in ("dataclass", "model", "class"):
+            return 1
+        elif kind == "protocol":
+            return 2
+        elif kind == "type_alias":
+            return 3
+        else:
+            return 1
+
+    # Kahn's algorithm for topological sort
+    # Count incoming edges (how many types depend on this type)
+    in_degree: dict[str, int] = {name: 0 for name in local_names}
+    for name, deps in dependencies.items():
+        for dep in deps:
+            if dep in in_degree:
+                in_degree[name] += 1  # name depends on dep, so name has higher in-degree conceptually
+                # Actually: in_degree tracks "blocked by", so increment in_degree[name] for each dep
+
+    # Recalculate: in_degree[x] = number of dependencies x has that are in local_names
+    in_degree = {name: len(deps) for name, deps in dependencies.items()}
+
+    # Start with types that have no dependencies
+    # Sort by kind priority for stable ordering
+    ready = sorted(
+        [name for name, deg in in_degree.items() if deg == 0],
+        key=lambda n: (kind_priority(type_by_name[n]), n),
+    )
+
+    result: list[dict] = []
+    processed: set[str] = set()
+
+    while ready:
+        # Take the first ready type (already sorted by priority)
+        name = ready.pop(0)
+        if name in processed:
+            continue
+        processed.add(name)
+        result.append(type_by_name[name])
+
+        # Find types that depend on this one and decrement their in-degree
+        for other_name, deps in dependencies.items():
+            if name in deps and other_name not in processed:
+                in_degree[other_name] -= 1
+                if in_degree[other_name] == 0:
+                    # Insert in sorted position by priority
+                    other_priority = (kind_priority(type_by_name[other_name]), other_name)
+                    insert_pos = 0
+                    for i, ready_name in enumerate(ready):
+                        ready_priority = (kind_priority(type_by_name[ready_name]), ready_name)
+                        if other_priority < ready_priority:
+                            break
+                        insert_pos = i + 1
+                    ready.insert(insert_pos, other_name)
+
+    # Handle any remaining types (circular dependencies - shouldn't happen in practice)
+    remaining = [t for t in types if t.get("name") not in processed]
+    remaining.sort(key=lambda t: (kind_priority(t), t.get("name", "")))
+    result.extend(remaining)
+
+    return result
 
 
 def generate_module_header(module_path: str, spec: dict | None = None) -> str:
@@ -1476,22 +1784,68 @@ def generate_module_code(
     mod_docstring = generate_module_header(module_path, spec)
     body.append(ast.Expr(value=ast.Constant(value=mod_docstring)))
 
-    imports = collect_imports(content, type_module_map, module_path, use_pydantic)
-    for imp in imports:
+    import_result = collect_imports(content, type_module_map, module_path, use_pydantic)
+
+    # Add runtime imports
+    for imp in import_result.runtime:
         try:
             imp_ast = ast.parse(imp).body[0]
             body.append(imp_ast)
         except SyntaxError:
             pass
 
-    body.append(ast.Pass())
+    # Add TYPE_CHECKING block with type-only imports
+    if import_result.type_only:
+        type_check_body: list[ast.stmt] = []
+        for imp in import_result.type_only:
+            try:
+                imp_ast = ast.parse(imp).body[0]
+                type_check_body.append(imp_ast)
+            except SyntaxError:
+                pass
+
+        if type_check_body:
+            # if TYPE_CHECKING:
+            #     from x import Y
+            type_check_if = ast.If(
+                test=ast.Name(id="TYPE_CHECKING", ctx=ast.Load()),
+                body=type_check_body,
+                orelse=[],
+            )
+            body.append(type_check_if)
+
+    # Generate __all__ for module exports
+    all_names: list[str] = []
+    for typ in content.types:
+        if typ.get("name"):
+            all_names.append(typ["name"])
+    for func in content.functions:
+        if func.get("name"):
+            all_names.append(func["name"])
+
+    if all_names:
+        all_assign = ast.Assign(
+            targets=[ast.Name(id="__all__", ctx=ast.Store())],
+            value=ast.List(
+                elts=[ast.Constant(value=name) for name in sorted(all_names)],
+                ctx=ast.Load(),
+            ),
+        )
+        body.append(all_assign)
 
     # Generate type variable definitions after imports
+    # Track TypeVar renames for reference updates
+    typevar_renames: dict[str, str] = {}
     generic_params = collect_generic_params(content)
     for param in generic_params:
-        body.append(generate_type_var_ast(param))
+        typevar_ast, renames = generate_type_var_ast(param)
+        body.append(typevar_ast)
+        typevar_renames.update(renames)
 
-    for typ in content.types:
+    # Topologically sort types so dependencies come first
+    # Dependencies: base classes must precede derived classes, types must precede type aliases that reference them
+    sorted_types = _topological_sort_types(content.types)
+    for typ in sorted_types:
         body.append(generate_type_ast(typ, use_pydantic))
 
     # Collect function notes for post-processing
@@ -1509,14 +1863,21 @@ def generate_module_code(
     code = _fix_module_docstring(code)
     code = _insert_function_notes(code, function_notes)
 
+    # Apply TypeVar renames to update references throughout the code
+    if typevar_renames:
+        code = _apply_typevar_renames(code, typevar_renames)
+
     lines = code.split("\n")
     cleaned = []
     for line in lines:
         if line.strip() == "pass" and len(cleaned) > 0:
+            prev_stripped = cleaned[-1].strip()
+            # Skip standalone pass after these patterns (not inside class/function bodies)
             if (
-                cleaned[-1].strip().endswith('"""')
-                or cleaned[-1].strip().startswith("from ")
-                or cleaned[-1].strip().startswith("import ")
+                prev_stripped.endswith('"""')
+                or prev_stripped.startswith("from ")
+                or prev_stripped.startswith("import ")
+                or prev_stripped.endswith("]")  # After __all__ = [...]
             ):
                 cleaned.append("")
                 continue
@@ -1768,10 +2129,16 @@ def generate_shared_types_code(
 
     shared_module_path = f"{package}._types"
 
+    # Create a modified type_module_map that already points moved types to _types
+    # This prevents collect_imports from generating imports for types we're defining
+    modified_type_map = type_module_map.copy()
+    for type_name in type_names:
+        modified_type_map[type_name] = shared_module_path
+
     code = generate_module_code(
         shared_module_path,
         shared_content,
-        type_module_map=type_module_map,
+        type_module_map=modified_type_map,
         use_pydantic=use_pydantic,
         spec=spec,
     )
@@ -1874,12 +2241,15 @@ def generate_init_code(
                 lines.append(f"    {name},")
             lines.append(")")
 
-    # Add TODO comments for undefined exports (Issue 8 fix)
+    # Generate placeholder stubs for undefined exports (Issue 8 fix)
     if undefined_exports:
         lines.append("")
-        lines.append("# TODO: The following exports are referenced but not defined in spec:")
+        lines.append("from typing import Any, TypeAlias")
+        lines.append("")
+        lines.append("# TODO: The following exports are referenced but not defined in spec.")
+        lines.append("# Replace these placeholder type aliases with proper implementations.")
         for name in sorted(undefined_exports):
-            lines.append(f"# from .??? import {name}")
+            lines.append(f"{name}: TypeAlias = Any")
 
     lines.append("")
     lines.append(f"__all__ = {sorted(exports)!r}")
