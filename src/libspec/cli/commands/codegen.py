@@ -14,7 +14,6 @@ import subprocess
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 import click
 
@@ -693,6 +692,41 @@ def generate_enum_ast(typ: dict, use_pydantic: bool = False) -> ast.ClassDef:
     )
 
 
+def _get_factory_for_mutable_default(default: str, type_hint: str) -> str:
+    """Determine the correct factory function for a mutable default.
+
+    Args:
+        default: The default value string (e.g., "{}", "[]", "set()")
+        type_hint: The type annotation string (e.g., "set[str]", "dict[str, Any]")
+
+    Returns:
+        The factory function name ("list", "dict", "set", or a class name)
+    """
+    # Explicit set() default
+    if default == "set()":
+        return "set"
+
+    # List defaults
+    if default == "[]" or default.startswith("["):
+        return "list"
+
+    # Braces - could be dict or set depending on type annotation
+    if default.startswith("{"):
+        type_lower = type_hint.lower()
+        if type_lower.startswith("set[") or type_lower == "set":
+            return "set"
+        if type_lower.startswith("frozenset[") or type_lower == "frozenset":
+            return "frozenset"
+        return "dict"
+
+    # Constructor call (e.g., "MyClass()")
+    if re.match(r"^[A-Z][a-zA-Z0-9]*\(\)$", default):
+        return default[:-2]  # Remove "()"
+
+    # Fallback
+    return "list"
+
+
 def generate_dataclass_ast(typ: dict) -> ast.ClassDef:
     """Build AST for a dataclass type."""
     name = typ["name"]
@@ -710,29 +744,16 @@ def generate_dataclass_ast(typ: dict) -> ast.ClassDef:
         annotation = make_type_annotation(prop_type)
 
         if default is not None:
-            is_list_or_dict = (
+            is_mutable_default = (
                 default in ("[]", "{}", "set()")
                 or default.startswith("[")
                 or default.startswith("{")
+                or re.match(r"^[A-Z][a-zA-Z0-9]*\(\)$", default) is not None
             )
-            is_constructor_call = (
-                re.match(r"^[A-Z][a-zA-Z0-9]*\(\)$", default) is not None
-            )
-            is_mutable_default = is_list_or_dict or is_constructor_call
 
             if is_mutable_default:
-                if default == "[]" or default.startswith("["):
-                    factory = ast.Name(id="list", ctx=ast.Load())
-                elif default == "{}" or default.startswith("{"):
-                    factory = ast.Name(id="dict", ctx=ast.Load())
-                elif default == "set()":
-                    factory = ast.Name(id="set", ctx=ast.Load())
-                elif is_constructor_call:
-                    class_name = default[:-2]
-                    factory = ast.Name(id=class_name, ctx=ast.Load())
-                else:
-                    factory = ast.Name(id="list", ctx=ast.Load())
-
+                factory_name = _get_factory_for_mutable_default(default, prop_type)
+                factory = ast.Name(id=factory_name, ctx=ast.Load())
                 default_node = ast.Call(
                     func=ast.Name(id="field", ctx=ast.Load()),
                     args=[],
@@ -818,15 +839,8 @@ def generate_pydantic_model_ast(typ: dict) -> ast.ClassDef:
             )
 
             if is_mutable:
-                if default == "[]" or default.startswith("["):
-                    factory = ast.Name(id="list", ctx=ast.Load())
-                elif default == "{}" or default.startswith("{"):
-                    factory = ast.Name(id="dict", ctx=ast.Load())
-                elif default == "set()":
-                    factory = ast.Name(id="set", ctx=ast.Load())
-                else:
-                    class_name = default[:-2]
-                    factory = ast.Name(id=class_name, ctx=ast.Load())
+                factory_name = _get_factory_for_mutable_default(default, prop_type)
+                factory = ast.Name(id=factory_name, ctx=ast.Load())
                 field_keywords.append(
                     ast.keyword(arg="default_factory", value=factory)
                 )
@@ -993,20 +1007,34 @@ def generate_type_alias_ast(typ: dict) -> ast.Assign:
 PYDANTIC_BASE_CLASSES = {"BaseModel", "RootModel", "BaseSettings"}
 
 
+def _extract_class_name(base: str) -> str:
+    """Extract the class name from a potentially dotted base class path.
+
+    Examples:
+        "BaseModel" -> "BaseModel"
+        "pydantic.BaseModel" -> "BaseModel"
+        "pydantic_settings.BaseSettings" -> "BaseSettings"
+    """
+    return base.rsplit(".", 1)[-1]
+
+
 def generate_type_ast(
     typ: dict,
     use_pydantic: bool = False,
 ) -> ast.ClassDef | ast.Assign:
     """Build AST for a type based on its kind."""
     kind = typ.get("kind", "class")
-    bases = set(typ.get("bases", []))
+    raw_bases = typ.get("bases", [])
+
+    # Normalize base class names for comparison (extract class name from dotted paths)
+    normalized_bases = {_extract_class_name(base) for base in raw_bases}
 
     if kind == "enum":
         return generate_enum_ast(typ, use_pydantic)
     elif kind == "dataclass":
         # Check if bases include a Pydantic base class - if so, use Pydantic model
         # generation regardless of use_pydantic flag (to avoid mixed @dataclass/BaseModel)
-        has_pydantic_base = bool(bases & PYDANTIC_BASE_CLASSES)
+        has_pydantic_base = bool(normalized_bases & PYDANTIC_BASE_CLASSES)
         if use_pydantic or has_pydantic_base:
             return generate_pydantic_model_ast(typ)
         return generate_dataclass_ast(typ)
@@ -1143,10 +1171,22 @@ def collect_imports(
     generic_param_kinds: set[str] = set()
     for typ in content.types:
         for param in typ.get("generic_params", []):
-            generic_param_kinds.add(param.get("kind", "type_var"))
+            kind = param.get("kind", "type_var")
+            bound = param.get("bound")
+            # Handle deprecated bound="ParamSpec" pattern (Issue 1 fix)
+            if kind == "type_var" and bound == "ParamSpec":
+                generic_param_kinds.add("param_spec")
+            else:
+                generic_param_kinds.add(kind)
     for func in content.functions:
         for param in func.get("generic_params", []):
-            generic_param_kinds.add(param.get("kind", "type_var"))
+            kind = param.get("kind", "type_var")
+            bound = param.get("bound")
+            # Handle deprecated bound="ParamSpec" pattern (Issue 1 fix)
+            if kind == "type_var" and bound == "ParamSpec":
+                generic_param_kinds.add("param_spec")
+            else:
+                generic_param_kinds.add(kind)
 
     if "type_var" in generic_param_kinds:
         imports.add("from typing import TypeVar")
@@ -1157,8 +1197,10 @@ def collect_imports(
 
     all_sigs = [f.get("signature", "") for f in content.functions]
     for typ in content.types:
-        for method in typ.get("methods", []):
-            all_sigs.append(method.get("signature", ""))
+        # Collect signatures from all method types (Issues 6 & 7 fix)
+        for method_key in ("methods", "class_methods", "static_methods"):
+            for method in typ.get(method_key, []):
+                all_sigs.append(method.get("signature", ""))
     all_types = [
         t.get("type", "")
         for t in sum([typ.get("properties", []) for typ in content.types], [])
@@ -1188,6 +1230,13 @@ def collect_imports(
                 for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", prop_type):
                     if word in type_module_map:
                         referenced_types.add(word)
+            # Also scan method signatures for type references (Issues 6 & 7 fix)
+            for method_key in ("methods", "class_methods", "static_methods"):
+                for method in typ.get(method_key, []):
+                    sig = method.get("signature", "")
+                    for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", sig):
+                        if word in type_module_map:
+                            referenced_types.add(word)
 
         module_imports: dict[str, list[str]] = defaultdict(list)
         for type_name in referenced_types:
@@ -1202,6 +1251,18 @@ def collect_imports(
     # Collect base class imports (multi-stage resolution)
     for typ in content.types:
         for base in typ.get("bases", []):
+            # Stage 0: Handle dotted base class names (e.g., pydantic.BaseModel)
+            if "." in base:
+                parts = base.split(".")
+                if len(parts) == 2:
+                    # Simple case: module.Class -> import module
+                    imports.add(f"import {parts[0]}")
+                else:
+                    # Deeper path: a.b.Class -> import a.b
+                    module_path = ".".join(parts[:-1])
+                    imports.add(f"import {module_path}")
+                continue
+
             # Stage 1: Check KNOWN_BASE_IMPORTS
             if base in KNOWN_BASE_IMPORTS:
                 import_stmt = KNOWN_BASE_IMPORTS[base]
@@ -1237,7 +1298,9 @@ def collect_imports(
                     for mod_path in set(type_module_map.values()):
                         mod_name = mod_path.rsplit(".", 1)[-1]
                         if mod_name == prefix_lower or mod_name.startswith(prefix_lower):
-                            imports.add(f"from {mod_path} import {base}")
+                            # Skip self-imports (Issue 4 fix)
+                            if mod_path != current_module:
+                                imports.add(f"from {mod_path} import {base}")
                             break
 
             # Stage 5: Unresolved base - will need manual import (no warning here, just skip)
@@ -1302,6 +1365,18 @@ def generate_type_var_ast(param: dict) -> ast.Assign:
     """Generate AST for a type variable definition (TypeVar, ParamSpec, TypeVarTuple)."""
     name = param["name"]
     kind = param.get("kind", "type_var")
+    bound = param.get("bound")
+
+    # Handle deprecated bound="ParamSpec" pattern (Issue 1 fix)
+    if kind == "type_var" and bound == "ParamSpec":
+        click.secho(
+            f"Warning: TypeVar '{name}' uses deprecated bound='ParamSpec'. "
+            "Use kind='param_spec' instead.",
+            fg="yellow",
+            err=True,
+        )
+        kind = "param_spec"
+        bound = None  # Clear bound since ParamSpec doesn't support bounds
 
     # Determine the constructor name based on kind
     if kind == "param_spec":
@@ -1592,6 +1667,118 @@ def find_import_cycles(graph: dict[str, set[str]]) -> list[list[str]]:
     return cycles
 
 
+def find_types_in_cycles(
+    cycles: list[list[str]],
+    modules: dict[str, ModuleContent],
+    type_module_map: dict[str, str],
+) -> dict[str, set[str]]:
+    """Identify types that cause circular imports.
+
+    Returns a mapping of package prefixes to sets of type names that should
+    be extracted to a shared _types.py module.
+    """
+    types_by_package: dict[str, set[str]] = defaultdict(set)
+
+    for cycle in cycles:
+        # Get all modules in this cycle (last element is duplicate of first)
+        cycle_modules = set(cycle[:-1])
+
+        for module_path in cycle_modules:
+            content = modules.get(module_path)
+            if not content:
+                continue
+
+            for typ in content.types:
+                type_name = typ.get("name")
+                if not type_name:
+                    continue
+
+                # Check if this type is imported by another module in the cycle
+                for other_module in cycle_modules:
+                    if other_module == module_path:
+                        continue
+                    other_content = modules.get(other_module)
+                    if not other_content:
+                        continue
+
+                    # Check if other_module references this type
+                    if _module_references_type(other_content, type_name):
+                        # Extract package prefix (e.g., "weave" from "weave.events")
+                        package = module_path.rsplit(".", 1)[0] if "." in module_path else module_path
+                        types_by_package[package].add(type_name)
+                        break
+
+    return dict(types_by_package)
+
+
+def _module_references_type(content: ModuleContent, type_name: str) -> bool:
+    """Check if a module content references a given type name."""
+    pattern = rf"\b{re.escape(type_name)}\b"
+
+    for func in content.functions:
+        sig = func.get("signature", "")
+        if re.search(pattern, sig):
+            return True
+
+    for typ in content.types:
+        for prop in typ.get("properties", []):
+            if re.search(pattern, prop.get("type", "")):
+                return True
+        for base in typ.get("bases", []):
+            if base == type_name:
+                return True
+
+    return False
+
+
+def generate_shared_types_code(
+    package: str,
+    type_names: set[str],
+    modules: dict[str, ModuleContent],
+    type_module_map: dict[str, str],
+    use_pydantic: bool = False,
+    spec: dict | None = None,
+) -> str | None:
+    """Generate code for a _types.py module containing shared types to break cycles."""
+    # Collect type definitions to move
+    types_to_move: list[dict] = []
+
+    for type_name in type_names:
+        original_module = type_module_map.get(type_name)
+        if not original_module:
+            continue
+
+        content = modules.get(original_module)
+        if not content:
+            continue
+
+        for typ in content.types:
+            if typ.get("name") == type_name:
+                types_to_move.append(typ)
+                break
+
+    if not types_to_move:
+        return None
+
+    # Create synthetic ModuleContent for _types.py
+    shared_content = ModuleContent(
+        functions=[],
+        types=types_to_move,
+    )
+
+    shared_module_path = f"{package}._types"
+
+    code = generate_module_code(
+        shared_module_path,
+        shared_content,
+        type_module_map=type_module_map,
+        use_pydantic=use_pydantic,
+        spec=spec,
+    )
+
+    return code
+
+
 def format_with_ruff(code: str) -> str:
     """Format code using ruff."""
     try:
@@ -1629,6 +1816,7 @@ def generate_init_code(
         return ""
 
     submodule_imports: dict[str, list[str]] = {}
+    undefined_exports: list[str] = []  # Track exports not found in spec (Issue 8 fix)
     library = spec.get("library", {})
 
     # Build set of all valid function names for validation
@@ -1643,13 +1831,14 @@ def generate_init_code(
                     full_module = func.get("module", module_path)
                     break
             else:
-                # Export not found in types or functions - emit warning
+                # Export not found in types or functions - emit warning and track
                 if warnings is not None:
                     if name not in valid_functions and name not in type_module_map:
                         warnings.append(
                             f"Export '{name}' in module '{module_path}' not found "
                             "in spec types or functions"
                         )
+                undefined_exports.append(name)  # Track for TODO comment
                 continue
 
         if full_module.startswith(module_path + "."):
@@ -1684,6 +1873,13 @@ def generate_init_code(
             for name in names:
                 lines.append(f"    {name},")
             lines.append(")")
+
+    # Add TODO comments for undefined exports (Issue 8 fix)
+    if undefined_exports:
+        lines.append("")
+        lines.append("# TODO: The following exports are referenced but not defined in spec:")
+        for name in sorted(undefined_exports):
+            lines.append(f"# from .??? import {name}")
 
     lines.append("")
     lines.append(f"__all__ = {sorted(exports)!r}")
@@ -1805,6 +2001,43 @@ def codegen(
         output_dir = Path(output) if output else Path(".")
         results: list[GenerationResult] = []
 
+        # Check for circular imports BEFORE generating modules (Issue 5 fix)
+        import_graph = build_import_graph(modules, type_module_map)
+        import_cycles = find_import_cycles(import_graph)
+
+        # Generate _types.py modules to break cycles
+        if import_cycles:
+            types_in_cycles = find_types_in_cycles(import_cycles, modules, type_module_map)
+
+            for package, type_names in types_in_cycles.items():
+                shared_code = generate_shared_types_code(
+                    package, type_names, modules, type_module_map,
+                    use_pydantic=pydantic, spec=spec
+                )
+                if shared_code:
+                    if format_code:
+                        shared_code = format_with_ruff(shared_code)
+
+                    shared_module_path = f"{package}._types"
+                    parts = shared_module_path.split(".")
+                    shared_file_path = output_dir / "/".join(parts[:-1]) / f"{parts[-1]}.py"
+
+                    result = GenerationResult(
+                        module=shared_module_path,
+                        code=shared_code,
+                        path=shared_file_path,
+                    )
+
+                    if not dry_run:
+                        shared_file_path.parent.mkdir(parents=True, exist_ok=True)
+                        shared_file_path.write_text(shared_code)
+
+                    results.append(result)
+
+                    # Update type_module_map to point to _types.py
+                    for type_name in type_names:
+                        type_module_map[type_name] = shared_module_path
+
         for module_path, content in modules.items():
             code = generate_module_code(
                 module_path,
@@ -1887,16 +2120,17 @@ def codegen(
 
             results.append(result)
 
-        # Check for circular imports
-        import_graph = build_import_graph(modules, type_module_map)
-        import_cycles = find_import_cycles(import_graph)
+        # Re-check for circular imports after _types.py generation
+        # This shows any remaining cycles that couldn't be resolved
+        final_import_graph = build_import_graph(modules, type_module_map)
+        remaining_cycles = find_import_cycles(final_import_graph)
 
         # Output warnings
         all_warnings: list[str] = []
         all_warnings.extend(export_warnings)
-        for cycle in import_cycles:
+        for cycle in remaining_cycles:
             cycle_path = " → ".join(cycle)
-            all_warnings.append(f"Potential circular import: {cycle_path}")
+            all_warnings.append(f"Remaining circular import (may need manual resolution): {cycle_path}")
 
         if all_warnings:
             click.secho("\nWarnings:", fg="yellow")
