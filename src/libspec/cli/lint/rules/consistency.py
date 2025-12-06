@@ -471,3 +471,44 @@ class UnsatisfiedRequirement(LintRule):
                             path=f"$.library.features[{i}].requires[{j}]",
                             ref=f"#/features/{fid}",
                         )
+
+
+# Pydantic base classes that are incompatible with kind: dataclass
+PYDANTIC_BASE_CLASSES = {"BaseModel", "RootModel", "BaseSettings"}
+
+
+@RuleRegistry.register
+class MixedDataclassPydantic(LintRule):
+    """Types with kind: dataclass should not inherit from Pydantic base classes."""
+
+    id = "X007"
+    name = "mixed-dataclass-pydantic"
+    description = "Type has kind: dataclass but inherits from Pydantic base class"
+    default_severity = Severity.ERROR
+    category = "consistency"
+
+    @override
+    def check(self, spec: dict[str, Any], config: dict[str, Any]) -> Iterator[LintIssue]:
+        types = spec.get("library", {}).get("types", [])
+        severity = self.get_severity(config)
+
+        for i, type_def in enumerate(types):
+            kind = type_def.get("kind")
+            bases = set(type_def.get("bases", []))
+            name = type_def.get("name", "?")
+
+            # Check if kind is dataclass but bases include a Pydantic class
+            if kind == "dataclass":
+                pydantic_bases = bases & PYDANTIC_BASE_CLASSES
+                if pydantic_bases:
+                    yield LintIssue(
+                        rule=self.id,
+                        severity=severity,
+                        message=(
+                            f"Type '{name}' has kind: dataclass but inherits from "
+                            f"Pydantic class(es): {', '.join(sorted(pydantic_bases))}. "
+                            f"Use kind: class or remove Pydantic bases."
+                        ),
+                        path=f"$.library.types[{i}]",
+                        ref=f"#/types/{name}",
+                    )

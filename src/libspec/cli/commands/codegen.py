@@ -40,15 +40,81 @@ PARAM_PATTERN = re.compile(
 # Known stdlib type imports (pattern -> import statement)
 # Patterns use word boundaries to avoid false matches
 STDLIB_TYPE_IMPORTS: dict[str, str] = {
+    # datetime module
     r"\bdatetime\b": "from datetime import datetime",
     r"\bdate\b": "from datetime import date",
     r"\btimedelta\b": "from datetime import timedelta",
     r"\btimezone\b": "from datetime import timezone",
+    # pathlib
     r"\bPath\b": "from pathlib import Path",
+    # decimal
     r"\bDecimal\b": "from decimal import Decimal",
+    # uuid
     r"\bUUID\b": "from uuid import UUID",
+    # re
     r"\bPattern\b": "from re import Pattern",
     r"\bMatch\b": "from re import Match",
+    # typing - generics and protocols
+    r"\bCallable\b": "from collections.abc import Callable",
+    r"\bAwaitable\b": "from collections.abc import Awaitable",
+    r"\bAsyncIterator\b": "from collections.abc import AsyncIterator",
+    r"\bAsyncGenerator\b": "from collections.abc import AsyncGenerator",
+    r"\bIterator\b": "from collections.abc import Iterator",
+    r"\bGenerator\b": "from collections.abc import Generator",
+    r"\bSequence\b": "from collections.abc import Sequence",
+    r"\bMapping\b": "from collections.abc import Mapping",
+    r"\bMutableMapping\b": "from collections.abc import MutableMapping",
+    r"\bIterable\b": "from collections.abc import Iterable",
+    r"\bCoroutine\b": "from collections.abc import Coroutine",
+    # typing - special forms
+    r"\bLiteral\b": "from typing import Literal",
+    r"\bTypeVar\b": "from typing import TypeVar",
+    r"\bParamSpec\b": "from typing import ParamSpec",
+    r"\bTypeVarTuple\b": "from typing import TypeVarTuple",
+    r"\bGeneric\b": "from typing import Generic",
+    r"\bClassVar\b": "from typing import ClassVar",
+    r"\bFinal\b": "from typing import Final",
+    r"\bTypeAlias\b": "from typing import TypeAlias",
+    r"\bSelf\b": "from typing import Self",
+    r"\bNever\b": "from typing import Never",
+    r"\bNoReturn\b": "from typing import NoReturn",
+    r"\bUnpack\b": "from typing import Unpack",
+    r"\bConcatenate\b": "from typing import Concatenate",
+    # contextlib
+    r"\bContextManager\b": "from contextlib import AbstractContextManager as ContextManager",
+    r"\bAsyncContextManager\b": "from contextlib import AbstractAsyncContextManager as AsyncContextManager",
+}
+
+# Known base class imports for inheritance resolution
+# Maps base class names to their import statements (None = builtin, no import needed)
+KNOWN_BASE_IMPORTS: dict[str, str | None] = {
+    # typing
+    "Protocol": "from typing import Protocol",
+    "Generic": "from typing import Generic",
+    # abc
+    "ABC": "from abc import ABC",
+    # pydantic
+    "BaseModel": "from pydantic import BaseModel",
+    "RootModel": "from pydantic import RootModel",
+    "BaseSettings": "from pydantic_settings import BaseSettings",
+    # builtins (no import needed)
+    "Exception": None,
+    "BaseException": None,
+    "ValueError": None,
+    "TypeError": None,
+    "RuntimeError": None,
+    "KeyError": None,
+    "AttributeError": None,
+    "NotImplementedError": None,
+    "StopIteration": None,
+    "StopAsyncIteration": None,
+    "object": None,
+    # enum
+    "Enum": "from enum import Enum",
+    "IntEnum": "from enum import IntEnum",
+    "StrEnum": "from enum import StrEnum",
+    "Flag": "from enum import Flag",
+    "IntFlag": "from enum import IntFlag",
 }
 
 # Known stdlib decorator imports for auto-inference
@@ -825,9 +891,18 @@ def generate_pydantic_model_ast(typ: dict) -> ast.ClassDef:
     if len(body) == 1:
         body.append(ast.Pass())
 
+    # Use bases from spec, defaulting to BaseModel if none specified
+    spec_bases = typ.get("bases", [])
+    if spec_bases:
+        bases: list[ast.expr] = [
+            ast.Name(id=base, ctx=ast.Load()) for base in spec_bases
+        ]
+    else:
+        bases = [ast.Name(id="BaseModel", ctx=ast.Load())]
+
     return ast.ClassDef(
         name=name,
-        bases=[ast.Name(id="BaseModel", ctx=ast.Load())],
+        bases=bases,
         keywords=[],
         body=body,
         decorator_list=[],
@@ -914,16 +989,25 @@ def generate_type_alias_ast(typ: dict) -> ast.Assign:
     )
 
 
+# Pydantic base classes that should trigger pydantic model generation
+PYDANTIC_BASE_CLASSES = {"BaseModel", "RootModel", "BaseSettings"}
+
+
 def generate_type_ast(
     typ: dict,
     use_pydantic: bool = False,
 ) -> ast.ClassDef | ast.Assign:
     """Build AST for a type based on its kind."""
     kind = typ.get("kind", "class")
+    bases = set(typ.get("bases", []))
+
     if kind == "enum":
         return generate_enum_ast(typ, use_pydantic)
     elif kind == "dataclass":
-        if use_pydantic:
+        # Check if bases include a Pydantic base class - if so, use Pydantic model
+        # generation regardless of use_pydantic flag (to avoid mixed @dataclass/BaseModel)
+        has_pydantic_base = bool(bases & PYDANTIC_BASE_CLASSES)
+        if use_pydantic or has_pydantic_base:
             return generate_pydantic_model_ast(typ)
         return generate_dataclass_ast(typ)
     elif kind == "protocol":
@@ -1055,6 +1139,22 @@ def collect_imports(
     if has_protocol:
         imports.add("from typing import Protocol")
 
+    # Collect imports for generic_params (TypeVar, ParamSpec, TypeVarTuple)
+    generic_param_kinds: set[str] = set()
+    for typ in content.types:
+        for param in typ.get("generic_params", []):
+            generic_param_kinds.add(param.get("kind", "type_var"))
+    for func in content.functions:
+        for param in func.get("generic_params", []):
+            generic_param_kinds.add(param.get("kind", "type_var"))
+
+    if "type_var" in generic_param_kinds:
+        imports.add("from typing import TypeVar")
+    if "param_spec" in generic_param_kinds:
+        imports.add("from typing import ParamSpec")
+    if "type_var_tuple" in generic_param_kinds:
+        imports.add("from typing import TypeVarTuple")
+
     all_sigs = [f.get("signature", "") for f in content.functions]
     for typ in content.types:
         for method in typ.get("methods", []):
@@ -1099,6 +1199,49 @@ def collect_imports(
             names = ", ".join(sorted(type_names))
             imports.add(f"from {mod} import {names}")
 
+    # Collect base class imports (multi-stage resolution)
+    for typ in content.types:
+        for base in typ.get("bases", []):
+            # Stage 1: Check KNOWN_BASE_IMPORTS
+            if base in KNOWN_BASE_IMPORTS:
+                import_stmt = KNOWN_BASE_IMPORTS[base]
+                if import_stmt:  # None means builtin, no import needed
+                    imports.add(import_stmt)
+                continue
+
+            # Stage 2: Check type_module_map (base defined elsewhere in spec)
+            if type_module_map and base in type_module_map:
+                base_module = type_module_map[base]
+                if base_module != current_module:
+                    imports.add(f"from {base_module} import {base}")
+                continue
+
+            # Stage 3: Check if base matches a stdlib pattern (e.g., Pattern, Iterator)
+            found_stdlib = False
+            for pattern, import_stmt in STDLIB_TYPE_IMPORTS.items():
+                if re.match(pattern.replace(r"\b", "^") + "$", base):
+                    imports.add(import_stmt)
+                    found_stdlib = True
+                    break
+            if found_stdlib:
+                continue
+
+            # Stage 4: Infer from naming conventions
+            # e.g., EventBase -> events module, LayoutMixin -> layout module
+            if base.endswith("Base") or base.endswith("Mixin"):
+                # Extract the prefix and try to find a matching module
+                prefix = base[:-4] if base.endswith("Base") else base[:-5]
+                prefix_lower = prefix.lower()
+                # Check if any module path ends with this prefix
+                if type_module_map:
+                    for mod_path in set(type_module_map.values()):
+                        mod_name = mod_path.rsplit(".", 1)[-1]
+                        if mod_name == prefix_lower or mod_name.startswith(prefix_lower):
+                            imports.add(f"from {mod_path} import {base}")
+                            break
+
+            # Stage 5: Unresolved base - will need manual import (no warning here, just skip)
+
     # Collect decorator imports
     for func in content.functions:
         for dec in func.get("decorators", []):
@@ -1126,6 +1269,102 @@ def collect_imports(
                 # else: assume it's builtin or already imported
 
     return sorted(imports)
+
+
+def collect_generic_params(content: ModuleContent) -> list[dict]:
+    """Collect all unique generic parameters from types and functions in a module.
+
+    Returns a list of unique GenericParam dicts, preserving first occurrence order.
+    """
+    seen_names: set[str] = set()
+    params: list[dict] = []
+
+    # Collect from types
+    for typ in content.types:
+        for param in typ.get("generic_params", []):
+            name = param.get("name")
+            if name and name not in seen_names:
+                seen_names.add(name)
+                params.append(param)
+
+    # Collect from functions
+    for func in content.functions:
+        for param in func.get("generic_params", []):
+            name = param.get("name")
+            if name and name not in seen_names:
+                seen_names.add(name)
+                params.append(param)
+
+    return params
+
+
+def generate_type_var_ast(param: dict) -> ast.Assign:
+    """Generate AST for a type variable definition (TypeVar, ParamSpec, TypeVarTuple)."""
+    name = param["name"]
+    kind = param.get("kind", "type_var")
+
+    # Determine the constructor name based on kind
+    if kind == "param_spec":
+        constructor = "ParamSpec"
+    elif kind == "type_var_tuple":
+        constructor = "TypeVarTuple"
+    else:
+        constructor = "TypeVar"
+
+    # Build the call arguments
+    args: list[ast.expr] = [ast.Constant(value=name)]
+    keywords: list[ast.keyword] = []
+
+    if kind == "type_var":
+        # Handle TypeVar-specific arguments
+        bound = param.get("bound")
+        constraints = param.get("constraints", [])
+        variance = param.get("variance", "invariant")
+        default = param.get("default")
+
+        # Add constraints as positional arguments (TypeVar("T", int, str))
+        for constraint in constraints:
+            args.append(ast.Name(id=constraint, ctx=ast.Load()))
+
+        # Add bound as keyword argument
+        if bound:
+            keywords.append(
+                ast.keyword(arg="bound", value=ast.Name(id=bound, ctx=ast.Load()))
+            )
+
+        # Add variance
+        if variance == "covariant":
+            keywords.append(
+                ast.keyword(arg="covariant", value=ast.Constant(value=True))
+            )
+        elif variance == "contravariant":
+            keywords.append(
+                ast.keyword(arg="contravariant", value=ast.Constant(value=True))
+            )
+
+        # Add default (Python 3.13+)
+        if default:
+            keywords.append(
+                ast.keyword(arg="default", value=ast.Name(id=default, ctx=ast.Load()))
+            )
+
+    elif kind in ("param_spec", "type_var_tuple"):
+        # ParamSpec and TypeVarTuple only support default (Python 3.13+)
+        default = param.get("default")
+        if default:
+            keywords.append(
+                ast.keyword(arg="default", value=ast.Name(id=default, ctx=ast.Load()))
+            )
+
+    # Create the assignment: T = TypeVar("T", ...)
+    return ast.Assign(
+        targets=[ast.Name(id=name, ctx=ast.Store())],
+        value=ast.Call(
+            func=ast.Name(id=constructor, ctx=ast.Load()),
+            args=args,
+            keywords=keywords,
+        ),
+    )
 
 
 def generate_module_header(module_path: str, spec: dict | None = None) -> str:
@@ -1171,6 +1410,11 @@ def generate_module_code(
             pass
 
     body.append(ast.Pass())
+
+    # Generate type variable definitions after imports
+    generic_params = collect_generic_params(content)
+    for param in generic_params:
+        body.append(generate_type_var_ast(param))
 
     for typ in content.types:
         body.append(generate_type_ast(typ, use_pydantic))
@@ -1271,6 +1515,83 @@ def _insert_function_notes(code: str, function_notes: dict[str, str]) -> str:
     return "\n".join(result)
 
 
+def build_import_graph(
+    modules: dict[str, ModuleContent],
+    type_module_map: dict[str, str],
+) -> dict[str, set[str]]:
+    """Build a graph of module import dependencies.
+
+    Returns a dict mapping module paths to the set of modules they import from.
+    """
+    graph: dict[str, set[str]] = {mod: set() for mod in modules}
+
+    for module_path, content in modules.items():
+        imported_modules: set[str] = set()
+
+        # Check type references in signatures and properties
+        for func in content.functions:
+            sig = func.get("signature", "")
+            for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", sig):
+                if word in type_module_map:
+                    imported_modules.add(type_module_map[word])
+
+        for typ in content.types:
+            # Check property types
+            for prop in typ.get("properties", []):
+                prop_type = prop.get("type", "")
+                for word in re.findall(r"\b([A-Z][a-zA-Z0-9]*)\b", prop_type):
+                    if word in type_module_map:
+                        imported_modules.add(type_module_map[word])
+
+            # Check base classes
+            for base in typ.get("bases", []):
+                if base in type_module_map:
+                    imported_modules.add(type_module_map[base])
+
+        # Remove self-imports and add to graph
+        imported_modules.discard(module_path)
+        graph[module_path] = imported_modules
+
+    return graph
+
+
+def find_import_cycles(graph: dict[str, set[str]]) -> list[list[str]]:
+    """Find all cycles in the import dependency graph using DFS.
+
+    Returns a list of cycles, where each cycle is a list of module paths.
+    """
+    cycles: list[list[str]] = []
+    visited: set[str] = set()
+    rec_stack: set[str] = set()
+
+    def dfs(node: str, path: list[str]) -> None:
+        visited.add(node)
+        rec_stack.add(node)
+        path.append(node)
+
+        for neighbor in graph.get(node, set()):
+            if neighbor not in visited:
+                dfs(neighbor, path)
+            elif neighbor in rec_stack:
+                # Found a cycle - extract it
+                cycle_start = path.index(neighbor)
+                cycle = path[cycle_start:] + [neighbor]
+                # Normalize cycle to avoid duplicates (start with smallest element)
+                min_idx = cycle.index(min(cycle[:-1]))
+                normalized = cycle[min_idx:-1] + cycle[:min_idx] + [cycle[min_idx]]
+                if normalized not in cycles:
+                    cycles.append(normalized)
+
+        path.pop()
+        rec_stack.remove(node)
+
+    for node in graph:
+        if node not in visited:
+            dfs(node, [])
+
+    return cycles
+
+
 def format_with_ruff(code: str) -> str:
     """Format code using ruff."""
     try:
@@ -1293,13 +1614,25 @@ def generate_init_code(
     exports: list[str],
     type_module_map: dict[str, str],
     spec: dict,
+    warnings: list[str] | None = None,
 ) -> str:
-    """Generate __init__.py content for a package."""
+    """Generate __init__.py content for a package.
+
+    Args:
+        module_path: The module path (e.g., "mylib.models")
+        exports: List of names to export
+        type_module_map: Map of type names to their module paths
+        spec: The full libspec
+        warnings: Optional list to collect warnings about invalid exports
+    """
     if not exports:
         return ""
 
     submodule_imports: dict[str, list[str]] = {}
     library = spec.get("library", {})
+
+    # Build set of all valid function names for validation
+    valid_functions = {func["name"] for func in library.get("functions", [])}
 
     for name in exports:
         if name in type_module_map:
@@ -1310,6 +1643,13 @@ def generate_init_code(
                     full_module = func.get("module", module_path)
                     break
             else:
+                # Export not found in types or functions - emit warning
+                if warnings is not None:
+                    if name not in valid_functions and name not in type_module_map:
+                        warnings.append(
+                            f"Export '{name}' in module '{module_path}' not found "
+                            "in spec types or functions"
+                        )
                 continue
 
         if full_module.startswith(module_path + "."):
@@ -1493,13 +1833,14 @@ def codegen(
 
         # Generate __init__.py files
         spec_modules = library.get("modules", [])
+        export_warnings: list[str] = []
         for mod_info in spec_modules:
             exports = mod_info.get("exports", [])
             mod_path = mod_info.get("path", "")
 
             if exports:
                 init_code = generate_init_code(
-                    mod_path, exports, type_module_map, spec
+                    mod_path, exports, type_module_map, spec, export_warnings
                 )
                 if not init_code:
                     continue
@@ -1545,6 +1886,22 @@ def codegen(
                 init_file_path.write_text(init_code)
 
             results.append(result)
+
+        # Check for circular imports
+        import_graph = build_import_graph(modules, type_module_map)
+        import_cycles = find_import_cycles(import_graph)
+
+        # Output warnings
+        all_warnings: list[str] = []
+        all_warnings.extend(export_warnings)
+        for cycle in import_cycles:
+            cycle_path = " → ".join(cycle)
+            all_warnings.append(f"Potential circular import: {cycle_path}")
+
+        if all_warnings:
+            click.secho("\nWarnings:", fg="yellow")
+            for warning in all_warnings:
+                click.secho(f"  • {warning}", fg="yellow")
 
         # Output results
         if dry_run:
