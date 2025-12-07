@@ -37,7 +37,8 @@ SIGNATURE_PATTERN = re.compile(
 )
 
 # Pattern for Optional[X] -> X | None conversion
-OPTIONAL_PATTERN = re.compile(r"Optional\[([^\]]+)\]")
+# Removed: OPTIONAL_PATTERN regex - can't handle nested brackets
+# Now using _replace_optional_balanced() instead
 
 # Parse individual parameter: name: type = default
 PARAM_PATTERN = re.compile(
@@ -92,6 +93,9 @@ STDLIB_TYPE_IMPORTS: dict[str, str] = {
     r"\bAnnotated\b": "from typing import Annotated",
     r"\bUnion\b": "from typing import Union",
     r"\bOptional\b": "from typing import Optional",
+    r"\bType\b": "from typing import Type",
+    # types module
+    r"\bTracebackType\b": "from types import TracebackType",
     # contextlib
     r"\bContextManager\b": "from contextlib import AbstractContextManager as ContextManager",
     r"\bAsyncContextManager\b": "from contextlib import AbstractAsyncContextManager as AsyncContextManager",
@@ -197,6 +201,41 @@ class GenerationResult:
 # === Type Normalization ===
 
 
+def _replace_optional_balanced(type_str: str) -> str:
+    """Replace Optional[X] with X | None, handling nested brackets correctly.
+
+    The simple regex approach fails for nested types like Optional[type[Any]]
+    because [^\\]]+ matches until the first ], not the matching one.
+    """
+    result = type_str
+    while True:
+        # Find "Optional[" in the string
+        idx = result.find("Optional[")
+        if idx == -1:
+            break
+
+        # Find the matching closing bracket
+        start = idx + len("Optional[")
+        depth = 1
+        pos = start
+        while pos < len(result) and depth > 0:
+            if result[pos] == "[":
+                depth += 1
+            elif result[pos] == "]":
+                depth -= 1
+            pos += 1
+
+        if depth == 0:
+            # Extract the inner type and replace
+            inner = result[start : pos - 1]
+            result = result[:idx] + inner + " | None" + result[pos:]
+        else:
+            # Malformed - unbalanced brackets, bail out
+            break
+
+    return result
+
+
 def normalize_type(type_str: str) -> str:
     """Convert type annotations to modern Python 3.10+ syntax.
 
@@ -210,9 +249,8 @@ def normalize_type(type_str: str) -> str:
 
     result = type_str
 
-    # Convert Optional[X] to X | None
-    while OPTIONAL_PATTERN.search(result):
-        result = OPTIONAL_PATTERN.sub(r"\1 | None", result)
+    # Convert Optional[X] to X | None (handles nested brackets)
+    result = _replace_optional_balanced(result)
 
     # Convert List -> list, Dict -> dict, etc.
     result = re.sub(r"\bList\[", "list[", result)
@@ -230,6 +268,9 @@ def normalize_type(type_str: str) -> str:
 def parse_signature(sig: str) -> ParsedSignature:
     """Parse a function signature string into components."""
     sig = sig.strip()
+    # Strip 'async def funcname' or 'def funcname' prefix if present
+    # This handles specs that use full signatures like 'async def __aexit__(self, ...) -> bool'
+    sig = re.sub(r"^(async\s+)?def\s+\w+", "", sig).strip()
     match = SIGNATURE_PATTERN.match(sig)
     if not match:
         return ParsedSignature(params=[], returns=None)
@@ -266,15 +307,18 @@ def parse_signature(sig: str) -> ParsedSignature:
 
 def parse_param(param_str: str) -> ParsedParam | None:
     """Parse a single parameter string."""
-    match = PARAM_PATTERN.match(param_str.strip())
-    if not match:
-        return None
-
-    return ParsedParam(
-        name=match.group("name"),
-        type_hint=normalize_type(match.group("type").strip()),
-        default=match.group("default").strip() if match.group("default") else None,
-    )
+    param_str = param_str.strip()
+    match = PARAM_PATTERN.match(param_str)
+    if match:
+        return ParsedParam(
+            name=match.group("name"),
+            type_hint=normalize_type(match.group("type").strip()),
+            default=match.group("default").strip() if match.group("default") else None,
+        )
+    # Handle untyped parameters like 'self', 'cls', '*args', '**kwargs'
+    if param_str.isidentifier():
+        return ParsedParam(name=param_str, type_hint=None, default=None)
+    return None
 
 
 # === Docstring Rendering ===
@@ -550,7 +594,11 @@ def generate_function_ast(
     defaults: list[ast.expr] = []
     kw_defaults: list[ast.expr | None] = []
 
-    if is_method:
+    # Check if signature already has self/cls as first param
+    first_param_name = sig.params[0].name if sig.params else None
+    has_self_or_cls = first_param_name in ("self", "cls")
+
+    if is_method and not has_self_or_cls:
         if method_type == "classmethod":
             args_list.append(ast.arg(arg="cls", annotation=None))
         elif method_type == "staticmethod":
@@ -568,7 +616,8 @@ def generate_function_ast(
         # Fix type annotation when default is None but type doesn't include None
         if p.default == "None" and type_hint and "None" not in type_hint:
             type_hint = f"{type_hint} | None"
-        arg = ast.arg(arg=p.name, annotation=make_type_annotation(type_hint))
+        annotation = make_type_annotation(type_hint) if type_hint else None
+        arg = ast.arg(arg=p.name, annotation=annotation)
         kind = param_kind_map.get(p.name, "positional_or_keyword")
 
         default_node = None
@@ -777,8 +826,38 @@ def generate_dataclass_ast(typ: dict) -> ast.ClassDef:
             )
 
             if is_mutable_default:
+                # Use lambda returning empty literal for proper type inference
+                # e.g., default_factory=lambda: {} instead of default_factory=dict
                 factory_name = _get_factory_for_mutable_default(default, prop_type)
-                factory = ast.Name(id=factory_name, ctx=ast.Load())
+                if factory_name == "list":
+                    empty_literal: ast.expr = ast.List(elts=[], ctx=ast.Load())
+                elif factory_name == "dict":
+                    empty_literal = ast.Dict(keys=[], values=[])
+                elif factory_name == "set":
+                    empty_literal = ast.Call(
+                        func=ast.Name(id="set", ctx=ast.Load()),
+                        args=[],
+                        keywords=[],
+                    )
+                else:
+                    # For custom class factories, use the constructor
+                    empty_literal = ast.Call(
+                        func=ast.Name(id=factory_name, ctx=ast.Load()),
+                        args=[],
+                        keywords=[],
+                    )
+                factory = ast.Lambda(
+                    args=ast.arguments(
+                        posonlyargs=[],
+                        args=[],
+                        vararg=None,
+                        kwonlyargs=[],
+                        kw_defaults=[],
+                        kwarg=None,
+                        defaults=[],
+                    ),
+                    body=empty_literal,
+                )
                 default_node = ast.Call(
                     func=ast.Name(id="field", ctx=ast.Load()),
                     args=[],
@@ -826,6 +905,11 @@ def generate_dataclass_ast(typ: dict) -> ast.ClassDef:
     bases: list[ast.expr] = [
         ast.Name(id=base, ctx=ast.Load()) for base in typ.get("bases", [])
     ]
+
+    # Add Generic[T, ...] if type has generic_params
+    generic_params = typ.get("generic_params", [])
+    if generic_params:
+        bases.append(build_generic_base(generic_params))
 
     return ast.ClassDef(
         name=name,
@@ -943,6 +1027,11 @@ def generate_pydantic_model_ast(typ: dict) -> ast.ClassDef:
     else:
         bases = [ast.Name(id="BaseModel", ctx=ast.Load())]
 
+    # Add Generic[T, ...] if type has generic_params
+    generic_params = typ.get("generic_params", [])
+    if generic_params:
+        bases.append(build_generic_base(generic_params))
+
     return ast.ClassDef(
         name=name,
         bases=bases,
@@ -953,8 +1042,45 @@ def generate_pydantic_model_ast(typ: dict) -> ast.ClassDef:
     )
 
 
+def get_generic_param_name(param: dict) -> str:
+    """Get the (possibly renamed) name for a generic parameter.
+
+    Applies PEP 8 naming convention:
+    - Covariant TypeVars get _co suffix
+    - Contravariant TypeVars get _contra suffix
+    """
+    name = param["name"]
+    variance = param.get("variance")
+    if variance == "covariant" and not name.endswith("_co"):
+        return f"{name}_co"
+    elif variance == "contravariant" and not name.endswith("_contra"):
+        return f"{name}_contra"
+    return name
+
+
+def build_generic_base(generic_params: list[dict], base_name: str = "Generic") -> ast.Subscript:
+    """Build a Generic[T, U, ...] or Protocol[T, U, ...] AST node."""
+    param_names = [get_generic_param_name(p) for p in generic_params]
+
+    if len(param_names) == 1:
+        slice_node: ast.expr = ast.Name(id=param_names[0], ctx=ast.Load())
+    else:
+        slice_node = ast.Tuple(
+            elts=[ast.Name(id=n, ctx=ast.Load()) for n in param_names],
+            ctx=ast.Load(),
+        )
+
+    return ast.Subscript(
+        value=ast.Name(id=base_name, ctx=ast.Load()),
+        slice=slice_node,
+        ctx=ast.Load(),
+    )
+
+
 def generate_class_ast(typ: dict) -> ast.ClassDef:
     """Build AST for a regular class type."""
+    import re
+
     name = typ["name"]
     docstring = render_type_docstring(typ)
 
@@ -975,9 +1101,33 @@ def generate_class_ast(typ: dict) -> ast.ClassDef:
     if len(body) == 1:
         body.append(ast.Pass())
 
+    # Build local TypeVar renames for this class's generic_params
+    # e.g., if this class has covariant T, we rename T -> T_co in base class refs
+    generic_params = typ.get("generic_params", [])
+    local_typevar_renames: dict[str, str] = {}
+    for param in generic_params:
+        original_name = param.get("name", "")
+        renamed = get_generic_param_name(param)
+        if original_name != renamed:
+            local_typevar_renames[original_name] = renamed
+
+    # Apply local TypeVar renames to base class references
+    raw_bases = typ.get("bases", [])
+    processed_bases: list[str] = []
+    for base in raw_bases:
+        for original, renamed in local_typevar_renames.items():
+            # Replace TypeVar references in base class, e.g., Handle[T] -> Handle[T_co]
+            pattern = rf"\b{re.escape(original)}\b"
+            base = re.sub(pattern, renamed, base)
+        processed_bases.append(base)
+
     bases: list[ast.expr] = [
-        ast.Name(id=base, ctx=ast.Load()) for base in typ.get("bases", [])
+        ast.Name(id=base, ctx=ast.Load()) for base in processed_bases
     ]
+
+    # Add Generic[T, ...] if type has generic_params
+    if generic_params:
+        bases.append(build_generic_base(generic_params))
 
     return ast.ClassDef(
         name=name,
@@ -991,6 +1141,8 @@ def generate_class_ast(typ: dict) -> ast.ClassDef:
 
 def generate_protocol_ast(typ: dict) -> ast.ClassDef:
     """Build AST for a Protocol type."""
+    import re
+
     name = typ["name"]
     docstring = render_type_docstring(typ)
 
@@ -1011,8 +1163,26 @@ def generate_protocol_ast(typ: dict) -> ast.ClassDef:
     if len(body) == 1:
         body.append(ast.Pass())
 
-    bases: list[ast.expr] = [ast.Name(id="Protocol", ctx=ast.Load())]
+    # Build local TypeVar renames for this protocol's generic_params
+    generic_params = typ.get("generic_params", [])
+    local_typevar_renames: dict[str, str] = {}
+    for param in generic_params:
+        original_name = param.get("name", "")
+        renamed = get_generic_param_name(param)
+        if original_name != renamed:
+            local_typevar_renames[original_name] = renamed
+
+    # Use Protocol[T] if generic_params exist, otherwise just Protocol
+    if generic_params:
+        bases: list[ast.expr] = [build_generic_base(generic_params, base_name="Protocol")]
+    else:
+        bases = [ast.Name(id="Protocol", ctx=ast.Load())]
+
+    # Apply local TypeVar renames to base class references
     for base in typ.get("bases", []):
+        for original, renamed in local_typevar_renames.items():
+            pattern = rf"\b{re.escape(original)}\b"
+            base = re.sub(pattern, renamed, base)
         bases.append(ast.Name(id=base, ctx=ast.Load()))
 
     return ast.ClassDef(
@@ -1245,6 +1415,15 @@ def collect_imports(
     if has_protocol:
         runtime_imports.add("from typing import Protocol")
 
+    # Check if any non-protocol class has generic_params (needs Generic base)
+    has_generic_class = any(
+        t.get("generic_params")
+        and t.get("kind") not in ("protocol", "type_alias", "enum")
+        for t in content.types
+    )
+    if has_generic_class:
+        runtime_imports.add("from typing import Generic")
+
     # Collect imports for generic_params (TypeVar, ParamSpec, TypeVarTuple)
     # These are runtime because they're assigned at module level
     generic_param_kinds: set[str] = set()
@@ -1418,23 +1597,22 @@ def collect_imports(
 
     # Check if types with dotted pydantic bases need Field import
     # (e.g., class Foo(pydantic.BaseModel): x: str = Field(...))
+    # Also handles pydantic_settings.BaseSettings and similar
     for typ in content.types:
         has_dotted_pydantic_base = any(
-            "." in base and base.split(".")[0] == "pydantic"
+            "." in base and base.split(".")[0] in ("pydantic", "pydantic_settings")
             for base in typ.get("bases", [])
         )
         if has_dotted_pydantic_base:
-            # Check if this type needs Field
+            # Check if this type needs Field - Field is used when there's
+            # a description, constraints, or any default value
             for prop in typ.get("properties", []):
                 if prop.get("description") or prop.get("constraints"):
                     runtime_imports.add("from pydantic import Field")
                     break
-                default = prop.get("default", "")
-                if (
-                    default in ("[]", "{}", "set()")
-                    or (default and default.startswith("["))
-                    or (default and default.startswith("{"))
-                ):
+                default = prop.get("default")
+                if default is not None:
+                    # Any default triggers Field(default=...) generation
                     runtime_imports.add("from pydantic import Field")
                     break
 
@@ -1478,24 +1656,30 @@ def collect_generic_params(content: ModuleContent) -> list[dict]:
     """Collect all unique generic parameters from types and functions in a module.
 
     Returns a list of unique GenericParam dicts, preserving first occurrence order.
+    Deduplication considers both name and variance, since a covariant T and an
+    invariant T are different TypeVars (T_co vs T).
     """
-    seen_names: set[str] = set()
+    seen_keys: set[tuple[str, str]] = set()
     params: list[dict] = []
 
     # Collect from types
     for typ in content.types:
         for param in typ.get("generic_params", []):
             name = param.get("name")
-            if name and name not in seen_names:
-                seen_names.add(name)
+            variance = param.get("variance", "invariant")
+            key = (name, variance)
+            if name and key not in seen_keys:
+                seen_keys.add(key)
                 params.append(param)
 
     # Collect from functions
     for func in content.functions:
         for param in func.get("generic_params", []):
             name = param.get("name")
-            if name and name not in seen_names:
-                seen_names.add(name)
+            variance = param.get("variance", "invariant")
+            key = (name, variance)
+            if name and key not in seen_keys:
+                seen_keys.add(key)
                 params.append(param)
 
     return params
@@ -1837,10 +2021,26 @@ def generate_module_code(
     # Track TypeVar renames for reference updates
     typevar_renames: dict[str, str] = {}
     generic_params = collect_generic_params(content)
+
+    # Find TypeVar names that have multiple variances (e.g., both invariant "T" and
+    # covariant "T" → "T_co"). These cannot be safely renamed globally because
+    # the rename would incorrectly affect the other variant.
+    names_by_variance: dict[str, set[str]] = {}  # name -> set of variances
+    for param in generic_params:
+        name = param.get("name", "")
+        variance = param.get("variance", "invariant")
+        if name not in names_by_variance:
+            names_by_variance[name] = set()
+        names_by_variance[name].add(variance)
+    conflicting_names = {name for name, variances in names_by_variance.items() if len(variances) > 1}
+
     for param in generic_params:
         typevar_ast, renames = generate_type_var_ast(param)
         body.append(typevar_ast)
-        typevar_renames.update(renames)
+        # Only add renames for TypeVars that don't have conflicting variances
+        for original, renamed in renames.items():
+            if original not in conflicting_names:
+                typevar_renames[original] = renamed
 
     # Topologically sort types so dependencies come first
     # Dependencies: base classes must precede derived classes, types must precede type aliases that reference them
